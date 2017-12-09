@@ -264,48 +264,48 @@ void Character_FixByBox(struct entity_s *ent)
         int32_t fix_x = 0;
         int32_t fix_y = 0;
 
-        if(ent->transform[12 + 2] < curr_box->bb_min[2])
+        if(ent->transform.M4x4[12 + 2] < curr_box->bb_min[2])
         {
-            ent->transform[12 + 2] = curr_box->bb_min[2];
+            ent->transform.M4x4[12 + 2] = curr_box->bb_min[2];
         }
 
-        if(ent->transform[12 + 0] + r > curr_box->bb_max[0])
+        if(ent->transform.M4x4[12 + 0] + r > curr_box->bb_max[0])
         {
-            fix_x = curr_box->bb_max[0] - ent->transform[12 + 0] - r;
+            fix_x = curr_box->bb_max[0] - ent->transform.M4x4[12 + 0] - r;
         }
-        else if(ent->transform[12 + 0] - r < curr_box->bb_min[0])
+        else if(ent->transform.M4x4[12 + 0] - r < curr_box->bb_min[0])
         {
-            fix_x = curr_box->bb_min[0] - ent->transform[12 + 0] + r;
+            fix_x = curr_box->bb_min[0] - ent->transform.M4x4[12 + 0] + r;
         }
 
-        if(ent->transform[12 + 1] + r > curr_box->bb_max[1])
+        if(ent->transform.M4x4[12 + 1] + r > curr_box->bb_max[1])
         {
-            fix_y = curr_box->bb_max[1] - ent->transform[12 + 1] - r;
+            fix_y = curr_box->bb_max[1] - ent->transform.M4x4[12 + 1] - r;
         }
-        else if(ent->transform[12 + 1] - r < curr_box->bb_min[1])
+        else if(ent->transform.M4x4[12 + 1] - r < curr_box->bb_min[1])
         {
-            fix_y = curr_box->bb_min[1] - ent->transform[12 + 1] + r;
+            fix_y = curr_box->bb_min[1] - ent->transform.M4x4[12 + 1] + r;
         }
 
         if(fix_x && fix_y || !next_box)
         {
-            ent->transform[12 + 0] += fix_x;
-            ent->transform[12 + 1] += fix_y;
+            ent->transform.M4x4[12 + 0] += fix_x;
+            ent->transform.M4x4[12 + 1] += fix_y;
         }
         else if(next_box && (fix_x || fix_y))
         {
             float min = (curr_box->bb_min[0] < next_box->bb_min[0]) ? (curr_box->bb_min[0]) : (next_box->bb_min[0]);
             float max = (curr_box->bb_max[0] > next_box->bb_max[0]) ? (curr_box->bb_max[0]) : (next_box->bb_max[0]);
-            if(fix_x && ((ent->transform[12 + 0] + r > max) || (ent->transform[12 + 0] - r < min)))
+            if(fix_x && ((ent->transform.M4x4[12 + 0] + r > max) || (ent->transform.M4x4[12 + 0] - r < min)))
             {
-                ent->transform[12 + 0] += fix_x;
+                ent->transform.M4x4[12 + 0] += fix_x;
             }
 
             min = (curr_box->bb_min[1] < next_box->bb_min[1]) ? (curr_box->bb_min[1]) : (next_box->bb_min[1]);
             max = (curr_box->bb_max[1] > next_box->bb_max[1]) ? (curr_box->bb_max[1]) : (next_box->bb_max[1]);
-            if(fix_y && ((ent->transform[12 + 1] + r > max) || (ent->transform[12 + 1] - r < min)))
+            if(fix_y && ((ent->transform.M4x4[12 + 1] + r > max) || (ent->transform.M4x4[12 + 1] - r < min)))
             {
-                ent->transform[12 + 1] += fix_y;
+                ent->transform.M4x4[12 + 1] += fix_y;
             }
         }
     }
@@ -340,7 +340,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
             }
         }
 
-        if((ent->character->path_dist > 1) && Room_IsInBox(ent->character->path[1], ent->transform + 12))
+        if((ent->character->path_dist > 1) && Room_IsInBox(ent->character->path[1], ent->transform.M4x4 + 12))
         {
             for(int i = 1; i < ent->character->path_dist; ++i)
             {
@@ -356,7 +356,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         else
         {
             Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
-            if(vec3_dist_sq(dir, ent->transform + 12) < 0.25f * TR_METERING_SECTORSIZE * TR_METERING_SECTORSIZE)
+            if(vec3_dist_sq(dir, ent->transform.M4x4 + 12) < 0.25f * TR_METERING_SECTORSIZE * TR_METERING_SECTORSIZE)
             {
                 if(ent->character->path_dist > 2)
                 {
@@ -369,11 +369,11 @@ void Character_GoByPathToTarget(struct entity_s *ent)
             }
         }
 
-        vec3_sub(dir, dir, ent->transform + 12);
+        vec3_sub(dir, dir, ent->transform.M4x4 + 12);
         vec3_norm(dir, dir[3]);
 
-        float sin_a = dir[0] * ent->transform[4 + 1] - dir[1] * ent->transform[4 + 0];
-        float cos_a = dir[0] * ent->transform[4 + 0] + dir[1] * ent->transform[4 + 1];
+        float sin_a = dir[0] * ent->transform.M4x4[4 + 1] - dir[1] * ent->transform.M4x4[4 + 0];
+        float cos_a = dir[0] * ent->transform.M4x4[4 + 0] + dir[1] * ent->transform.M4x4[4 + 1];
         float delta = fabs((180.0f / M_PI) * sin_a / cos_a);
 
         ent->character->cmd.rot[0] = (sin_a >= 0.0f) ? (-1) : (1);
@@ -385,14 +385,14 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         if(ent->move_type == MOVE_FLY)
         {
             float target_z = ent->character->path_target->floor + 600.0f;
-            room_sector_p next_sector = Sector_GetNextSector(ent->self->sector, ent->transform + 4);
+            room_sector_p next_sector = Sector_GetNextSector(ent->self->sector, ent->transform.M4x4 + 4);
             target_z = (target_z < next_sector->floor + TR_METERING_STEP) ? (next_sector->floor + TR_METERING_STEP) : target_z;
             target_z = (target_z > next_sector->ceiling - TR_METERING_STEP) ? (next_sector->ceiling - TR_METERING_STEP) : target_z;
-            if(ent->transform[12 + 2] < target_z - 64.0f)
+            if(ent->transform.M4x4[12 + 2] < target_z - 64.0f)
             {
                 ent->character->cmd.move[2] = 0x01;
             }
-            else if(ent->transform[12 + 2] > target_z + 64.0f)
+            else if(ent->transform.M4x4[12 + 2] > target_z + 64.0f)
             {
                 ent->character->cmd.move[2] = -0x01;
             }
@@ -460,19 +460,19 @@ void Character_UpdateCurrentSpeed(struct entity_s *ent, int zeroVz)
     t *= (ent->character) ? (ent->character->linear_speed_mult) : (DEFAULT_CHARACTER_SPEED_MULT);
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, t);
     }
     else
     {
@@ -492,15 +492,15 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     height_info_p hi = &ent->character->height_info;
 
     v = ent->bf->bone_tags[0].transform + 12;
-    Mat4_vec3_mul_macro(from, ent->transform, v);
+    Mat4_vec3_mul_macro(from, ent->transform.M4x4, v);
     from[2] -= ent->speed[2] * engine_frame_time;
-    from[0] = ent->transform[12 + 0];
-    from[1] = ent->transform[12 + 1];
+    from[0] = ent->transform.M4x4[12 + 0];
+    from[1] = ent->transform.M4x4[12 + 1];
     Character_GetHeightInfo(ent, from, hi, ent->character->height);
 }
 
 /**
- * Start position are taken from ent->transform
+ * Start position are taken from ent->transform.M4x4
  */
 void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_info_s *fc, float v_offset)
 {
@@ -604,7 +604,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     int ret = CHARACTER_STEP_HORIZONTAL;
     ///penetration test?
 
-    vec3_add(pos, ent->transform + 12, offset);
+    vec3_add(pos, ent->transform.M4x4 + 12, offset);
     Character_GetHeightInfo(ent, pos, nfc);
 
     if(fc->floor_hit.hit && nfc->floor_hit.hit)
@@ -676,8 +676,8 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     /*
      * check walls! If test is positive, than CHARACTER_STEP_UP_IMPOSSIBLE - can not go next!
      */
-    from[0] = ent->transform[12 + 0];
-    from[1] = ent->transform[12 + 1];
+    from[0] = ent->transform.M4x4[12 + 0];
+    from[1] = ent->transform.M4x4[12 + 1];
     from[2] += ent->character->climb_r;
 
     to[0] = pos[0];
@@ -700,8 +700,8 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
  */
 int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 {
-    float *pos = ent->transform + 12;
-    float *v1 = ent->transform + 4;
+    float *pos = ent->transform.M4x4 + 12;
+    float *v1 = ent->transform.M4x4 + 4;
     float *v2 = next_fc->floor_hit.normale;
 
     return next_fc->floor_hit.hit && (next_fc->floor_hit.point[2] > pos[2]) && (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
@@ -718,7 +718,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
     temp[0] = 0.0f;
     temp[1] = 0.5f * (v1[1] + v2[1]);
     temp[2] = ((v1[2] > v2[2]) ? (v1[2]) : (v2[2]));
-    Mat4_vec3_mul_macro(pos, ent->transform, temp);
+    Mat4_vec3_mul_macro(pos, ent->transform.M4x4, temp);
 }
 
 
@@ -739,7 +739,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
 {
     const float z_step = -0.66 * ent->character->climb_r;
     float from[3], to[3];
-    float *pos = ent->transform + 12;
+    float *pos = ent->transform.M4x4 + 12;
     double n0[4], n1[4];                                                        // planes equations
     char up_founded = 0;
     collision_result_t cb;
@@ -867,7 +867,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
     {
         double d, n2[4];
         // get the character plane equation
-        vec3_copy(n2, ent->transform + 0);
+        vec3_copy(n2, ent->transform.M4x4 + 0);
         n2[3] = -vec3_dot(n2, pos);
 
         /*
@@ -927,7 +927,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         n2[0] = n2[1];
         n2[1] =-n2[2];
         n2[2] = 0.0;
-        if(n2[0] * ent->transform[4 + 0] + n2[1] * ent->transform[4 + 1] > 0)   // direction fixing
+        if(n2[0] * ent->transform.M4x4[4 + 0] + n2[1] * ent->transform.M4x4[4 + 1] > 0)   // direction fixing
         {
             n2[0] = -n2[0];
             n2[1] = -n2[1];
@@ -997,10 +997,10 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     }
 
     // now we have wall normale in XOY plane. Let us check all flags
-    if(!((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (ent->transform[4 + 1] >  0.7)) &&
-       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST)  && (ent->transform[4 + 0] >  0.7)) &&
-       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (ent->transform[4 + 1] < -0.7)) &&
-       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST)  && (ent->transform[4 + 0] < -0.7)))
+    if(!((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_NORTH) && (ent->transform.M4x4[4 + 1] >  0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_EAST)  && (ent->transform.M4x4[4 + 0] >  0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_SOUTH) && (ent->transform.M4x4[4 + 1] < -0.7)) &&
+       !((ent->character->height_info.walls_climb_dir & SECTOR_FLAG_CLIMB_WEST)  && (ent->transform.M4x4[4 + 0] < -0.7)))
     {
         return;
     }
@@ -1012,12 +1012,12 @@ void Character_CheckWallsClimbability(struct entity_s *ent, struct climb_info_s 
     Character_GetMiddleHandsPos(ent, from);
     vec3_copy(to, from);
     t = ent->character->climb_r * 2.0f;
-    from[0] -= ent->transform[4 + 0] * t;
-    from[1] -= ent->transform[4 + 1] * t;
+    from[0] -= ent->transform.M4x4[4 + 0] * t;
+    from[1] -= ent->transform.M4x4[4 + 1] * t;
 
     t += ent->character->forvard_size + 64.0f;      //@WORKAROUND! stupid useless anim move command usages!
-    to[0] += ent->transform[4 + 0] * t;
-    to[1] += ent->transform[4 + 1] * t;
+    to[0] += ent->transform.M4x4[4 + 0] * t;
+    to[1] += ent->transform.M4x4[4 + 1] * t;
 
     to[2] -= ent->character->min_step_up_height;
     Character_CheckClimbability(ent, climb, from, to);
@@ -1059,19 +1059,19 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
     // Calculate the direction of jump by vector multiplication.
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,  t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,  t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, -t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, -t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, -t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,  t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,  t);
     }
     else
     {
@@ -1100,59 +1100,59 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
     // Continously lean character, according to current left/right direction.
     if((cmd->move[1] == 0) || (max_lean == 0.0f))                               // No direction - restore straight vertical position!
     {
-        if(ent->angles[2] != 0.0f)
+        if(ent->transform.angles[2] != 0.0f)
         {
-            if(ent->angles[2] < 180.0f)
+            if(ent->transform.angles[2] < 180.0f)
             {
-                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] >= 0.0f) ? (ent->angles[2]) : (0.0f);
+                ent->transform.angles[2] -= 0.5f * (fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] >= 0.0f) ? (ent->transform.angles[2]) : (0.0f);
             }
             else
             {
-                ent->angles[2] += 0.5f * (360.0f - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] >= 180.0f) ? (ent->angles[2]) : (0.0f);
+                ent->transform.angles[2] += 0.5f * (360.0f - fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] >= 180.0f) ? (ent->transform.angles[2]) : (0.0f);
             }
         }
     }
     else if(cmd->move[1] == 1) // Right direction
     {
-        if(ent->angles[2] != max_lean)
+        if(ent->transform.angles[2] != max_lean)
         {
-            if(ent->angles[2] < max_lean)   // Approaching from center
+            if(ent->transform.angles[2] < max_lean)   // Approaching from center
             {
-                ent->angles[2] += 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] <= max_lean) ? (ent->angles[2]) : (max_lean);
+                ent->transform.angles[2] += 0.5f * (fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] <= max_lean) ? (ent->transform.angles[2]) : (max_lean);
             }
-            else if(ent->angles[2] > 180.0f) // Approaching from left
+            else if(ent->transform.angles[2] > 180.0f) // Approaching from left
             {
-                ent->angles[2] += 0.5f * (360.0f - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] >= 180.0f) ? (ent->angles[2]) : (0.0f);
+                ent->transform.angles[2] += 0.5f * (360.0f - fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] >= 180.0f) ? (ent->transform.angles[2]) : (0.0f);
             }
             else    // Reduce previous lean
             {
-                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] >= 0.0f) ? (ent->angles[2]) : (0.0f);
+                ent->transform.angles[2] -= 0.5f * (fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] >= 0.0f) ? (ent->transform.angles[2]) : (0.0f);
             }
         }
     }
     else if(cmd->move[1] == -1)     // Left direction
     {
-        if(ent->angles[2] != neg_lean)
+        if(ent->transform.angles[2] != neg_lean)
         {
-            if(ent->angles[2] > neg_lean)   // Reduce previous lean
+            if(ent->transform.angles[2] > neg_lean)   // Reduce previous lean
             {
-                ent->angles[2] -= 0.5f * (360.0f - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                ent->angles[2] = (ent->angles[2] >= neg_lean) ? (ent->angles[2]) : (neg_lean);
+                ent->transform.angles[2] -= 0.5f * (360.0f - fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                ent->transform.angles[2] = (ent->transform.angles[2] >= neg_lean) ? (ent->transform.angles[2]) : (neg_lean);
             }
-            else if(ent->angles[2] < 180.0f) // Approaching from right
+            else if(ent->transform.angles[2] < 180.0f) // Approaching from right
             {
-                ent->angles[2] -= 0.5f * (fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                if(ent->angles[2] < 0.0) ent->angles[2] += 360.0f;
+                ent->transform.angles[2] -= 0.5f * (fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                if(ent->transform.angles[2] < 0.0) ent->transform.angles[2] += 360.0f;
             }
             else    // Approaching from center
             {
-                ent->angles[2] += 0.5f * (360.0f - fabs(ent->angles[2]) + lean_coeff) * engine_frame_time;
-                if(ent->angles[2] > 360.0f) ent->angles[2] -= 360.0f;
+                ent->transform.angles[2] += 0.5f * (360.0f - fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
+                if(ent->transform.angles[2] > 360.0f) ent->transform.angles[2] -= 360.0f;
             }
         }
     }
@@ -1207,28 +1207,28 @@ void Character_ClearLookAt(struct entity_s *ent)
  */
 int Character_MoveOnFloor(struct entity_s *ent)
 {
-    float norm_move_xy_len, t, *pos = ent->transform + 12;
+    float norm_move_xy_len, t, *pos = ent->transform.M4x4 + 12;
     float tv[3], move[3], norm_move_xy[2];
 
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
-    ent->angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
+    ent->transform.angles[0] += ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * (float)ent->character->cmd.rot[0];
     Entity_UpdateTransform(ent); // apply rotations
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, t);
     }
     else
     {
@@ -1289,14 +1289,14 @@ int Character_MoveOnFloor(struct entity_s *ent)
         {
             float from[3];
             collision_result_t cs;
-            from[0] = tv[0] = ent->transform[12 + 0];
-            from[1] = tv[1] = ent->transform[12 + 1];
+            from[0] = tv[0] = ent->transform.M4x4[12 + 0];
+            from[1] = tv[1] = ent->transform.M4x4[12 + 1];
             from[2] = tv[2] = fc->floor_hit.point[2];
             from[2] += 2.0f * ent->character->sphere;
             if(Physics_SphereTest(&cs, from, tv, ent->character->sphere, fc->self, COLLISION_FILTER_HEIGHT_TEST) &&
                (fabs(cs.normale[2] - fc->floor_hit.normale[2]) < 0.01))
             {
-                ent->character->state.slide = (fc->floor_hit.normale[0] * ent->transform[4 + 0] + fc->floor_hit.normale[1] * ent->transform[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
+                ent->character->state.slide = (fc->floor_hit.normale[0] * ent->transform.M4x4[4 + 0] + fc->floor_hit.normale[1] * ent->transform.M4x4[4 + 1] >= 0.0f) ? (CHARACTER_SLIDE_FRONT) : (CHARACTER_SLIDE_BACK);
             }
         }
         ent->character->state.floor_collide = 0x01;
@@ -1310,11 +1310,11 @@ int Character_MoveOnFloor(struct entity_s *ent)
             t = 180.0f * atan2f(tv[0], -tv[1]) / M_PI;                          // from -180 deg to +180 deg
             if(ent->character->state.slide == CHARACTER_SLIDE_FRONT)
             {
-                ent->angles[0] = t + 180.0f;
+                ent->transform.angles[0] = t + 180.0f;
             }
             else //if(fc->slide == CHARACTER_SLIDE_BACK)
             {
-                ent->angles[0] = t;
+                ent->transform.angles[0] = t;
             }
             Entity_UpdateTransform(ent);
         }
@@ -1369,7 +1369,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
 
 int Character_MoveFly(struct entity_s *ent)
 {
-    float move[3], *pos = ent->transform + 12;
+    float move[3], *pos = ent->transform.M4x4 + 12;
     character_command_p cmd = &ent->character->cmd;
     float dir[3] = {0.0f, 0.0f, 0.0f};
 
@@ -1393,15 +1393,15 @@ int Character_MoveFly(struct entity_s *ent)
 
     if(!cmd->shift)
     {
-        ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * cmd->rot[0];
-        ent->angles[1]  = 0.0f;
-        ent->angles[2]  = 0.0f;
+        ent->transform.angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * cmd->rot[0];
+        ent->transform.angles[1]  = 0.0f;
+        ent->transform.angles[2]  = 0.0f;
         Entity_UpdateTransform(ent);
     }
     dir[0] = (cmd->shift) ? (cmd->move[1]) : (0.0f);
     dir[1] = cmd->move[0];
     dir[2] = cmd->move[2];
-    Mat4_vec3_rot_macro(ent->speed, ent->transform, dir);
+    Mat4_vec3_rot_macro(ent->speed, ent->transform.M4x4, dir);
     vec3_mul_scalar(ent->speed, ent->speed, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
 
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
@@ -1416,11 +1416,11 @@ int Character_MoveFly(struct entity_s *ent)
 
 int Character_FreeFalling(struct entity_s *ent)
 {
-    float move[3], g[3], *pos = ent->transform + 12;
+    float move[3], g[3], *pos = ent->transform.M4x4 + 12;
     float rot = ROT_SPEED_FREEFALL * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
 
-    ent->angles[0] += rot;
-    ent->angles[1] = 0.0f;
+    ent->transform.angles[0] += rot;
+    ent->transform.angles[1] = 0.0f;
 
     Entity_UpdateTransform(ent);                                                // apply rotations
 
@@ -1488,30 +1488,30 @@ int Character_FreeFalling(struct entity_s *ent)
 int Character_MonkeyClimbing(struct entity_s *ent)
 {
     float move[3];
-    float *pos = ent->transform + 12;
+    float *pos = ent->transform.M4x4 + 12;
     float t = ent->anim_linear_speed * ent->character->linear_speed_mult;
     int ret = 1;
 
-    ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0f;
-    ent->angles[2] = 0.0f;
+    ent->transform.angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+    ent->transform.angles[1] = 0.0f;
+    ent->transform.angles[2] = 0.0f;
     Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag & ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, t);
     }
     else if(ent->dir_flag & ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,-t);
     }
     else if(ent->dir_flag & ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, t);
     }
     else
     {
@@ -1543,7 +1543,7 @@ int Character_MonkeyClimbing(struct entity_s *ent)
 int Character_WallsClimbing(struct entity_s *ent)
 {
     climb_info_t *climb = &ent->character->climb;
-    float move[3], t, *pos = ent->transform + 12;
+    float move[3], t, *pos = ent->transform.M4x4 + 12;
 
     Character_CheckWallsClimbability(ent, climb);
     Character_GetMiddleHandsPos(ent, move);
@@ -1556,7 +1556,7 @@ int Character_WallsClimbing(struct entity_s *ent)
         return 2;
     }
 
-    ent->angles[0] = atan2f(climb->n[0], -climb->n[1]) * 180.0f / M_PI;
+    ent->transform.angles[0] = atan2f(climb->n[0], -climb->n[1]) * 180.0f / M_PI;
     Entity_UpdateTransform(ent);
     pos[0] = climb->point[0] + climb->n[0] * ent->bf->bb_max[1];
     pos[1] = climb->point[1] + climb->n[1] * ent->bf->bb_max[1];
@@ -1596,29 +1596,29 @@ int Character_WallsClimbing(struct entity_s *ent)
 int Character_Climbing(struct entity_s *ent)
 {
     float move[3];
-    float t, *pos = ent->transform + 12;
+    float t, *pos = ent->transform.M4x4 + 12;
 
     t = ent->anim_linear_speed * ent->character->linear_speed_mult;
-    ent->angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0f;
-    ent->angles[2] = 0.0f;
+    ent->transform.angles[0] += ROT_SPEED_MONKEYSWING * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+    ent->transform.angles[1] = 0.0f;
+    ent->transform.angles[2] = 0.0f;
     Entity_UpdateTransform(ent);                                                // apply rotations
 
     if(ent->dir_flag == ENT_MOVE_FORWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, t);
     }
     else if(ent->dir_flag == ENT_MOVE_BACKWARD)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,-t);
     }
     else if(ent->dir_flag == ENT_MOVE_LEFT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,-t);
     }
     else if(ent->dir_flag == ENT_MOVE_RIGHT)
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, t);
     }
     else
     {
@@ -1644,7 +1644,7 @@ int Character_Climbing(struct entity_s *ent)
  */
 int Character_MoveUnderWater(struct entity_s *ent)
 {
-    float move[3], *pos = ent->transform + 12;
+    float move[3], *pos = ent->transform.M4x4 + 12;
 
     // Check current place.
 
@@ -1672,21 +1672,21 @@ int Character_MoveUnderWater(struct entity_s *ent)
         }
     }
 
-    ent->angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
-    ent->angles[2]  = 0.0f;
+    ent->transform.angles[0] += ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+    ent->transform.angles[1] -= ROT_SPEED_UNDERWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[1];
+    ent->transform.angles[2]  = 0.0f;
 
-    if((ent->angles[1] > 70.0f) && (ent->angles[1] < 180.0f))               // Underwater angle limiter.
+    if((ent->transform.angles[1] > 70.0f) && (ent->transform.angles[1] < 180.0f))               // Underwater angle limiter.
     {
-       ent->angles[1] = 70.0f;
+       ent->transform.angles[1] = 70.0f;
     }
-    else if((ent->angles[1] > 180.0f) && (ent->angles[1] < 270.0f))
+    else if((ent->transform.angles[1] > 180.0f) && (ent->transform.angles[1] < 270.0f))
     {
-        ent->angles[1] = 270.0f;
+        ent->transform.angles[1] = 270.0f;
     }
 
     Entity_UpdateTransform(ent);                                            // apply rotations
-    vec3_mul_scalar(ent->speed, ent->transform + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
+    vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, ent->linear_speed * ent->character->linear_speed_mult);    // OY move only!
 
     vec3_mul_scalar(move, ent->speed, engine_frame_time);
     vec3_add(pos, pos, move);
@@ -1695,7 +1695,7 @@ int Character_MoveUnderWater(struct entity_s *ent)
     Character_UpdateCurrentHeight(ent);
     if(ent->character->height_info.water && (pos[2] + ent->bf->bb_max[2] >= ent->character->height_info.transition_level))
     {
-        if(ent->transform[4 + 2] > 0.67f)             ///@FIXME: magick!
+        if(ent->transform.M4x4[4 + 2] > 0.67f)             ///@FIXME: magick!
         {
             ent->move_type = MOVE_ON_WATER;
             //pos[2] = fc.transition_level;
@@ -1714,11 +1714,11 @@ int Character_MoveUnderWater(struct entity_s *ent)
 int Character_MoveOnWater(struct entity_s *ent)
 {
     float move[3];
-    float *pos = ent->transform + 12;
+    float *pos = ent->transform.M4x4 + 12;
 
-    ent->angles[0] += ROT_SPEED_ONWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
-    ent->angles[1] = 0.0f;
-    ent->angles[2] = 0.0f;
+    ent->transform.angles[0] += ROT_SPEED_ONWATER * 60.0f * ent->character->rotate_speed_mult * engine_frame_time * ent->character->cmd.rot[0];
+    ent->transform.angles[1] = 0.0f;
+    ent->transform.angles[2] = 0.0f;
     Entity_UpdateTransform(ent);     // apply rotations
 
     // Calculate current speed.
@@ -1742,19 +1742,19 @@ int Character_MoveOnWater(struct entity_s *ent)
     float t = ent->linear_speed * ent->linear_speed;
     if((ent->dir_flag & ENT_MOVE_FORWARD) && (ent->character->cmd.move[0] == 1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4, t);
     }
     else if((ent->dir_flag & ENT_MOVE_BACKWARD) && (ent->character->cmd.move[0] == -1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 4,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 4,-t);
     }
     else if((ent->dir_flag & ENT_MOVE_LEFT) && (ent->character->cmd.move[1] == -1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0,-t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0,-t);
     }
     else if((ent->dir_flag & ENT_MOVE_RIGHT) && (ent->character->cmd.move[1] == 1))
     {
-        vec3_mul_scalar(ent->speed, ent->transform + 0, t);
+        vec3_mul_scalar(ent->speed, ent->transform.M4x4 + 0, t);
     }
     else
     {
@@ -1808,23 +1808,23 @@ int Character_FindTraverse(struct entity_s *ch)
     ch->character->traversed_object = NULL;
 
     // OX move case
-    if(ch->transform[4 + 0] > 0.9f)
+    if(ch->transform.M4x4[4 + 0] > 0.9f)
     {
         float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
     }
-    else if(ch->transform[4 + 0] < -0.9f)
+    else if(ch->transform.M4x4[4 + 0] < -0.9f)
     {
         float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
     }
     // OY move case
-    else if(ch->transform[4 + 1] > 0.9f)
+    else if(ch->transform.M4x4[4 + 1] > 0.9f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
         obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
     }
-    else if(ch->transform[4 + 1] < -0.9f)
+    else if(ch->transform.M4x4[4 + 1] < -0.9f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
         obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
@@ -1838,10 +1838,10 @@ int Character_FindTraverse(struct entity_s *ch)
             if(cont->object_type == OBJECT_ENTITY)
             {
                 entity_p e = (entity_p)cont->object;
-                if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
+                if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform.M4x4[12 + 2] - ch->transform.M4x4[12 + 2]) < 1.1f))
                 {
-                    int oz = (ch->angles[0] + 45.0f) / 90.0f;
-                    ch->angles[0] = oz * 90.0f;
+                    int oz = (ch->transform.angles[0] + 45.0f) / 90.0f;
+                    ch->transform.angles[0] = oz * 90.0f;
                     ch->character->traversed_object = e;
                     Entity_UpdateTransform(ch);
                     return 1;
@@ -1855,10 +1855,10 @@ int Character_FindTraverse(struct entity_s *ch)
         if(cont->object_type == OBJECT_ENTITY)
         {
             entity_p e = (entity_p)cont->object;
-            if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform[12 + 2] - ch->transform[12 + 2]) < 1.1f))
+            if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform.M4x4[12 + 2] - ch->transform.M4x4[12 + 2]) < 1.1f))
             {
-                int oz = (ch->angles[0] + 45.0f) / 90.0f;
-                ch->angles[0] = oz * 90.0f;
+                int oz = (ch->transform.angles[0] + 45.0f) / 90.0f;
+                ch->transform.angles[0] = oz * 90.0f;
                 ch->character->traversed_object = e;
                 Entity_UpdateTransform(ch);
                 return 1;
@@ -1897,9 +1897,9 @@ int Sector_AllowTraverse(struct room_sector_s *rs, float floor)
         {
             entity_p ent = (entity_p)cont->object;
             if((ent->type_flags & ENTITY_TYPE_TRAVERSE_FLOOR) &&
-               (fabs(ent->transform[12 + 2] + TR_METERING_SECTORSIZE - floor) < 1.1f) &&
-               (fabs(ent->transform[12 + 0] - rs->pos[0]) < 1.1f) &&
-               (fabs(ent->transform[12 + 1] - rs->pos[1]) < 1.1f))
+               (fabs(ent->transform.M4x4[12 + 2] + TR_METERING_SECTORSIZE - floor) < 1.1f) &&
+               (fabs(ent->transform.M4x4[12 + 0] - rs->pos[0]) < 1.1f) &&
+               (fabs(ent->transform.M4x4[12 + 1] - rs->pos[1]) < 1.1f))
             {
                 return 0x01;
             }
@@ -1925,7 +1925,7 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         return 0x00;
     }
 
-    float floor = ch->transform[12 + 2];
+    float floor = ch->transform.M4x4[12 + 2];
     if((Sector_AllowTraverse(ch_s, floor) == 0x00) || (Sector_AllowTraverse(obj_s, floor) == 0x00))
     {
         return 0x00;
@@ -1937,9 +1937,9 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
         {
             entity_p ent = (entity_p)cont->object;
             if((ent->type_flags & (ENTITY_TYPE_TRAVERSE | ENTITY_TYPE_TRAVERSE_FLOOR)) &&
-               (fabs(ent->transform[12 + 2] - TR_METERING_SECTORSIZE - floor) < 1.1f) &&
-               (fabs(ent->transform[12 + 0] - obj_s->pos[0]) < 1.1f) &&
-               (fabs(ent->transform[12 + 1] - obj_s->pos[1]) < 1.1f))
+               (fabs(ent->transform.M4x4[12 + 2] - TR_METERING_SECTORSIZE - floor) < 1.1f) &&
+               (fabs(ent->transform.M4x4[12 + 0] - obj_s->pos[0]) < 1.1f) &&
+               (fabs(ent->transform.M4x4[12 + 1] - obj_s->pos[1]) < 1.1f))
             {
                 return 0x00;
             }
@@ -1953,23 +1953,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
      * PUSH MOVE CHECK
      */
     // OX move case
-    if(ch->transform[4 + 0] > 0.8f)
+    if(ch->transform.M4x4[4 + 0] > 0.8f)
     {
         float pos[] = {(float)(obj_s->pos[0] + TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(obj_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 0] < -0.8f)
+    else if(ch->transform.M4x4[4 + 0] < -0.8f)
     {
         float pos[] = {(float)(obj_s->pos[0] - TR_METERING_SECTORSIZE), (float)(obj_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(obj_s->owner_room->real_room, pos);
     }
     // OY move case
-    else if(ch->transform[4 + 1] > 0.8f)
+    else if(ch->transform.M4x4[4 + 1] > 0.8f)
     {
         float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(obj_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 1] < -0.8f)
+    else if(ch->transform.M4x4[4 + 1] < -0.8f)
     {
         float pos[] = {(float)(obj_s->pos[0]), (float)(obj_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(obj_s->owner_room->real_room, pos);
@@ -1997,23 +1997,23 @@ int Character_CheckTraverse(struct entity_s *ch, struct entity_s *obj)
      */
     next_s = NULL;
     // OX move case
-    if(ch->transform[4 + 0] > 0.8f)
+    if(ch->transform.M4x4[4 + 0] > 0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 0] < -0.8f)
+    else if(ch->transform.M4x4[4 + 0] < -0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
     // OY move case
-    else if(ch->transform[4 + 1] > 0.8f)
+    else if(ch->transform.M4x4[4 + 1] > 0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
     }
-    else if(ch->transform[4 + 1] < -0.8f)
+    else if(ch->transform.M4x4[4 + 1] < -0.8f)
     {
         float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
         next_s = Room_GetSectorRaw(ch_s->owner_room->real_room, pos);
@@ -2270,9 +2270,9 @@ int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *ta
     {
         collision_result_t cs;
         float dir[3], t;
-        vec3_sub(dir, target->transform + 12, character->transform + 12);
+        vec3_sub(dir, target->transform.M4x4 + 12, character->transform.M4x4 + 12);
         vec3_norm(dir, t);
-        t = vec3_dot(character->transform + 4, dir);
+        t = vec3_dot(character->transform.M4x4 + 4, dir);
         ret = (t > 0.0f) && (!Physics_RayTest(&cs, character->obb->centre, target->obb->centre, character->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self));
     }
 
@@ -2298,9 +2298,9 @@ struct entity_s *Character_FindTarget(struct entity_s *ent)
                    (!target->character || (target->character->parameters.param[PARAM_HEALTH] > 0.0f)))
                 {
                     float dir[3], t;
-                    vec3_sub(dir, target->transform + 12, ent->transform + 12);
+                    vec3_sub(dir, target->transform.M4x4 + 12, ent->transform.M4x4 + 12);
                     vec3_norm(dir, t);
-                    t = vec3_dot(ent->transform + 4, dir);
+                    t = vec3_dot(ent->transform.M4x4 + 4, dir);
                     if((t > max_dot) && (!Physics_RayTest(&cs, ent->obb->centre, target->obb->centre, ent->self, COLLISION_FILTER_CHARACTER) || (cs.obj == target->self)))
                     {
                         max_dot = t;

@@ -157,7 +157,7 @@ void Trigger_DoCommands(trigger_header_p trigger, struct entity_s *entity_activa
                     {
                         room_sector_p lowest_sector  = Sector_GetLowest(entity_activator->self->sector);
                         header_condition = (entity_activator->move_type == MOVE_ON_FLOOR) && lowest_sector &&
-                                           (entity_activator->transform[12 + 2] <= lowest_sector->floor + 16);
+                                           (entity_activator->transform.M4x4[12 + 2] <= lowest_sector->floor + 16);
                     }
                     break;
 

@@ -34,7 +34,10 @@ entity_p Entity_Create()
     entity_p ret = (entity_p)calloc(1, sizeof(entity_t));
 
     ret->move_type = MOVE_ON_FLOOR;
-    Mat4_E(ret->transform);
+    Mat4_E(ret->transform.M4x4);
+    vec3_set_zero(ret->transform.angles);
+    vec3_set_one(ret->transform.scaling);
+    
     ret->state_flags = ENTITY_STATE_ENABLED | ENTITY_STATE_ACTIVE | ENTITY_STATE_VISIBLE | ENTITY_STATE_COLLIDABLE;
     ret->type_flags = ENTITY_TYPE_GENERIC;
     ret->callback_flags = 0x00000000;               // no callbacks by default
@@ -52,7 +55,7 @@ entity_p Entity_Create()
     ret->self->collision_group = COLLISION_GROUP_KINEMATIC;
     ret->self->collision_mask = COLLISION_MASK_ALL;
     ret->obb = OBB_Create();
-    ret->obb->transform = ret->transform;
+    ret->obb->transform = ret->transform.M4x4;
 
     ret->no_fix_all = 0x00;
     ret->no_move = 0x00;
@@ -66,10 +69,8 @@ entity_p Entity_Create()
 
     ret->bf = (ss_bone_frame_p)malloc(sizeof(ss_bone_frame_t));
     SSBoneFrame_CreateFromModel(ret->bf, NULL);
-    vec3_set_zero(ret->angles);
+    
     vec3_set_zero(ret->speed);
-    vec3_set_one(ret->scaling);
-
     ret->linear_speed = 0.0f;
     ret->anim_linear_speed = 0.0f;
 
@@ -196,9 +197,9 @@ void Entity_UpdateRoomPos(entity_p ent)
 
     if(ent->character)
     {
-        Mat4_vec3_mul(pos, ent->transform, ent->bf->bone_tags->full_transform + 12);
-        pos[0] = ent->transform[12 + 0];
-        pos[1] = ent->transform[12 + 1];
+        Mat4_vec3_mul(pos, ent->transform.M4x4, ent->bf->bone_tags->full_transform + 12);
+        pos[0] = ent->transform.M4x4[12 + 0];
+        pos[1] = ent->transform.M4x4[12 + 1];
     }
     else
     {
@@ -207,7 +208,7 @@ void Entity_UpdateRoomPos(entity_p ent)
         v[0] /= 2.0f;
         v[1] /= 2.0f;
         v[2] /= 2.0f;
-        Mat4_vec3_mul_macro(pos, ent->transform, v);
+        Mat4_vec3_mul_macro(pos, ent->transform.M4x4, v);
     }
 
     new_room = World_FindRoomByPosCogerrence(pos, ent->self->room);
@@ -249,19 +250,20 @@ void Entity_MoveToRoom(entity_p entity, struct room_s *new_room)
 
 void Entity_UpdateTransform(entity_p entity)
 {
-    int32_t i = entity->angles[0] / 360.0f;
-    i = (entity->angles[0] < 0.0f) ? (i - 1) : (i);
-    entity->angles[0] -= 360.0f * i;
+    float *ang = entity->transform.angles;
+    int32_t i = ang[0] / 360.0f;
+    i = (ang[0] < 0.0f) ? (i - 1) : (i);
+    ang[0] -= 360.0f * i;
 
-    i = entity->angles[1] / 360.0f;
-    i = (entity->angles[1] < 0.0f) ? (i - 1) : (i);
-    entity->angles[1] -= 360.0f * i;
+    i = ang[1] / 360.0f;
+    i = (ang[1] < 0.0f) ? (i - 1) : (i);
+    ang[1] -= 360.0f * i;
 
-    i = entity->angles[2] / 360.0f;
-    i = (entity->angles[2] < 0.0f) ? (i - 1) : (i);
-    entity->angles[2] -= 360.0f * i;
+    i = ang[2] / 360.0f;
+    i = (ang[2] < 0.0f) ? (i - 1) : (i);
+    ang[2] -= 360.0f * i;
 
-    Mat4_SetAnglesZXY(entity->transform, entity->angles);
+    Mat4_SetAnglesZXY(entity->transform.M4x4, ang);
 }
 
 
@@ -270,7 +272,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
     if(ent->type_flags & ENTITY_TYPE_DYNAMIC)
     {
         float tr[16];
-        Physics_GetBodyWorldTransform(ent->physics, ent->transform, 0);
+        Physics_GetBodyWorldTransform(ent->physics, ent->transform.M4x4, 0);
         switch(ent->self->collision_shape)
         {
             case COLLISION_SHAPE_SINGLE_BOX:
@@ -280,10 +282,10 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                     centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
                     centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
                     centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
-                    Mat4_vec3_rot_macro(offset, ent->transform, centre);
-                    ent->transform[12 + 0] -= offset[0];
-                    ent->transform[12 + 1] -= offset[1];
-                    ent->transform[12 + 2] -= offset[2];
+                    Mat4_vec3_rot_macro(offset, ent->transform.M4x4, centre);
+                    ent->transform.M4x4[12 + 0] -= offset[0];
+                    ent->transform.M4x4[12 + 1] -= offset[1];
+                    ent->transform.M4x4[12 + 2] -= offset[2];
                 }
                 return;
         };
@@ -294,7 +296,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Physics_SetGhostWorldTransform(ent->physics, tr, i);
-            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform, tr);
+            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform.M4x4, tr);
         }
 
         // fill bone frame transformation matrices;
@@ -379,15 +381,15 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                         centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
                         centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
                         centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
-                        Mat4_vec3_rot_macro(offset, ent->transform, centre);
-                        ent->transform[12 + 0] += offset[0];
-                        ent->transform[12 + 1] += offset[1];
-                        ent->transform[12 + 2] += offset[2];
-                        Physics_SetBodyWorldTransform(ent->physics, ent->transform, 0);
-                        Physics_SetGhostWorldTransform(ent->physics,ent->transform, 0);
-                        ent->transform[12 + 0] -= offset[0];
-                        ent->transform[12 + 1] -= offset[1];
-                        ent->transform[12 + 2] -= offset[2];
+                        Mat4_vec3_rot_macro(offset, ent->transform.M4x4, centre);
+                        ent->transform.M4x4[12 + 0] += offset[0];
+                        ent->transform.M4x4[12 + 1] += offset[1];
+                        ent->transform.M4x4[12 + 2] += offset[2];
+                        Physics_SetBodyWorldTransform(ent->physics, ent->transform.M4x4, 0);
+                        Physics_SetGhostWorldTransform(ent->physics,ent->transform.M4x4, 0);
+                        ent->transform.M4x4[12 + 0] -= offset[0];
+                        ent->transform.M4x4[12 + 1] -= offset[1];
+                        ent->transform.M4x4[12 + 2] -= offset[2];
                     }
                     break;
 
@@ -396,7 +398,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                         float tr[16];
                         for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
                         {
-                            Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                            Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].full_transform);
                             Physics_SetBodyWorldTransform(ent->physics, tr, i);
                             Physics_SetGhostWorldTransform(ent->physics, tr, i);
                         }
@@ -422,11 +424,11 @@ void Entity_GhostUpdate(struct entity_s *ent)
                 {
                     float centre[3];
                     float *pos = tr + 12;
-                    Mat4_Copy(tr, ent->transform);
+                    Mat4_Copy(tr, ent->transform.M4x4);
                     centre[0] = 0.5f * (ent->bf->bb_min[0] + ent->bf->bb_max[0]);
                     centre[1] = 0.5f * (ent->bf->bb_min[1] + ent->bf->bb_max[1]);
                     centre[2] = 0.5f * (ent->bf->bb_min[2] + ent->bf->bb_max[2]);
-                    Mat4_vec3_mul_macro(pos, ent->transform, centre);
+                    Mat4_vec3_mul_macro(pos, ent->transform.M4x4, centre);
                     Physics_SetGhostWorldTransform(ent->physics, tr, 0);
                 }
                 break;
@@ -436,7 +438,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
                     uint16_t max_index = Physics_GetBodiesCount(ent->physics);
                     for(uint16_t i = 0; i < max_index; i++)
                     {
-                        Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[i].full_transform);
+                        Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].full_transform);
                         Physics_SetGhostWorldTransform(ent->physics, tr, i);
                     }
                 }
@@ -459,7 +461,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
         float from[3], to[3], curr[3], move[3], move_len;
         float from_parent[3], offset[3];
 
-        vec3_copy(orig_pos, ent->transform + 12);
+        vec3_copy(orig_pos, ent->transform.M4x4 + 12);
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
         {
             uint16_t m = ent->bf->animations.model->collision_map[i];
@@ -469,7 +471,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             {
                 if(callback)
                 {
-                    Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+                    Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
                     Physics_SetGhostWorldTransform(ent->physics, tr, m);
                     cn = Physics_GetGhostCurrentCollision(ent->physics, m, filter);
                     callback(ent, cn);
@@ -477,7 +479,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
                 continue;
             }
 
-            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
             // antitunneling condition for main body parts, needs only in move case
             if(btag->parent == NULL)
             {
@@ -495,7 +497,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             {
                 ghost_shape_p parent_info = Physics_GetGhostShapeInfo(ent->physics, btag->parent->index);
                 Mat4_vec3_mul(offset, btag->parent->full_transform, parent_info->offset);
-                Mat4_vec3_mul(from_parent, ent->transform, offset);
+                Mat4_vec3_mul(from_parent, ent->transform.M4x4, offset);
 
                 offset[0] = -ghost_info->offset[0];
                 offset[1] = -ghost_info->offset[1];
@@ -530,7 +532,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
                 for(; cn && cn->obj; cn = cn->next)
                 {
                     vec3_mul_scalar(tmp, cn->penetration, cn->penetration[3]);
-                    vec3_add_to(ent->transform + 12, tmp);
+                    vec3_add_to(ent->transform.M4x4 + 12, tmp);
                     vec3_add_to(curr, tmp);
                     vec3_add_to(from, tmp);
                     ret++;
@@ -539,14 +541,14 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             }
         }
 
-        vec3_sub(reaction, ent->transform + 12, orig_pos);
+        vec3_sub(reaction, ent->transform.M4x4 + 12, orig_pos);
         if(ret > 0)
         {
             filter &= COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT;
             ss_bone_tag_p btag = ent->bf->bone_tags + 0;
             ghost_shape_p ghost_info = Physics_GetGhostShapeInfo(ent->physics, 0);
 
-            Mat4_Mat4_mul(tr, ent->transform, btag->full_transform);
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
 
             from[0] = tr[12 + 0] - reaction[0];
             from[1] = tr[12 + 1] - reaction[1];
@@ -577,7 +579,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
                 for(; cn && cn->obj; cn = cn->next)
                 {
                     vec3_mul_scalar(tmp, cn->penetration, cn->penetration[3]);
-                    vec3_add_to(ent->transform + 12, tmp);
+                    vec3_add_to(ent->transform.M4x4 + 12, tmp);
                     vec3_add_to(curr, tmp);
                     vec3_add_to(from, tmp);
                     ret++;
@@ -586,8 +588,8 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             }
         }
 
-        vec3_sub(reaction, ent->transform + 12, orig_pos);
-        vec3_copy(ent->transform + 12, orig_pos);
+        vec3_sub(reaction, ent->transform.M4x4 + 12, orig_pos);
+        vec3_copy(ent->transform.M4x4 + 12, orig_pos);
         Entity_GhostUpdate(ent);
     }
 
@@ -608,7 +610,7 @@ int Entity_CheckNextPenetration(struct entity_s *ent, collision_callback_t callb
     int ret = 0;
     if(Physics_IsGhostsInited(ent->physics))
     {
-        float t1, t2, *pos = ent->transform + 12;
+        float t1, t2, *pos = ent->transform.M4x4 + 12;
 
         Entity_GhostUpdate(ent);
         vec3_add(pos, pos, move);
@@ -651,7 +653,7 @@ void Entity_FixPenetrations(struct entity_s *ent, collision_callback_t callback,
         float t1, t2, reaction[3];
         if(0 < Entity_GetPenetrationFixVector(ent, callback, reaction, move, filter))
         {
-            vec3_add(ent->transform + 12, ent->transform + 12, reaction);
+            vec3_add(ent->transform.M4x4 + 12, ent->transform.M4x4 + 12, reaction);
             if(ent->character)
             {
                 if(move)
@@ -705,7 +707,7 @@ int  Entity_GetSubstanceState(entity_p entity)
 
     if(entity->self->room->content->room_flags & TR_ROOM_FLAG_QUICKSAND)
     {
-        if(entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->height)
+        if(entity->character->height_info.transition_level > entity->transform.M4x4[12 + 2] + entity->character->height)
         {
             return ENTITY_SUBSTANCE_QUICKSAND_CONSUMED;
         }
@@ -719,13 +721,13 @@ int  Entity_GetSubstanceState(entity_p entity)
         return ENTITY_SUBSTANCE_NONE;
     }
     else if( entity->character->height_info.water &&
-            (entity->character->height_info.transition_level > entity->transform[12 + 2]) &&
-            (entity->character->height_info.transition_level < entity->transform[12 + 2] + entity->character->wade_depth) )
+            (entity->character->height_info.transition_level > entity->transform.M4x4[12 + 2]) &&
+            (entity->character->height_info.transition_level < entity->transform.M4x4[12 + 2] + entity->character->wade_depth) )
     {
         return ENTITY_SUBSTANCE_WATER_SHALLOW;
     }
     else if( entity->character->height_info.water &&
-            (entity->character->height_info.transition_level > entity->transform[12 + 2] + entity->character->wade_depth) )
+            (entity->character->height_info.transition_level > entity->transform.M4x4[12 + 2] + entity->character->wade_depth) )
     {
         return ENTITY_SUBSTANCE_WATER_WADE;
     }
@@ -775,8 +777,8 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->current_frame >= current_af->max_frame - 1))   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
-                        Mat4_vec3_rot_macro(tr, entity->transform, command->data);
-                        vec3_add(entity->transform + 12, entity->transform + 12, tr);
+                        Mat4_vec3_rot_macro(tr, entity->transform.M4x4, command->data);
+                        vec3_add(entity->transform.M4x4 + 12, entity->transform.M4x4 + 12, tr);
                         entity->no_move = 0x01;
                         do_skip_frame = true;
                     }
@@ -864,8 +866,8 @@ bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
                     case TR_EFFECT_SHAKESCREEN:
                         if(player)
                         {
-                            float *pos = player->transform + 12;
-                            float dist = vec3_dist(pos, entity->transform + 12);
+                            float *pos = player->transform.M4x4 + 12;
+                            float dist = vec3_dist(pos, entity->transform.M4x4 + 12);
                             dist = (dist > TR_CAM_MAX_SHAKE_DISTANCE) ? (0) : ((TR_CAM_MAX_SHAKE_DISTANCE - dist) / 1024.0f);
                             //if(dist > 0)
                             //    Cam_Shake(&engine_camera, (dist * TR_CAM_DEFAULT_SHAKE_POWER), 0.5);
@@ -874,10 +876,10 @@ bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
 
                     case TR_EFFECT_CHANGEDIRECTION:
                         {
-                            entity->angles[0] += 180.0f;
+                            entity->transform.angles[0] += 180.0f;
                             if(entity->move_type == MOVE_UNDERWATER)
                             {
-                                entity->angles[1] = -entity->angles[1]; // for underwater case
+                                entity->transform.angles[1] = -entity->transform.angles[1]; // for underwater case
                             }
                             if(entity->dir_flag == ENT_MOVE_BACKWARD)
                             {
@@ -1035,7 +1037,7 @@ void Entity_ProcessSector(entity_p ent)
                 {
                     case MOVE_ON_FLOOR:
                     case MOVE_QUICKSAND:
-                        if(ent->transform[12 + 2] <= lowest_sector->floor + 16.0f)
+                        if(ent->transform.M4x4[12 + 2] <= lowest_sector->floor + 16.0f)
                         {
                             Character_SetParam(ent, PARAM_HEALTH, 0.0f);
                             ent->character->state.dead = 0x01;
@@ -1081,18 +1083,18 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                 {
                     float move[3], r0[3], r1[3];
                     vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
-                    Mat4_vec3_rot_macro(r0, entity->transform, move);
+                    Mat4_vec3_rot_macro(r0, entity->transform.M4x4, move);
 
                     Anim_SetAnimation(ss_anim, animation, frame);
                     SSBoneFrame_Update(entity->bf, 0.0f);
                     vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
                     if(new_transform)
                     {
-                        Mat4_Copy(entity->transform, new_transform);
+                        Mat4_Copy(entity->transform.M4x4, new_transform);
                     }
-                    Mat4_vec3_rot_macro(r1, entity->transform, move);
+                    Mat4_vec3_rot_macro(r1, entity->transform.M4x4, move);
                     vec3_sub(move, r0, r1);
-                    vec3_add(entity->transform + 12, entity->transform + 12, move);
+                    vec3_add(entity->transform.M4x4 + 12, entity->transform.M4x4 + 12, move);
                 }
                 else
                 {
@@ -1100,7 +1102,7 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                     SSBoneFrame_Update(entity->bf, 0.0f);
                     if(new_transform)
                     {
-                        Mat4_Copy(entity->transform, new_transform);
+                        Mat4_Copy(entity->transform.M4x4, new_transform);
                     }
                 }
                 Entity_GhostUpdate(entity);
@@ -1121,7 +1123,7 @@ void Entity_MoveToSink(entity_p entity, struct static_camera_sink_s *sink)
 {
     if(sink && !entity->no_move)
     {
-        float sink_pos[3], *ent_pos = entity->transform + 12;
+        float sink_pos[3], *ent_pos = entity->transform.M4x4 + 12;
         sink_pos[0] = sink->pos[0];
         sink_pos[1] = sink->pos[1];
         sink_pos[2] = sink->pos[2] + TR_METERING_STEP; // Prevents digging into the floor.
@@ -1243,19 +1245,19 @@ int  Entity_CanTrigger(entity_p activator, entity_p trigger)
         {
             float r = trigger->activation_point->offset[3];
             r *= r;
-            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_point->offset);
-            if(vec3_dist_sq(activator->transform + 12, pos) < r)
+            Mat4_vec3_mul_macro(pos, trigger->transform.M4x4, trigger->activation_point->offset);
+            if(vec3_dist_sq(activator->transform.M4x4 + 12, pos) < r)
             {
                 if(vec3_sqabs(trigger->activation_point->direction) > 0.001f)
                 {
-                    Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+                    Mat4_vec3_rot_macro(dir, trigger->transform.M4x4, trigger->activation_point->direction);
                 }
                 else
                 {
-                    vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+                    vec3_sub(dir, trigger->transform.M4x4 + 12, activator->transform.M4x4 + 12);
                     vec3_norm(dir, r);
                 }
-                return (vec3_dot(activator->transform + 4, dir) > trigger->activation_point->direction[3]);
+                return (vec3_dot(activator->transform.M4x4 + 4, dir) > trigger->activation_point->direction[3]);
             }
         }
     }
@@ -1271,14 +1273,14 @@ void Entity_RotateToTriggerZ(entity_p activator, entity_p trigger)
         float dir[4];
         if(trigger->activation_point && (vec3_sqabs(trigger->activation_point->direction) > 0.001f))
         {
-            Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+            Mat4_vec3_rot_macro(dir, trigger->transform.M4x4, trigger->activation_point->direction);
         }
         else
         {
-            vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+            vec3_sub(dir, trigger->transform.M4x4 + 12, activator->transform.M4x4 + 12);
             vec3_norm(dir, dir[3]);
         }
-        activator->angles[0] = (180.0f  / M_PI) * atan2f(-dir[0], dir[1]);
+        activator->transform.angles[0] = (180.0f  / M_PI) * atan2f(-dir[0], dir[1]);
         Entity_UpdateTransform(activator);
     }
 }
@@ -1291,34 +1293,34 @@ void Entity_RotateToTrigger(entity_p activator, entity_p trigger, int bone_to)
         float dir[4], q[4], qt[4];
         if(trigger->activation_point && (vec3_sqabs(trigger->activation_point->direction) > 0.001f))
         {
-            Mat4_vec3_rot_macro(dir, trigger->transform, trigger->activation_point->direction);
+            Mat4_vec3_rot_macro(dir, trigger->transform.M4x4, trigger->activation_point->direction);
         }
         else
         {
             if((0 <= bone_to) && (bone_to < trigger->bf->bone_tag_count))
             {
-                Mat4_vec3_mul(dir, trigger->transform, trigger->bf->bone_tags[bone_to].full_transform + 12);
-                vec3_sub(dir, dir, activator->transform + 12);
+                Mat4_vec3_mul(dir, trigger->transform.M4x4, trigger->bf->bone_tags[bone_to].full_transform + 12);
+                vec3_sub(dir, dir, activator->transform.M4x4 + 12);
             }
             else
             {
-                vec3_sub(dir, trigger->transform + 12, activator->transform + 12);
+                vec3_sub(dir, trigger->transform.M4x4 + 12, activator->transform.M4x4 + 12);
             }
             vec3_norm(dir, dir[3]);
         }
-        vec4_GetQuaternionRotation(q, activator->transform + 4, dir);
+        vec4_GetQuaternionRotation(q, activator->transform.M4x4 + 4, dir);
         vec4_sop(qt, q);
 
-        vec4_mul(dir, q, activator->transform + 0)
-        vec4_mul(activator->transform + 0, dir, qt)
+        vec4_mul(dir, q, activator->transform.M4x4 + 0)
+        vec4_mul(activator->transform.M4x4 + 0, dir, qt)
 
-        vec4_mul(dir, q, activator->transform + 4)
-        vec4_mul(activator->transform + 4, dir, qt)
+        vec4_mul(dir, q, activator->transform.M4x4 + 4)
+        vec4_mul(activator->transform.M4x4 + 4, dir, qt)
 
-        vec4_mul(dir, q, activator->transform + 8)
-        vec4_mul(activator->transform + 8, dir, qt)
+        vec4_mul(dir, q, activator->transform.M4x4 + 8)
+        vec4_mul(activator->transform.M4x4 + 8, dir, qt)
 
-        Mat4_GetAnglesZXY(activator->angles, activator->transform);
+        Mat4_GetAnglesZXY(activator->transform.angles, activator->transform.M4x4);
     }
 }
 
@@ -1346,15 +1348,15 @@ void Entity_CheckActivators(struct entity_s *ent)
                     else if((trigger->type_flags & ENTITY_TYPE_PICKABLE) && (trigger->state_flags & ENTITY_STATE_ENABLED) && (trigger->state_flags & ENTITY_STATE_VISIBLE))
                     {
                         float ppos[3];
-                        float *v = trigger->transform + 12;
+                        float *v = trigger->transform.M4x4 + 12;
                         float r = trigger->activation_point->offset[3];
 
-                        ppos[0] = ent->transform[12 + 0] + ent->transform[4 + 0] * ent->bf->bb_max[1];
-                        ppos[1] = ent->transform[12 + 1] + ent->transform[4 + 1] * ent->bf->bb_max[1];
-                        ppos[2] = ent->transform[12 + 2] + ent->transform[4 + 2] * ent->bf->bb_max[1];
+                        ppos[0] = ent->transform.M4x4[12 + 0] + ent->transform.M4x4[4 + 0] * ent->bf->bb_max[1];
+                        ppos[1] = ent->transform.M4x4[12 + 1] + ent->transform.M4x4[4 + 1] * ent->bf->bb_max[1];
+                        ppos[2] = ent->transform.M4x4[12 + 2] + ent->transform.M4x4[4 + 2] * ent->bf->bb_max[1];
                         r *= r;
                         if(((v[0] - ppos[0]) * (v[0] - ppos[0]) + (v[1] - ppos[1]) * (v[1] - ppos[1]) < r) &&
-                            (v[2] + 72.0f > ent->transform[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0f < ent->transform[12 + 2] + ent->bf->bb_max[2]))
+                            (v[2] + 72.0f > ent->transform.M4x4[12 + 2] + ent->bf->bb_min[2]) && (v[2] - 32.0f < ent->transform.M4x4[12 + 2] + ent->bf->bb_max[2]))
                         {
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_ACTIVATE, trigger->id, ent->id);
                         }
@@ -1463,23 +1465,23 @@ int  Entity_Deactivate(struct entity_s *entity_object, struct entity_s *entity_a
 
 void Entity_MoveForward(entity_p ent, float dist)
 {
-    ent->transform[12 + 0] += ent->transform[4] * dist;
-    ent->transform[12 + 1] += ent->transform[5] * dist;
-    ent->transform[12 + 2] += ent->transform[6] * dist;
+    ent->transform.M4x4[12 + 0] += ent->transform.M4x4[4] * dist;
+    ent->transform.M4x4[12 + 1] += ent->transform.M4x4[5] * dist;
+    ent->transform.M4x4[12 + 2] += ent->transform.M4x4[6] * dist;
 }
 
 
 void Entity_MoveStrafe(entity_p ent, float dist)
 {
-    ent->transform[12 + 0] += ent->transform[0] * dist;
-    ent->transform[12 + 1] += ent->transform[1] * dist;
-    ent->transform[12 + 2] += ent->transform[2] * dist;
+    ent->transform.M4x4[12 + 0] += ent->transform.M4x4[0] * dist;
+    ent->transform.M4x4[12 + 1] += ent->transform.M4x4[1] * dist;
+    ent->transform.M4x4[12 + 2] += ent->transform.M4x4[2] * dist;
 }
 
 
 void Entity_MoveVertical(entity_p ent, float dist)
 {
-    ent->transform[12 + 0] += ent->transform[8] * dist;
-    ent->transform[12 + 1] += ent->transform[9] * dist;
-    ent->transform[12 + 2] += ent->transform[10] * dist;
+    ent->transform.M4x4[12 + 0] += ent->transform.M4x4[8] * dist;
+    ent->transform.M4x4[12 + 1] += ent->transform.M4x4[9] * dist;
+    ent->transform.M4x4[12 + 2] += ent->transform.M4x4[10] * dist;
 }

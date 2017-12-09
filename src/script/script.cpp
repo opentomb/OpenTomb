@@ -957,7 +957,6 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ANIM_FRAME_REVERSE);
 
         LUA_EXPOSE(lua, ANIM_TYPE_BASE);
-        LUA_EXPOSE(lua, ANIM_TYPE_HEAD_TRACK);
         LUA_EXPOSE(lua, ANIM_TYPE_WEAPON_LH);
         LUA_EXPOSE(lua, ANIM_TYPE_WEAPON_RH);
         LUA_EXPOSE(lua, ANIM_TYPE_WEAPON_TH);

@@ -236,9 +236,9 @@ int lua_SimilarSector(lua_State * lua)
 
             float next_pos[3];
 
-            next_pos[0] = ent->transform[12 + 0] + (dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0] + dz * ent->transform[8 + 0]);
-            next_pos[1] = ent->transform[12 + 1] + (dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1]);
-            next_pos[2] = ent->transform[12 + 2] + (dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2]);
+            next_pos[0] = ent->transform.M4x4[12 + 0] + (dx * ent->transform.M4x4[0 + 0] + dy * ent->transform.M4x4[4 + 0] + dz * ent->transform.M4x4[8 + 0]);
+            next_pos[1] = ent->transform.M4x4[12 + 1] + (dx * ent->transform.M4x4[0 + 1] + dy * ent->transform.M4x4[4 + 1] + dz * ent->transform.M4x4[8 + 1]);
+            next_pos[2] = ent->transform.M4x4[12 + 2] + (dx * ent->transform.M4x4[0 + 2] + dy * ent->transform.M4x4[4 + 2] + dz * ent->transform.M4x4[8 + 2]);
 
             room_sector_p next_sector = Room_GetSectorRaw(ent->self->sector->owner_room, next_pos);
             next_sector = Sector_GetPortalSectorTargetRaw(next_sector);
@@ -280,7 +280,7 @@ int lua_GetSectorHeight(lua_State * lua)
         if(ent)
         {
             bool ceiling = (top > 1) ? (lua_toboolean(lua, 2)) : (false);
-            float pos[3] = {ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]};
+            float pos[3] = {ent->transform.M4x4[12 + 0], ent->transform.M4x4[12 + 1], ent->transform.M4x4[12 + 2]};
 
             if(top >= 5)
             {
@@ -288,9 +288,9 @@ int lua_GetSectorHeight(lua_State * lua)
                 float dy = lua_tonumber(lua, 4);
                 float dz = lua_tonumber(lua, 5);
 
-                pos[0] += dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0] + dz * ent->transform[8 + 0];
-                pos[1] += dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1];
-                pos[2] += dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2];
+                pos[0] += dx * ent->transform.M4x4[0 + 0] + dy * ent->transform.M4x4[4 + 0] + dz * ent->transform.M4x4[8 + 0];
+                pos[1] += dx * ent->transform.M4x4[0 + 1] + dy * ent->transform.M4x4[4 + 1] + dz * ent->transform.M4x4[8 + 1];
+                pos[2] += dx * ent->transform.M4x4[0 + 2] + dy * ent->transform.M4x4[4 + 2] + dz * ent->transform.M4x4[8 + 2];
             }
 
             (ceiling) ? (Sector_LowestCeilingCorner(ent->self->sector, pos)) : (Sector_HighestFloorCorner(ent->self->sector, pos));

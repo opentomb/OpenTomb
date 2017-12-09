@@ -26,13 +26,7 @@ extern "C" {
 #define SS_CHANGING_HEAVY       (0x04)      // 0x04 - rough change by set animation;
 
     
-//#define ANIM_EXT_TARGET_TO              (1)
-    
-//#define ANIM_TARGET_USE_AXIS_MOD        (0x0001)
-//#define ANIM_TARGET_OWERRIDE_ANIM       (0x0002)
-
 #define ANIM_TYPE_BASE                  (0x0000)
-#define ANIM_TYPE_HEAD_TRACK            (0x0001)
 #define ANIM_TYPE_WEAPON_LH             (0x0002)
 #define ANIM_TYPE_WEAPON_RH             (0x0003)
 #define ANIM_TYPE_WEAPON_TH             (0x0004)
@@ -43,6 +37,8 @@ extern "C" {
 
 #include <stdint.h>
 
+#include "core/base_types.h"
+    
 struct base_mesh_s;
 
 /*
@@ -64,11 +60,11 @@ typedef struct ss_bone_tag_s
     uint16_t                is_axis_modded : 1;
     struct
     {
-        float               bone_direction[3];
-        float               targeting_limit[4];                                 // x, y, z, cos(alpha_limit)
-        float               targeting_axis_mod[3];
-        float               current_mod[4];
+        float               direction[3];
         float               target[3];
+        float               limit[4];                                           // x, y, z, cos(alpha_limit)
+        float               current[4];
+        float               axis_mod[3];
     }                       mod;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_replace;
@@ -118,14 +114,17 @@ typedef struct ss_animation_s
 typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
-    uint16_t                    unused;
+    uint16_t                    do_move : 1;
+    uint16_t                    do_roll : 2;
+    uint16_t                    : 13;
     
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     float                       pos[3];                                         // position (base offset)
+    float                       move[3];
     float                       bb_min[3];                                      // bounding box min coordinates
     float                       bb_max[3];                                      // bounding box max coordinates
     float                       centre[3];                                      // bounding box centre
-    float                      *transform;
+    struct engine_transform_s  *transform;
 
     struct ss_animation_s       animations;                                     // animations list
 }ss_bone_frame_t, *ss_bone_frame_p;

@@ -672,7 +672,7 @@ void AudioSource::LinkEmitter()
             if(ent)
             {
                 ALfloat  vec[3];
-                vec3_copy(vec, ent->transform + 12);
+                vec3_copy(vec, ent->transform.M4x4 + 12);
                 SetPosition(vec);
                 vec3_copy(vec, ent->speed);
                 SetVelocity(vec);
@@ -1015,7 +1015,7 @@ int  Audio_IsInRange(int entity_type, int entity_ID, float range, float gain)
             {
                 return 0;
             }
-            vec3_copy(vec, ent->transform + 12);
+            vec3_copy(vec, ent->transform.M4x4 + 12);
             break;
 
         case TR_AUDIO_EMITTER_SOUNDSOURCE:

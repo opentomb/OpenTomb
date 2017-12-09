@@ -407,11 +407,11 @@ int lua_GetEntityBoxID(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->self->room)
         {
-            float pos[3] = {ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]};
+            float pos[3] = {ent->transform.M4x4[12 + 0], ent->transform.M4x4[12 + 1], ent->transform.M4x4[12 + 2]};
             float dx = TR_METERING_SECTORSIZE * lua_tointeger(lua, 2);
             float dy = TR_METERING_SECTORSIZE * lua_tointeger(lua, 3);
-            pos[0] += dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0];
-            pos[1] += dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1];
+            pos[0] += dx * ent->transform.M4x4[0 + 0] + dy * ent->transform.M4x4[4 + 0];
+            pos[1] += dx * ent->transform.M4x4[0 + 1] + dy * ent->transform.M4x4[4 + 1];
             room_sector_p rs = Room_GetSectorRaw(ent->self->room, pos);
             rs = Sector_GetPortalSectorTargetRaw(rs);
             if(rs && rs->box)
@@ -551,9 +551,9 @@ int lua_GetEntityVector(lua_State * lua)
         entity_p e2 = World_GetEntityByID(lua_tointeger(lua, 2));
         if(e1 && e2)
         {
-            lua_pushnumber(lua, e2->transform[12 + 0] - e1->transform[12 + 0]);
-            lua_pushnumber(lua, e2->transform[12 + 1] - e1->transform[12 + 1]);
-            lua_pushnumber(lua, e2->transform[12 + 2] - e1->transform[12 + 2]);
+            lua_pushnumber(lua, e2->transform.M4x4[12 + 0] - e1->transform.M4x4[12 + 0]);
+            lua_pushnumber(lua, e2->transform.M4x4[12 + 1] - e1->transform.M4x4[12 + 1]);
+            lua_pushnumber(lua, e2->transform.M4x4[12 + 2] - e1->transform.M4x4[12 + 2]);
             return 3;
         }
     }
@@ -574,7 +574,7 @@ int lua_GetEntityDistance(lua_State * lua)
         entity_p e2 = World_GetEntityByID(lua_tointeger(lua, 2));
         if(e1 && e2)
         {
-            lua_pushnumber(lua, vec3_dist(e1->transform + 12, e2->transform + 12));
+            lua_pushnumber(lua, vec3_dist(e1->transform.M4x4 + 12, e2->transform.M4x4 + 12));
             return 1;
         }
     }
@@ -595,7 +595,7 @@ int lua_GetEntityDirDot(lua_State * lua)
         entity_p e2 = World_GetEntityByID(lua_tointeger(lua, 2));
         if(e1 && e2)
         {
-            lua_pushnumber(lua, vec3_dot(e1->transform + 4, e2->transform + 4));
+            lua_pushnumber(lua, vec3_dot(e1->transform.M4x4 + 4, e2->transform.M4x4 + 4));
             return 1;
         }
     }
@@ -646,12 +646,12 @@ int lua_GetEntityPosition(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushnumber(lua, ent->transform[12 + 0]);
-            lua_pushnumber(lua, ent->transform[12 + 1]);
-            lua_pushnumber(lua, ent->transform[12 + 2]);
-            lua_pushnumber(lua, ent->angles[0]);
-            lua_pushnumber(lua, ent->angles[1]);
-            lua_pushnumber(lua, ent->angles[2]);
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 0]);
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 1]);
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 2]);
+            lua_pushnumber(lua, ent->transform.angles[0]);
+            lua_pushnumber(lua, ent->transform.angles[1]);
+            lua_pushnumber(lua, ent->transform.angles[2]);
             return 6;
         }
         else
@@ -675,9 +675,9 @@ int lua_GetEntityAngles(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushnumber(lua, ent->angles[0]);
-            lua_pushnumber(lua, ent->angles[1]);
-            lua_pushnumber(lua, ent->angles[2]);
+            lua_pushnumber(lua, ent->transform.angles[0]);
+            lua_pushnumber(lua, ent->transform.angles[1]);
+            lua_pushnumber(lua, ent->transform.angles[2]);
             return 3;
         }
         else
@@ -701,9 +701,9 @@ int lua_GetEntityScaling(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushnumber(lua, ent->scaling[0]);
-            lua_pushnumber(lua, ent->scaling[1]);
-            lua_pushnumber(lua, ent->scaling[2]);
+            lua_pushnumber(lua, ent->transform.scaling[0]);
+            lua_pushnumber(lua, ent->transform.scaling[1]);
+            lua_pushnumber(lua, ent->transform.scaling[2]);
             return 3;
         }
         else
@@ -727,11 +727,11 @@ int lua_SetEntityScaling(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->scaling[0] = lua_tonumber(lua, 2);
-            ent->scaling[1] = lua_tonumber(lua, 3);
-            ent->scaling[2] = lua_tonumber(lua, 4);
+            ent->transform.scaling[0] = lua_tonumber(lua, 2);
+            ent->transform.scaling[1] = lua_tonumber(lua, 3);
+            ent->transform.scaling[2] = lua_tonumber(lua, 4);
 
-            Physics_SetCollisionScale(ent->physics, ent->scaling);
+            Physics_SetCollisionScale(ent->physics, ent->transform.scaling);
             Entity_UpdateRigidBody(ent, 1);
         }
         else
@@ -757,9 +757,9 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
                 if(ent)
                 {
-                    ent->transform[12 + 0] = lua_tonumber(lua, 2);
-                    ent->transform[12 + 1] = lua_tonumber(lua, 3);
-                    ent->transform[12 + 2] = lua_tonumber(lua, 4);
+                    ent->transform.M4x4[12 + 0] = lua_tonumber(lua, 2);
+                    ent->transform.M4x4[12 + 1] = lua_tonumber(lua, 3);
+                    ent->transform.M4x4[12 + 2] = lua_tonumber(lua, 4);
                     Entity_UpdateRigidBody(ent, 1);
                 }
                 else
@@ -774,12 +774,12 @@ int lua_SetEntityPosition(lua_State * lua)
                 entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
                 if(ent)
                 {
-                    ent->transform[12 + 0] = lua_tonumber(lua, 2);
-                    ent->transform[12 + 1] = lua_tonumber(lua, 3);
-                    ent->transform[12 + 2] = lua_tonumber(lua, 4);
-                    ent->angles[0] = lua_tonumber(lua, 5);
-                    ent->angles[1] = lua_tonumber(lua, 6);
-                    ent->angles[2] = lua_tonumber(lua, 7);
+                    ent->transform.M4x4[12 + 0] = lua_tonumber(lua, 2);
+                    ent->transform.M4x4[12 + 1] = lua_tonumber(lua, 3);
+                    ent->transform.M4x4[12 + 2] = lua_tonumber(lua, 4);
+                    ent->transform.angles[0] = lua_tonumber(lua, 5);
+                    ent->transform.angles[1] = lua_tonumber(lua, 6);
+                    ent->transform.angles[2] = lua_tonumber(lua, 7);
                     Entity_UpdateTransform(ent);
                     Entity_UpdateRigidBody(ent, 1);
                 }
@@ -806,9 +806,9 @@ int lua_SetEntityAngles(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->angles[0] = lua_tonumber(lua, 2);
-            ent->angles[1] = lua_tonumber(lua, 3);
-            ent->angles[2] = lua_tonumber(lua, 4);
+            ent->transform.angles[0] = lua_tonumber(lua, 2);
+            ent->transform.angles[1] = lua_tonumber(lua, 3);
+            ent->transform.angles[2] = lua_tonumber(lua, 4);
             Entity_UpdateTransform(ent);
         }
         else
@@ -834,9 +834,9 @@ int lua_MoveEntityGlobal(lua_State * lua)
                 entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
                 if(ent)
                 {
-                    ent->transform[12 + 0] += lua_tonumber(lua, 2);
-                    ent->transform[12 + 1] += lua_tonumber(lua, 3);
-                    ent->transform[12 + 2] += lua_tonumber(lua, 4);
+                    ent->transform.M4x4[12 + 0] += lua_tonumber(lua, 2);
+                    ent->transform.M4x4[12 + 1] += lua_tonumber(lua, 3);
+                    ent->transform.M4x4[12 + 2] += lua_tonumber(lua, 4);
                     Entity_UpdateRigidBody(ent, 1);
                 }
                 else
@@ -866,9 +866,9 @@ int lua_MoveEntityLocal(lua_State * lua)
             float dy = lua_tonumber(lua, 3);
             float dz = lua_tonumber(lua, 4);
 
-            ent->transform[12 + 0] += dx * ent->transform[0 + 0] + dy * ent->transform[4 + 0] + dz * ent->transform[8 + 0];
-            ent->transform[12 + 1] += dx * ent->transform[0 + 1] + dy * ent->transform[4 + 1] + dz * ent->transform[8 + 1];
-            ent->transform[12 + 2] += dx * ent->transform[0 + 2] + dy * ent->transform[4 + 2] + dz * ent->transform[8 + 2];
+            ent->transform.M4x4[12 + 0] += dx * ent->transform.M4x4[0 + 0] + dy * ent->transform.M4x4[4 + 0] + dz * ent->transform.M4x4[8 + 0];
+            ent->transform.M4x4[12 + 1] += dx * ent->transform.M4x4[0 + 1] + dy * ent->transform.M4x4[4 + 1] + dz * ent->transform.M4x4[8 + 1];
+            ent->transform.M4x4[12 + 2] += dx * ent->transform.M4x4[0 + 2] + dy * ent->transform.M4x4[4 + 2] + dz * ent->transform.M4x4[8 + 2];
 
             Entity_UpdateRigidBody(ent, 1);
         }
@@ -916,8 +916,8 @@ int lua_MoveEntityToEntity(lua_State * lua)
         if(ent1 && ent2)
         {
             float speed_mult = lua_tonumber(lua, 3);
-            float *ent1_pos = ent1->transform + 12;
-            float *ent2_pos = ent2->transform + 12;
+            float *ent1_pos = ent1->transform.M4x4 + 12;
+            float *ent2_pos = ent2->transform.M4x4 + 12;
             float t, speed[3];
 
             vec3_sub(speed, ent2_pos, ent1_pos);
@@ -925,11 +925,11 @@ int lua_MoveEntityToEntity(lua_State * lua)
             t = (t == 0.0f) ? 1.0f : t; // Prevents division by zero.
             t = speed_mult / t;
 
-            ent1->transform[12 + 0] += speed[0] * t;
-            ent1->transform[12 + 1] += speed[1] * t;
+            ent1->transform.M4x4[12 + 0] += speed[0] * t;
+            ent1->transform.M4x4[12 + 1] += speed[1] * t;
             if((top == 3) || !lua_toboolean(lua, 4))
             {
-                ent1->transform[12 + 2] += speed[2] * t;
+                ent1->transform.M4x4[12 + 2] += speed[2] * t;
             }
 
             Entity_UpdateRigidBody(ent1, 1);
@@ -953,11 +953,11 @@ int lua_RotateEntity(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->angles[0] += lua_tonumber(lua, 2);
+            ent->transform.angles[0] += lua_tonumber(lua, 2);
             if(top >= 4)
             {
-                 ent->angles[1] += lua_tonumber(lua, 3);
-                 ent->angles[2] += lua_tonumber(lua, 4);
+                 ent->transform.angles[1] += lua_tonumber(lua, 3);
+                 ent->transform.angles[2] += lua_tonumber(lua, 4);
             }
             Entity_UpdateTransform(ent);
             Entity_UpdateRigidBody(ent, 1);
@@ -1288,8 +1288,8 @@ int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
         entity_p trigger = World_GetEntityByID(lua_tointeger(lua, 2));
         if(ent && trigger && trigger->activation_point)
         {
-            float *pos = ent->transform + 12;
-            Mat4_vec3_mul_macro(pos, trigger->transform, trigger->activation_point->offset);
+            float *pos = ent->transform.M4x4 + 12;
+            Mat4_vec3_mul_macro(pos, trigger->transform.M4x4, trigger->activation_point->offset);
         }
     }
 
@@ -2272,7 +2272,7 @@ int lua_GetEntityGlobalMove(lua_State * lua)
             move[1] = lua_tonumber(lua, 3);
             move[2] = lua_tonumber(lua, 4);
 
-            Mat4_vec3_rot_macro(gmove, ent->transform, move);
+            Mat4_vec3_rot_macro(gmove, ent->transform.M4x4, move);
 
             lua_pushnumber(lua, gmove[0]);
             lua_pushnumber(lua, gmove[1]);
@@ -2381,12 +2381,12 @@ int lua_GetEntityRayTest(lua_State * lua)
                 move[1] += lua_tonumber(lua, 7);
                 move[2] += lua_tonumber(lua, 8);
             }
-            Mat4_vec3_mul_macro(from, ent->transform, move);
+            Mat4_vec3_mul_macro(from, ent->transform.M4x4, move);
 
             move[0] = lua_tonumber(lua, 3);
             move[1] = lua_tonumber(lua, 4);
             move[2] = lua_tonumber(lua, 5);
-            Mat4_vec3_rot_macro(to, ent->transform, move);
+            Mat4_vec3_rot_macro(to, ent->transform.M4x4, move);
 
             to[0] += from[0];
             to[1] += from[1];
@@ -2434,12 +2434,12 @@ int lua_GetEntitySphereTest(lua_State * lua)
                 move[1] += lua_tonumber(lua, 8);
                 move[2] += lua_tonumber(lua, 9);
             }
-            Mat4_vec3_mul_macro(from, ent->transform, move);
+            Mat4_vec3_mul_macro(from, ent->transform.M4x4, move);
 
             move[0] = lua_tonumber(lua, 4);
             move[1] = lua_tonumber(lua, 5);
             move[2] = lua_tonumber(lua, 6);
-            Mat4_vec3_rot_macro(to, ent->transform, move);
+            Mat4_vec3_rot_macro(to, ent->transform.M4x4, move);
 
             to[0] += from[0];
             to[1] += from[1];
@@ -2490,20 +2490,20 @@ int lua_DropEntity(lua_State * lua)
             ent->speed[1] += g[1] * time;
             ent->speed[2] += g[2] * time;
 
-            Mat4_vec3_mul_macro(from, ent->transform, ent->bf->centre);
+            Mat4_vec3_mul_macro(from, ent->transform.M4x4, ent->bf->centre);
             vec3_add(to, from, move);
             from[2] += 32.0f;
             to[2] -= (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
 
             if(Physics_RayTestFiltered(&cb, from, to, ent->self, filter))
             {
-                lua_pushboolean(lua, ent->transform[12 + 2] < cb.point[2] + 1.0f);
-                ent->transform[12 + 2] = cb.point[2];
+                lua_pushboolean(lua, ent->transform.M4x4[12 + 2] < cb.point[2] + 1.0f);
+                ent->transform.M4x4[12 + 2] = cb.point[2];
                 vec3_set_zero(ent->speed);
             }
             else
             {
-                vec3_add_to(ent->transform + 12, move);
+                vec3_add_to(ent->transform.M4x4 + 12, move);
                 lua_pushboolean(lua, false);
             }
             Entity_UpdateRigidBody(ent, 1);
@@ -2532,7 +2532,7 @@ int lua_PushEntityBody(lua_State *lua)
         if(ent && (body_number < ent->bf->bone_tag_count) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
         {
             float h_force = lua_tonumber(lua, 3);
-            float t       = ent->angles[0] * M_PI / 180.0;
+            float t       = ent->transform.angles[0] * M_PI / 180.0;
             float speed[3];
 
             speed[0] = -sinf(t) * h_force;
@@ -2612,7 +2612,7 @@ int lua_LockEntityBodyLinearFactor(lua_State *lua)
         int body_number = lua_tointeger(lua, 2);
         if(ent && (body_number < ent->bf->bone_tag_count) && (ent->type_flags & ENTITY_TYPE_DYNAMIC))
         {
-            float factor[3], t    = ent->angles[0] * M_PI / 180.0;
+            float factor[3], t    = ent->transform.angles[0] * M_PI / 180.0;
             factor[0] = fabs(sinf(t));
             factor[1] = fabs(cosf(t));
             factor[2] = 1.0;

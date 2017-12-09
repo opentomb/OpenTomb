@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "core/base_types.h"
+
 struct room_sector_s;
 struct obb_s;
 struct character_s;
@@ -157,10 +159,8 @@ typedef struct entity_s
     uint32_t                            no_fix_skeletal_parts;
     struct ss_bone_frame_s             *bf;                 // current boneframe with full frame information
     struct physics_data_s              *physics;
-    float                               scaling[3];         // entity scaling
-    float                               angles[3];
-    float                               transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
-
+    struct engine_transform_s           transform;
+    
     struct obb_s                       *obb;                // oriented bounding box
     struct engine_container_s          *self;
 

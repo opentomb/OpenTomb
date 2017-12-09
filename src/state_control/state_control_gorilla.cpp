@@ -24,34 +24,35 @@ void ent_gorilla_fix_strafe(entity_p ent, ss_animation_p ss_anim)
 {
     if(ss_anim->frame_changing_state >= 0x02)
     {
+        float *ang = ent->transform.angles;
         uint16_t curr_st = ss_anim->model->animations[ss_anim->current_animation].state_id;
         uint16_t next_st = ss_anim->model->animations[ss_anim->next_animation].state_id;
         if((curr_st == TR_STATE_GORILLA_STRAFE_LEFT) && (next_st == TR_STATE_GORILLA_STAY))
         {
             ss_anim->current_animation = ss_anim->next_animation;
             ss_anim->current_frame = ss_anim->next_frame;
-            ent->angles[0] -= 90.0f;
+            ang[0] -= 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STRAFE_RIGHT) && (next_st == TR_STATE_GORILLA_STAY))
         {
             ss_anim->current_animation = ss_anim->next_animation;
             ss_anim->current_frame = ss_anim->next_frame;
-            ent->angles[0] += 90.0f;
+            ang[0] += 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STAY) && (next_st == TR_STATE_GORILLA_STRAFE_LEFT))
         {
             ss_anim->current_animation = ss_anim->next_animation;
             ss_anim->current_frame = ss_anim->next_frame;
-            ent->angles[0] += 90.0f;
+            ang[0] += 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STAY) && (next_st == TR_STATE_GORILLA_STRAFE_RIGHT))
         {
             ss_anim->current_animation = ss_anim->next_animation;
             ss_anim->current_frame = ss_anim->next_frame;
-            ent->angles[0] -= 90.0f;
+            ang[0] -= 90.0f;
             Entity_UpdateTransform(ent);
         }
     }
@@ -87,7 +88,7 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
     character_command_p cmd = &ent->character->cmd;
     character_state_p state = &ent->character->state;
     uint16_t current_state = Anim_GetCurrentState(ss_anim);
-    float *pos = ent->transform + 12;
+    float *pos = ent->transform.M4x4 + 12;
 
     ent->character->rotate_speed_mult = 1.0f;
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
@@ -131,8 +132,8 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     climb_from[0] = pos[0];
                     climb_from[1] = pos[1];
                     climb_from[2] = pos[2] + 1024.0f;
-                    climb_to[0] = pos[0] + t * ent->transform[4 + 0];
-                    climb_to[1] = pos[1] + t * ent->transform[4 + 1];
+                    climb_to[0] = pos[0] + t * ent->transform.M4x4[4 + 0];
+                    climb_to[1] = pos[1] + t * ent->transform.M4x4[4 + 1];
                     climb_to[2] = pos[2] + ent->character->max_step_up_height;
                     if(curr_fc->ceiling_hit.hit && (climb_from[2] >= curr_fc->ceiling_hit.point[2] - ent->character->climb_r))
                     {
@@ -145,13 +146,13 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     {
                         if(pos[2] + 800.0f >= climb->edge_point[2])
                         {
-                            ent->angles[0] = climb->edge_z_ang;
+                            ent->transform.angles[0] = climb->edge_z_ang;
                             Entity_UpdateTransform(ent);
                             vec3_copy(climb->point, climb->edge_point);
                             Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_GORILLA_CLIMB, 0);
                             ent->no_fix_all = 0x01;
-                            pos[0] = climb->point[0] - ent->transform[4 + 0] * (80.0f);
-                            pos[1] = climb->point[1] - ent->transform[4 + 1] * (80.0f);
+                            pos[0] = climb->point[0] - ent->transform.M4x4[4 + 0] * (80.0f);
+                            pos[1] = climb->point[1] - ent->transform.M4x4[4 + 1] * (80.0f);
                             pos[2] = climb->edge_point[2] - 512.0;
                             Entity_UpdateRigidBody(ent, 1);
                             break;

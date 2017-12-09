@@ -378,7 +378,7 @@ void CRender::DrawList()
                         {
                             if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
                             {
-                                Mat4_Mat4_mul(tr, ent->transform, ent->bf->bone_tags[j].full_transform);
+                                Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[j].full_transform);
                                 dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
                             }
                         }
@@ -894,15 +894,15 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
         if(entity->bf->bone_tag_count == 1)
         {
             float scaledTransform[16];
-            memcpy(scaledTransform, entity->transform, sizeof(float) * 16);
-            Mat4_Scale(scaledTransform, entity->scaling[0], entity->scaling[1], entity->scaling[2]);
+            memcpy(scaledTransform, entity->transform.M4x4, sizeof(scaledTransform));
+            Mat4_Scale(scaledTransform, entity->transform.scaling[0], entity->transform.scaling[1], entity->transform.scaling[2]);
             Mat4_Mat4_mul(subModelView, modelViewMatrix, scaledTransform);
             Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, scaledTransform);
         }
         else
         {
-            Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform);
-            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform);
+            Mat4_Mat4_mul(subModelView, modelViewMatrix, entity->transform.M4x4);
+            Mat4_Mat4_mul(subModelViewProjection, modelViewProjectionMatrix, entity->transform.M4x4);
         }
 
         this->DrawSkeletalModel(shader, entity->bf, subModelView, subModelViewProjection);
@@ -1288,7 +1288,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
         memset(innerRadiuses, 0, sizeof(innerRadiuses));
         memset(outerRadiuses, 0, sizeof(outerRadiuses));
 
-        float *entity_pos = entity->transform + 12;
+        float *entity_pos = entity->transform.M4x4 + 12;
 
         for(uint32_t i = 0; (i < room->content->lights_count) && (current_light_number < MAX_NUM_LIGHTS); i++)
         {
@@ -1750,12 +1750,12 @@ void CRenderDebugDrawer::DrawEntityDebugLines(struct entity_s *entity)
 
     if(m_drawFlags & R_DRAW_AXIS)
     {
-        this->DrawAxis(1000.0, entity->transform);
+        this->DrawAxis(1000.0, entity->transform.M4x4);
     }
 
     if(entity->bf->animations.model && entity->bf->animations.model->animations)
     {
-        this->DrawSkeletalModelDebugLines(entity->bf, entity->transform);
+        this->DrawSkeletalModelDebugLines(entity->bf, entity->transform.M4x4);
     }
 }
 

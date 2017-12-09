@@ -48,7 +48,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     if(!control_states.mouse_look)
     {
         float currentAngle = control_states.cam_angles[0] * (M_PI / 180.0f);    //Current is the current cam angle
-        float targetAngle  = ent->angles[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
+        float *ent_ang = ent->transform.angles;
+        float targetAngle  = ent_ang[0] * (M_PI / 180.0f); //Target is the target angle which is the entity's angle itself
         float rotSpeed = 2.0f; //Speed of rotation
         ///@FIXME
         //If Lara is in a specific state we want to rotate -75 deg or +75 deg depending on camera collision
@@ -58,15 +59,15 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
             if(cam_state->target_dir == TR_CAM_TARG_BACK)
             {
                 vec3_copy(cameraFrom, cam_pos);
-                cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
-                cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
+                cameraTo[0] = cameraFrom[0] + sinf((ent_ang[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
+                cameraTo[1] = cameraFrom[1] - cosf((ent_ang[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                 cameraTo[2] = cameraFrom[2];
 
                 //If collided we want to go right otherwise stay left
                 if(Physics_SphereTest(NULL, cameraFrom, cameraTo, test_r, ent->self, filter))
                 {
-                    cameraTo[0] = cameraFrom[0] + sinf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
-                    cameraTo[1] = cameraFrom[1] - cosf((ent->angles[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
+                    cameraTo[0] = cameraFrom[0] + sinf((ent_ang[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
+                    cameraTo[1] = cameraFrom[1] - cosf((ent_ang[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                     cameraTo[2] = cameraFrom[2];
 
                     //If collided we want to go to back else right
@@ -100,19 +101,19 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
             switch(cam_state->target_dir)
             {
             case TR_CAM_TARG_BACK:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0f);
+                targetAngle = (ent_ang[0]) * (M_PI / 180.0f);
                 break;
             case TR_CAM_TARG_FRONT:
-                targetAngle = (ent->angles[0] - 180.0f) * (M_PI / 180.0f);
+                targetAngle = (ent_ang[0] - 180.0f) * (M_PI / 180.0f);
                 break;
             case TR_CAM_TARG_LEFT:
-                targetAngle = (ent->angles[0] - 75.0f) * (M_PI / 180.0f);
+                targetAngle = (ent_ang[0] - 75.0f) * (M_PI / 180.0f);
                 break;
             case TR_CAM_TARG_RIGHT:
-                targetAngle = (ent->angles[0] + 75.0f) * (M_PI / 180.0f);
+                targetAngle = (ent_ang[0] + 75.0f) * (M_PI / 180.0f);
                 break;
             default:
-                targetAngle = (ent->angles[0]) * (M_PI / 180.0f);
+                targetAngle = (ent_ang[0]) * (M_PI / 180.0f);
                 break;
             }
 
@@ -136,7 +137,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     }
     else
     {
-        Mat4_vec3_mul(cam_pos, ent->transform, ent->bf->bone_tags->full_transform + 12);
+        Mat4_vec3_mul(cam_pos, ent->transform.M4x4, ent->bf->bone_tags->full_transform + 12);
     }
 
     //Code to manage screen shaking effects
@@ -176,8 +177,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         if(target && target != World_GetPlayer())
         {
             float dir2d[2], dist;
-            dir2d[0] = target->transform[12 + 0] - cam->gl_transform[12 + 0];
-            dir2d[1] = target->transform[12 + 1] - cam->gl_transform[12 + 1];
+            dir2d[0] = target->transform.M4x4[12 + 0] - cam->gl_transform[12 + 0];
+            dir2d[1] = target->transform.M4x4[12 + 1] - cam->gl_transform[12 + 1];
             dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
             cam_pos[0] -= dir2d[0] * dist;
             cam_pos[1] -= dir2d[1] * dist;

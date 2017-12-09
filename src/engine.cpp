@@ -89,29 +89,6 @@ enum debug_view_state_e
 };
 
 
-engine_container_p Container_Create()
-{
-    engine_container_p ret;
-
-    ret = (engine_container_p)malloc(sizeof(engine_container_t));
-    ret->collision_shape = 0;
-    ret->collision_heavy = 0x00;
-    ret->collision_group = COLLISION_GROUP_KINEMATIC;
-    ret->collision_mask = COLLISION_MASK_ALL;
-    ret->next = NULL;
-    ret->object = NULL;
-    ret->room = NULL;
-    ret->sector = NULL;
-    ret->object_type = 0;
-    return ret;
-}
-
-void Container_Delete(engine_container_p cont)
-{
-    free(cont);
-}
-
-
 extern "C" int  Engine_ExecCmd(char *ch);
 
 void Engine_Init_Pre();
@@ -976,7 +953,7 @@ void SetTestModel(int index)
 
 void ShowModelView(float time)
 {
-    static float tr[16];
+    static engine_transform_t tr;
     static float test_model_angles[3] = {45.0f, 45.0f, 0.0f};
     static float test_model_dist = 1024.0f;
     static float test_model_z_offset = 256.0f;
@@ -1030,8 +1007,8 @@ void ShowModelView(float time)
             test_model_z_offset -= time * 512.0f;
         }
 
-        test_model.transform = tr;
-        Mat4_E_macro(tr);
+        test_model.transform = &tr;
+        Mat4_E_macro(tr.M4x4);
         Mat4_E_macro(engine_camera.gl_transform);
         engine_camera.ang[0] = test_model_angles[0];
         engine_camera.ang[1] = test_model_angles[1] + 90.0f;
@@ -1052,8 +1029,8 @@ void ShowModelView(float time)
         test_model.animations.next_frame = test_model.animations.current_frame;
         SSBoneFrame_Update(&test_model, 0.0f);
 
-        Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr);
-        Mat4_Mat4_mul(subModelViewProjection, engine_camera.gl_view_proj_mat, tr);
+        Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr.M4x4);
+        Mat4_Mat4_mul(subModelViewProjection, engine_camera.gl_view_proj_mat, tr.M4x4);
         qglUseProgramObjectARB(shader->program);
 
         {
@@ -1061,13 +1038,13 @@ void ShowModelView(float time)
             qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
         }
         renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
-        renderer.debugDrawer->DrawAxis(4096.0f, tr);
+        renderer.debugDrawer->DrawAxis(4096.0f, tr.M4x4);
 
         for(int i = 0; i < test_model.bone_tag_count; ++i)
         {
             ss_bone_tag_p bf = test_model.bone_tags + i;
-            Mat4_vec3_mul_macro(tr, bf->full_transform, bf->mesh_base->centre);
-            renderer.OutTextXYZ(tr[0], tr[1], tr[2], "%d", i);
+            Mat4_vec3_mul_macro(tr.M4x4, bf->full_transform, bf->mesh_base->centre);
+            renderer.OutTextXYZ(tr.M4x4[0], tr.M4x4[1], tr.M4x4[2], "%d", i);
         }
 
         {
@@ -1146,9 +1123,9 @@ void ShowDebugInfo()
                                 if(trig_obj)
                                 {
                                     renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
-                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
+                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform.M4x4);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
-                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
+                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform.M4x4[12 + 0], trig_obj->transform.M4x4[12 + 1], trig_obj->transform.M4x4[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
                                     if(text)
                                     {
                                         text->x_align = GLTEXT_ALIGN_CENTER;
@@ -1183,7 +1160,7 @@ void ShowDebugInfo()
                     GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.next_state);
                     GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, ent->bf->animations.next_animation, ent->bf->animations.next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
-                    GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform[12], ent->transform[13], ent->transform[14]);
+                    GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform.M4x4[12], ent->transform.M4x4[13], ent->transform.M4x4[14]);
                 }
             }
             break;
@@ -1198,9 +1175,9 @@ void ShowDebugInfo()
                 }
                 if(ent && ent->self->room)
                 {
-                    GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2]);
+                    GLText_OutTextXY(30.0f, y += dy, "char_pos = (%.1f, %.1f, %.1f)", ent->transform.M4x4[12 + 0], ent->transform.M4x4[12 + 1], ent->transform.M4x4[12 + 2]);
                     room_p room = ent->self->room;
-                    room_sector_p rs = Room_GetSectorRaw(room, ent->transform + 12);
+                    room_sector_p rs = Room_GetSectorRaw(room, ent->transform.M4x4 + 12);
                     if(rs != NULL)
                     {
                         renderer.debugDrawer->SetColor(0.0f, 1.0f, 0.0f);
@@ -1229,9 +1206,9 @@ void ShowDebugInfo()
                                 if(trig_obj)
                                 {
                                     renderer.debugDrawer->SetColor(0.0f, 0.0f, 1.0f);
-                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform);
+                                    renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform.M4x4);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
-                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform[12 + 0], trig_obj->transform[12 + 1], trig_obj->transform[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
+                                    gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform.M4x4[12 + 0], trig_obj->transform.M4x4[12 + 1], trig_obj->transform.M4x4[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
                                     if(text)
                                     {
                                         text->x_align = GLTEXT_ALIGN_CENTER;
@@ -1265,7 +1242,7 @@ void ShowDebugInfo()
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             entity_p e = (entity_p)cont->object;
-                            gl_text_line_p text = renderer.OutTextXYZ(e->transform[12 + 0], e->transform[12 + 1], e->transform[12 + 2], "(entity[0x%X])", e->id);
+                            gl_text_line_p text = renderer.OutTextXYZ(e->transform.M4x4[12 + 0], e->transform.M4x4[12 + 1], e->transform.M4x4[12 + 2], "(entity[0x%X])", e->id);
                             if(text)
                             {
                                 text->x_align = GLTEXT_ALIGN_CENTER;
@@ -1326,7 +1303,7 @@ void ShowDebugInfo()
                                 GLfloat red[3] = {1.0f, 0.0f, 0.0f};
                                 GLfloat from[3], to[3];
                                 vec3_copy(from, foe->self->sector->pos);
-                                from[2] = foe->transform[12 + 2] + TR_METERING_STEP;
+                                from[2] = foe->transform.M4x4[12 + 2] + TR_METERING_STEP;
                                 for(int i = 1; i < foe->character->path_dist; ++i)
                                 {
                                     Room_GetOverlapCenter(foe->character->path[i], foe->character->path[i - 1], to);
@@ -1334,7 +1311,7 @@ void ShowDebugInfo()
                                     vec3_copy(from, to);
                                 }
                                 vec3_copy(to, ent->self->sector->pos);
-                                to[2] = ent->transform[12 + 2] + TR_METERING_STEP;
+                                to[2] = ent->transform.M4x4[12 + 2] + TR_METERING_STEP;
                                 renderer.debugDrawer->DrawLine(from, to, red, red);
                             }
                         }
@@ -1793,7 +1770,7 @@ extern "C" int Engine_ExecCmd(char *ch)
                         if(cont->object_type == OBJECT_ENTITY)
                         {
                             entity_p e = (entity_p)cont->object;
-                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform[12 + 0], (int)e->transform[12 + 1], (int)e->transform[12 + 2], e->id);
+                            Con_Printf("cont[entity](%d, %d, %d).object_id = %d", (int)e->transform.M4x4[12 + 0], (int)e->transform.M4x4[12 + 1], (int)e->transform.M4x4[12 + 2], e->id);
                         }
                     }
                 }

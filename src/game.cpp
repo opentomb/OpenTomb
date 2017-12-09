@@ -180,14 +180,14 @@ int Save_Entity(entity_p ent, void *data)
         {
             uint32_t room_id = (ent->self->room) ? (ent->self->room->id) : (0xFFFFFFFF);
             fprintf(*f, "\nspawnEntity(%d, 0x%X, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d);", ent->bf->animations.model->id, room_id,
-                    ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
-                    ent->angles[0], ent->angles[1], ent->angles[2], ent->id);
+                    ent->transform.M4x4[12 + 0], ent->transform.M4x4[12 + 1], ent->transform.M4x4[12 + 2],
+                    ent->transform.angles[0], ent->transform.angles[1], ent->transform.angles[2], ent->id);
         }
         else
         {
             fprintf(*f, "\nsetEntityPos(%d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f);", ent->id,
-                    ent->transform[12 + 0], ent->transform[12 + 1], ent->transform[12 + 2],
-                    ent->angles[0], ent->angles[1], ent->angles[2]);
+                    ent->transform.M4x4[12 + 0], ent->transform.M4x4[12 + 1], ent->transform.M4x4[12 + 2],
+                    ent->transform.angles[0], ent->transform.angles[1], ent->transform.angles[2]);
         }
 
         if(ent->self->room)
@@ -224,17 +224,17 @@ int Save_Entity(entity_p ent, void *data)
                 {
                     fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, i,
                         b_tag->mod.target[0], b_tag->mod.target[1], b_tag->mod.target[2],
-                        b_tag->mod.bone_direction[0], b_tag->mod.bone_direction[1], b_tag->mod.bone_direction[2]);
+                        b_tag->mod.direction[0], b_tag->mod.direction[1], b_tag->mod.direction[2]);
                 }
                 if(b_tag->is_axis_modded)
                 {
                     fprintf(*f, "\nentitySSAnimSetAxisMod(%d, %d, %.6f, %.6f, %.6f);", ent->id, i,
-                        b_tag->mod.targeting_axis_mod[0], b_tag->mod.targeting_axis_mod[1], b_tag->mod.targeting_axis_mod[2]);
+                        b_tag->mod.axis_mod[0], b_tag->mod.axis_mod[1], b_tag->mod.axis_mod[2]);
                 }
                 fprintf(*f, "\nentitySSAnimSetTargetingLimit(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, i,
-                    b_tag->mod.targeting_limit[0], b_tag->mod.targeting_limit[1], b_tag->mod.targeting_limit[2], b_tag->mod.targeting_limit[3]);
+                    b_tag->mod.limit[0], b_tag->mod.limit[1], b_tag->mod.limit[2], b_tag->mod.limit[3]);
                 fprintf(*f, "\nentitySSAnimSetCurrentRotation(%d, %d, %.6f, %.6f, %.6f, %.6f);", ent->id, i,
-                    b_tag->mod.current_mod[0], b_tag->mod.current_mod[1], b_tag->mod.current_mod[2], b_tag->mod.current_mod[3]);
+                    b_tag->mod.current[0], b_tag->mod.current[1], b_tag->mod.current[2], b_tag->mod.current[3]);
             }
         }
 
@@ -496,11 +496,11 @@ void Game_ApplyControls(struct entity_s *ent)
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
         engine_camera.current_room = World_FindRoomByPosCogerrence(engine_camera.gl_transform + 12, engine_camera.current_room);
 
-        ent->angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
+        ent->transform.angles[0] = 180.0 * control_states.cam_angles[0] / M_PI;
         pos[0] = engine_camera.gl_transform[12 + 0] + engine_camera.gl_transform[8 + 0] * control_states.cam_distance;
         pos[1] = engine_camera.gl_transform[12 + 1] + engine_camera.gl_transform[8 + 1] * control_states.cam_distance;
         pos[2] = engine_camera.gl_transform[12 + 2] + engine_camera.gl_transform[8 + 2] * control_states.cam_distance - 512.0f;
-        vec3_copy(ent->transform + 12, pos);
+        vec3_copy(ent->transform.M4x4 + 12, pos);
         Entity_UpdateTransform(ent);
         Entity_UpdateRoomPos(ent);
         Entity_UpdateRigidBody(ent, 1);
@@ -685,11 +685,11 @@ void Game_Frame(float time)
                     float pos[3];
                     if(target->character)
                     {
-                        Mat4_vec3_mul(pos, target->transform, target->bf->bone_tags[target->character->bone_head].full_transform + 12);
+                        Mat4_vec3_mul(pos, target->transform.M4x4, target->bf->bone_tags[target->character->bone_head].full_transform + 12);
                     }
                     else
                     {
-                        vec3_copy(pos, target->transform + 12);
+                        vec3_copy(pos, target->transform.M4x4 + 12);
                     }
                     Cam_LookTo(&engine_camera, pos);
                 }
@@ -701,8 +701,8 @@ void Game_Frame(float time)
                 Cam_FollowEntity(&engine_camera, &engine_camera_state, player);
                 if(!control_states.look && target && (engine_camera_state.state == CAMERA_STATE_LOOK_AT))
                 {
-                    Character_LookAt(player, target->transform + 12);
-                    Cam_LookTo(&engine_camera, target->transform + 12);
+                    Character_LookAt(player, target->transform.M4x4 + 12);
+                    Cam_LookTo(&engine_camera, target->transform.M4x4 + 12);
                 }
                 else
                 {
@@ -763,9 +763,9 @@ void Game_Prepare()
         player->character->statistics.secrets_game   = 0;
         player->character->statistics.secrets_level  = 0;
 
-        vec3_copy(engine_camera.gl_transform + 12, player->transform + 12);
+        vec3_copy(engine_camera.gl_transform + 12, player->transform.M4x4 + 12);
         engine_camera.gl_transform[12 + 2] += player->character->height;
-        engine_camera.ang[0] = player->angles[0] + 180.0f;
+        engine_camera.ang[0] = player->transform.angles[0] + 180.0f;
         engine_camera.current_room = player->self->room;
     }
     else

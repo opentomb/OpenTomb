@@ -181,9 +181,12 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
+    vec3_set_zero(bf->move);
     bf->transform = NULL;
     bf->bone_tag_count = 0;
     bf->bone_tags = NULL;
+    bf->do_move = 0x00;
+    bf->do_roll = 0x00;
     
     SSBoneFrame_InitSSAnim(&bf->animations, ANIM_TYPE_BASE);
     bf->animations.model = model;
@@ -213,15 +216,15 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
             Mat4_E_macro(b_tag->full_transform);
 
             vec3_set_zero(b_tag->mod.target);
-            vec4_set_zero_angle(b_tag->mod.current_mod);
-            b_tag->mod.bone_direction[0] = 0.0f;
-            b_tag->mod.bone_direction[1] = 1.0f;
-            b_tag->mod.bone_direction[2] = 0.0f;
-            b_tag->mod.targeting_limit[0] = 0.0f;
-            b_tag->mod.targeting_limit[1] = 1.0f;
-            b_tag->mod.targeting_limit[2] = 0.0f;
-            b_tag->mod.targeting_limit[3] =-1.0f;
-            vec3_set_one(b_tag->mod.targeting_axis_mod);
+            vec4_set_zero_angle(b_tag->mod.current);
+            b_tag->mod.direction[0] = 0.0f;
+            b_tag->mod.direction[1] = 1.0f;
+            b_tag->mod.direction[2] = 0.0f;
+            b_tag->mod.limit[0] = 0.0f;
+            b_tag->mod.limit[1] = 1.0f;
+            b_tag->mod.limit[2] = 0.0f;
+            b_tag->mod.limit[3] =-1.0f;
+            vec3_set_one(b_tag->mod.axis_mod);
             
             if(i > 0)
             {
@@ -289,20 +292,36 @@ void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src)
 {
     if(dst->bone_tag_count == src->bone_tag_count)
     {
+        ss_animation_p src_a = &src->animations;
+        
         vec3_copy(dst->pos, src->pos);
         vec3_copy(dst->centre, src->centre);
         vec3_copy(dst->bb_max, src->bb_max);
         vec3_copy(dst->bb_min, src->bb_min);
         
-        dst->animations.model = src->animations.model;
-        dst->animations.enabled = src->animations.enabled;
-        dst->animations.current_animation = src->animations.current_animation;
-        dst->animations.current_frame = src->animations.current_frame;
-        dst->animations.next_animation = src->animations.next_animation;
-        dst->animations.next_frame = src->animations.next_frame;
-        dst->animations.lerp = src->animations.lerp;
-        dst->animations.frame_time = src->animations.frame_time;
-        dst->animations.next_state = src->animations.next_state;
+        for(; src_a; src_a = src_a->next)
+        {
+            ss_animation_p dst_a = SSBoneFrame_GetOverrideAnim(dst, src_a->type);
+            if(!dst_a)
+            {
+                dst_a = SSBoneFrame_AddOverrideAnim(dst, src_a->model, src_a->type);
+            }
+            dst_a->enabled = src_a->enabled;
+            dst_a->model = src_a->model;
+            dst_a->current_animation = src_a->current_animation;
+            dst_a->current_frame = src_a->current_frame;
+            dst_a->next_animation = src_a->next_animation;
+            dst_a->next_frame = src_a->next_frame;
+            dst_a->lerp = src_a->lerp;
+            dst_a->frame_time = src_a->frame_time;
+            dst_a->next_state = src_a->next_state;
+        }
+        
+        for(uint16_t i = 0; i < src->bone_tag_count; ++i)
+        {
+            dst->bone_tags[i].mod = src->bone_tags[i].mod;
+            dst->bone_tags[i].alt_anim = src->bone_tags[i].alt_anim;
+        }
     }
 }
 
@@ -401,17 +420,17 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_bone
 {
     float target_dir[3], target_local[3], limit_dir[3], t;
 
-    Mat4_vec3_mul_inv(target_local, bf->transform, target);
+    Mat4_vec3_mul_inv(target_local, bf->transform->M4x4, target);
     if(b_tag->parent)
     {
         Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
     }
     vec3_sub(target_dir, target_local, b_tag->transform + 12);
     vec3_norm(target_dir, t);
-    vec3_copy(limit_dir, b_tag->mod.targeting_limit);
+    vec3_copy(limit_dir, b_tag->mod.limit);
 
-    if((b_tag->mod.targeting_limit[3] == -1.0f) ||
-       (vec3_dot(limit_dir, target_dir) > b_tag->mod.targeting_limit[3]))
+    if((b_tag->mod.limit[3] == -1.0f) ||
+       (vec3_dot(limit_dir, target_dir) > b_tag->mod.limit[3]))
     {
         return 1;
     }
@@ -426,7 +445,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_ta
     {
         float clamped_q[4], q[4], target_dir[3], target_local[3], bone_dir[3];
 
-        Mat4_vec3_mul_inv(target_local, bf->transform, b_tag->mod.target);
+        Mat4_vec3_mul_inv(target_local, bf->transform->M4x4, b_tag->mod.target);
         if(b_tag->parent)
         {
             Mat4_vec3_mul_inv(target_local, b_tag->parent->full_transform, target_local);
@@ -434,43 +453,43 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_ta
         vec3_sub(target_dir, target_local, b_tag->transform + 12);
         if(0 /*b_tag->is_target_over_anim*/)
         {
-            Mat4_vec3_rot_macro(bone_dir, bf->transform, b_tag->mod.bone_direction);
+            Mat4_vec3_rot_macro(bone_dir, bf->transform->M4x4, b_tag->mod.direction);
         }
         else
         {
-            vec3_copy(bone_dir, b_tag->mod.bone_direction);
+            vec3_copy(bone_dir, b_tag->mod.direction);
         }
 
         vec4_GetQuaternionRotation(q, bone_dir, target_dir);
-        if(q[3] < b_tag->mod.targeting_limit[3])
+        if(q[3] < b_tag->mod.limit[3])
         {
-            vec4_clampw(q, b_tag->mod.targeting_limit[3]);
+            vec4_clampw(q, b_tag->mod.limit[3]);
         }
         if(b_tag->is_axis_modded)
         {
-            q[0] *= b_tag->mod.targeting_axis_mod[0];
-            q[1] *= b_tag->mod.targeting_axis_mod[1];
-            q[2] *= b_tag->mod.targeting_axis_mod[2];
+            q[0] *= b_tag->mod.axis_mod[0];
+            q[1] *= b_tag->mod.axis_mod[1];
+            q[2] *= b_tag->mod.axis_mod[2];
             q[3] = 1.0f - vec3_sqabs(q);
             q[3] = sqrtf(q[3]);
         }
-        vec4_slerp_to(clamped_q, b_tag->mod.current_mod, q, time * M_PI / 1.3f);
-        vec4_copy(b_tag->mod.current_mod, clamped_q);
-        SSBoneFrame_RotateBone(bf, b_tag->mod.current_mod, b_tag->index);
+        vec4_slerp_to(clamped_q, b_tag->mod.current, q, time * M_PI / 1.3f);
+        vec4_copy(b_tag->mod.current, clamped_q);
+        SSBoneFrame_RotateBone(bf, b_tag->mod.current, b_tag->index);
     }
-    else if(b_tag->mod.current_mod[3] < 1.0f)
+    else if(b_tag->mod.current[3] < 1.0f)
     {       
-        if(b_tag->mod.current_mod[3] < 0.99f)
+        if(b_tag->mod.current[3] < 0.99f)
         {
             float zero_ang[4] = {0.0f, 0.0f, 0.0f, 1.0f};
             float clamped_q[4];
-            vec4_slerp_to(clamped_q, b_tag->mod.current_mod, zero_ang, time * M_PI / 1.3f);
-            vec4_copy(b_tag->mod.current_mod, clamped_q);
-            SSBoneFrame_RotateBone(bf, b_tag->mod.current_mod, b_tag->index);
+            vec4_slerp_to(clamped_q, b_tag->mod.current, zero_ang, time * M_PI / 1.3f);
+            vec4_copy(b_tag->mod.current, clamped_q);
+            SSBoneFrame_RotateBone(bf, b_tag->mod.current, b_tag->index);
         }
         else
         {
-            vec4_set_zero_angle(b_tag->mod.current_mod);
+            vec4_set_zero_angle(b_tag->mod.current);
         }
     }
 }
@@ -480,7 +499,7 @@ void SSBoneFrame_SetTarget(struct ss_bone_tag_s *b_tag, const float target_pos[3
 {
     b_tag->is_targeted = 0x01;
     vec3_copy(b_tag->mod.target, target_pos);
-    vec3_copy(b_tag->mod.bone_direction, bone_dir);
+    vec3_copy(b_tag->mod.direction, bone_dir);
 }
 
 
@@ -488,12 +507,12 @@ void SSBoneFrame_SetTargetingAxisMod(struct ss_bone_tag_s *b_tag, const float mo
 {
     if(mod)
     {
-        vec3_copy(b_tag->mod.targeting_axis_mod, mod);
+        vec3_copy(b_tag->mod.axis_mod, mod);
         b_tag->is_axis_modded = 0x01;
     }
     else
     {
-        vec3_set_one(b_tag->mod.targeting_axis_mod);
+        vec3_set_one(b_tag->mod.axis_mod);
         b_tag->is_axis_modded = 0x00;
     }
 }
@@ -503,14 +522,14 @@ void SSBoneFrame_SetTargetingLimit(struct ss_bone_tag_s *b_tag, const float limi
 {
     if(limit)
     {
-        vec4_copy(b_tag->mod.targeting_limit, limit);
+        vec4_copy(b_tag->mod.limit, limit);
     }
     else
     {
-        b_tag->mod.targeting_limit[0] = 0.0f;
-        b_tag->mod.targeting_limit[1] = 0.0f;
-        b_tag->mod.targeting_limit[2] = 0.0f;
-        b_tag->mod.targeting_limit[3] = -1.0f;
+        b_tag->mod.limit[0] = 0.0f;
+        b_tag->mod.limit[1] = 0.0f;
+        b_tag->mod.limit[2] = 0.0f;
+        b_tag->mod.limit[3] = -1.0f;
     }
 }
 

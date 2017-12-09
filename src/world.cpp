@@ -447,17 +447,17 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         {
             if(pos != NULL)
             {
-                vec3_copy(entity->transform + 12, pos);
+                vec3_copy(entity->transform.M4x4 + 12, pos);
             }
             if(ang != NULL)
             {
-                vec3_copy(entity->angles, ang);
+                vec3_copy(entity->transform.angles, ang);
                 Entity_UpdateTransform(entity);
             }
             if(room_id < global_world.rooms_count)
             {
                 Entity_MoveToRoom(entity, global_world.rooms + room_id);
-                entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+                entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform.M4x4 + 12);
             }
             else
             {
@@ -484,18 +484,18 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
         if(pos != NULL)
         {
-            vec3_copy(entity->transform + 12, pos);
+            vec3_copy(entity->transform.M4x4 + 12, pos);
         }
         if(ang != NULL)
         {
-            vec3_copy(entity->angles, ang);
+            vec3_copy(entity->transform.angles, ang);
             Entity_UpdateTransform(entity);
         }
         if(room_id < global_world.rooms_count)
         {
             entity->self->room = global_world.rooms + room_id;
             Room_AddObject(entity->self->room, entity->self);
-            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform.M4x4 + 12);
         }
         else
         {
@@ -515,7 +515,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         entity->move_type          = 0;
 
         SSBoneFrame_CreateFromModel(entity->bf, model);
-        entity->bf->transform = entity->transform;
+        entity->bf->transform = &entity->transform;
         Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);
         Physics_GenRigidBody(entity->physics, entity->bf);
 
@@ -2175,15 +2175,15 @@ void World_GenEntities(class VT_Level *tr)
         tr_item = &tr->items[i];
         entity = Entity_Create();
         entity->id = i;
-        TR_vertex_to_arr(entity->transform + 12, &tr_item->pos);
-        entity->angles[0] = tr_item->rotation;
-        entity->angles[1] = 0.0f;
-        entity->angles[2] = 0.0f;
+        TR_vertex_to_arr(entity->transform.M4x4 + 12, &tr_item->pos);
+        entity->transform.angles[0] = tr_item->rotation;
+        entity->transform.angles[1] = 0.0f;
+        entity->transform.angles[2] = 0.0f;
         Entity_UpdateTransform(entity);
         if((tr_item->room >= 0) && ((uint32_t)tr_item->room < global_world.rooms_count))
         {
             entity->self->room = global_world.rooms + tr_item->room;
-            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+            entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform.M4x4 + 12);
         }
         else
         {
@@ -2230,9 +2230,9 @@ void World_GenEntities(class VT_Level *tr)
                 entity->self->room->content->sprites = (room_sprite_p)realloc(entity->self->room->content->sprites, sz * sizeof(room_sprite_t));
                 rsp = entity->self->room->content->sprites + sz - 1;
                 rsp->sprite = sp;
-                rsp->pos[0] = entity->transform[12 + 0];
-                rsp->pos[1] = entity->transform[12 + 1];
-                rsp->pos[2] = entity->transform[12 + 2];
+                rsp->pos[0] = entity->transform.M4x4[12 + 0];
+                rsp->pos[1] = entity->transform.M4x4[12 + 1];
+                rsp->pos[2] = entity->transform.M4x4[12 + 2];
             }
 
             Entity_Delete(entity);
@@ -2240,12 +2240,12 @@ void World_GenEntities(class VT_Level *tr)
         }
 
         SSBoneFrame_CreateFromModel(entity->bf, entity->bf->animations.model);
-        entity->bf->transform = entity->transform;
+        entity->bf->transform = &entity->transform;
 
         Entity_SetAnimation(entity, ANIM_TYPE_BASE, 0, 0);                      // Set zero animation and zero frame
         Entity_RebuildBV(entity);
         Room_AddObject(entity->self->room, entity->self);
-        entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform + 12);
+        entity->self->sector = Room_GetSectorRaw(entity->self->room, entity->transform.M4x4 + 12);
         World_AddEntity(entity);
         World_SetEntityModelProperties(entity);
         Physics_GenRigidBody(entity->physics, entity->bf);
