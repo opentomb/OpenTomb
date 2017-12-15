@@ -42,7 +42,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     const int16_t filter = COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC;
     const float test_r = 16.0f;
 
-    vec3_copy(cam_pos, cam->gl_transform + 12);
+    vec3_copy(cam_pos, cam->transform.M4x4 + 12);
     ///@INFO Basic camera override, completely placeholder until a system classic-like is created
 
     if(!control_states.mouse_look)
@@ -160,9 +160,9 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     if(cam_state->entity_offset_x != 0.0f)
     {
         vec3_copy(cameraFrom, cam_pos);
-        cam_pos[0] += cam_state->entity_offset_x * cam->gl_transform[0 + 0];
-        cam_pos[1] += cam_state->entity_offset_x * cam->gl_transform[0 + 1];
-        cam_pos[2] += cam_state->entity_offset_x * cam->gl_transform[0 + 2];
+        cam_pos[0] += cam_state->entity_offset_x * cam->transform.M4x4[0 + 0];
+        cam_pos[1] += cam_state->entity_offset_x * cam->transform.M4x4[0 + 1];
+        cam_pos[2] += cam_state->entity_offset_x * cam->transform.M4x4[0 + 2];
         vec3_copy(cameraTo, cam_pos);
         if(Physics_SphereTest(&cb, cameraFrom, cameraTo, test_r, ent->self, filter))
         {
@@ -177,8 +177,8 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         if(target && target != World_GetPlayer())
         {
             float dir2d[2], dist;
-            dir2d[0] = target->transform.M4x4[12 + 0] - cam->gl_transform[12 + 0];
-            dir2d[1] = target->transform.M4x4[12 + 1] - cam->gl_transform[12 + 1];
+            dir2d[0] = target->transform.M4x4[12 + 0] - cam->transform.M4x4[12 + 0];
+            dir2d[1] = target->transform.M4x4[12 + 1] - cam->transform.M4x4[12 + 1];
             dist = control_states.cam_distance / sqrtf(dir2d[0] * dir2d[0] + dir2d[1] * dir2d[1]);
             cam_pos[0] -= dir2d[0] * dist;
             cam_pos[1] -= dir2d[1] * dist;
@@ -196,7 +196,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     }
 
     //Update cam pos
-    vec3_copy(cam->gl_transform + 12, cam_pos);
+    vec3_copy(cam->transform.M4x4 + 12, cam_pos);
     cam->current_room = World_FindRoomByPosCogerrence(cam_pos, ent->self->room);
     // check quicksand
     {
@@ -205,7 +205,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
         cam_pos[2] += 128.0f;
         if(check_room && (check_room->content->room_flags & TR_ROOM_FLAG_QUICKSAND))
         {
-            cam->gl_transform[12 + 2] = check_room->bb_max[2] + 128.0f;
+            cam->transform.M4x4[12 + 2] = check_room->bb_max[2] + 128.0f;
         }
     }
 

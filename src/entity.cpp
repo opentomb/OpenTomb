@@ -766,8 +766,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
     {
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
-        bool do_skip_frame = false;
-
         ///@DO COMMANDS
         for(animation_command_p command = current_af->commands; command; command = command->next)
         {
@@ -779,8 +777,8 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform.M4x4, command->data);
                         vec3_add(entity->transform.M4x4 + 12, entity->transform.M4x4 + 12, tr);
+                        ss_anim->do_jump_anim = 0x01;
                         entity->no_move = 0x01;
-                        do_skip_frame = true;
                     }
                     break;
 
@@ -788,17 +786,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                     if(entity->character && (ss_anim->frame_changing_state >= 0x02))   // This command executes ONLY at the end of animation.
                     {
                         Character_SetToJump(entity, -command->data[0], command->data[1]);
-                    }
-                    break;
-
-                case TR_ANIMCOMMAND_EMPTYHANDS:
-                    ///@FIXME: Behaviour is yet to be discovered.
-                    break;
-
-                case TR_ANIMCOMMAND_KILL:
-                    if(entity->character && !entity->character->state.dead)
-                    {
-                        entity->character->state.dead = 0x01;
                     }
                     break;
             };
@@ -809,25 +796,37 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
         {
             if(ss_anim->next_frame == effect->frame)
             {
-                do_skip_frame |= Entity_DoFlipEffect(entity, effect->id, effect->data);
+                Entity_DoFlipEffect(entity, effect->id, effect->data);
+                ss_anim->do_jump_anim = (effect->data == TR_EFFECT_CHANGEDIRECTION) ? 0x01 : ss_anim->do_jump_anim;
             }
         }
-
-        if(do_skip_frame)
-        {
-            Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
-            Entity_UpdateTransform(entity);
-            Entity_DoAnimCommands(entity, ss_anim);
-        }
+    }
+    
+    if(ss_anim->do_jump_anim)
+    {
+        ss_anim->do_jump_anim = 0x00;
+        Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
+        Entity_UpdateTransform(entity);
+        Entity_DoAnimCommands(entity, ss_anim);
     }
 }
 
 
-bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
+void Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
 {
-    bool do_skip_frame = false;
     switch(effect_id)
     {
+        case TR_ANIMCOMMAND_EMPTYHANDS:
+            ///@FIXME: Behaviour is yet to be discovered.
+            break;
+        
+        case TR_ANIMCOMMAND_KILL:
+            if(entity->character && !entity->character->state.dead)
+            {
+                entity->character->state.dead = 0x01;
+            }
+            break;
+            
         case TR_ANIMCOMMAND_PLAYSOUND:
             {
                 int16_t sound_index = 0x3FFF & param;
@@ -889,11 +888,9 @@ bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
                             {
                                 entity->dir_flag = ENT_MOVE_BACKWARD;
                             }
-
-                            do_skip_frame = true;
                         }
                         break;
-
+                        
                     case TR_EFFECT_HIDEOBJECT:
                         entity->state_flags &= ~ENTITY_STATE_VISIBLE;
                         break;
@@ -998,8 +995,6 @@ bool Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
             };
             break;
     };
-
-    return do_skip_frame;
 }
 
 

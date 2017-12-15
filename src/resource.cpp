@@ -1649,16 +1649,12 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             for(uint32_t count = 0; count < tr_animation->num_anim_commands; count++, pointer++)
             {
                 command.id = *pointer;
+                command.frame = -1;
+                vec3_set_zero(command.data);
+                effect.frame = -1;
+                effect.data = 0;
                 switch(command.id)
                 {
-                    case TR_ANIMCOMMAND_PLAYEFFECT:
-                    case TR_ANIMCOMMAND_PLAYSOUND:
-                        effect.id = command.id;
-                        effect.frame = *(++pointer) - tr_animation->frame_start;
-                        effect.data = *(++pointer);
-                        Anim_AddEffect(anim, &effect);
-                        break;
-
                     case TR_ANIMCOMMAND_SETPOSITION:
                         command.data[0] = (float)(*++pointer);     // x = x;
                         command.data[2] =-(float)(*++pointer);     // z =-y
@@ -1672,12 +1668,17 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                         command.data[2] = 0.0f;
                         Anim_AddCommand(anim, &command);
                         break;
-
+                        
+                    case TR_ANIMCOMMAND_PLAYEFFECT:
+                    case TR_ANIMCOMMAND_PLAYSOUND:
+                        effect.frame = *(++pointer) - tr_animation->frame_start;
+                        effect.data = *(++pointer);
                     case TR_ANIMCOMMAND_KILL:
                     case TR_ANIMCOMMAND_EMPTYHANDS:
                     default:
-                        vec3_set_zero(command.data);
-                        Anim_AddCommand(anim, &command);
+                        effect.id = command.id;
+                        effect.extra = 0x0000;
+                        Anim_AddEffect(anim, &effect);
                         break;
                 };
             }

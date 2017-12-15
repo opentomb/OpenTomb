@@ -181,12 +181,10 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
     vec3_set_zero(bf->bb_max);
     vec3_set_zero(bf->centre);
     vec3_set_zero(bf->pos);
-    vec3_set_zero(bf->move);
     bf->transform = NULL;
+    bf->flags = 0x0000;
     bf->bone_tag_count = 0;
     bf->bone_tags = NULL;
-    bf->do_move = 0x00;
-    bf->do_roll = 0x00;
     
     SSBoneFrame_InitSSAnim(&bf->animations, ANIM_TYPE_BASE);
     bf->animations.model = model;
@@ -240,7 +238,8 @@ void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_i
     ss_anim->anim_ext_flags = 0x00;
     ss_anim->anim_frame_flags = 0x00;
     ss_anim->type = anim_type_id;
-    ss_anim->enabled = 1;
+    ss_anim->enabled = 0x01;
+    ss_anim->do_jump_anim = 0x00;
     ss_anim->model = NULL;
     ss_anim->onFrame = NULL;
     ss_anim->onEndFrame = NULL;

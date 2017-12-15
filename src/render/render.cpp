@@ -241,8 +241,8 @@ void CRender::GenWorldList(struct camera_s *cam)
         return;
     }
 
-    room_p curr_room = World_FindRoomByPosCogerrence(cam->gl_transform + 12, cam->current_room);     // find room that contains camera
-    GLfloat *cam_pos = cam->gl_transform + 12;
+    room_p curr_room = World_FindRoomByPosCogerrence(cam->transform.M4x4 + 12, cam->current_room);     // find room that contains camera
+    GLfloat *cam_pos = cam->transform.M4x4 + 12;
     cam->current_room = curr_room;                                              // set camera's cuttent room pointer
     if(curr_room != NULL)                                                       // camera located in some room
     {
@@ -431,7 +431,7 @@ void CRender::DrawListDebugLines()
             float *p;
             Mat4_E_macro(tr);
             p = skybox->animations->frames->bone_tags->offset;
-            vec3_add(tr + 12, m_camera->gl_transform + 12, p);
+            vec3_add(tr + 12, m_camera->transform.M4x4 + 12, p);
             p = skybox->animations->frames->bone_tags->qrotate;
             Mat4_set_qrotation(tr, p);
             debugDrawer->DrawMeshDebugLines(skybox->mesh_tree->mesh_base, tr, NULL, NULL);
@@ -477,7 +477,7 @@ void CRender::DrawListDebugLines()
                 }
             }
         }
-        
+
         if(r_flags & R_DRAW_CINEMATICS)
         {
             const float color_r[3] = {1.0f, 0.0f, 0.0f};
@@ -605,7 +605,7 @@ void CRender::DrawBSPPolygon(struct bsp_polygon_s *p)
 
 void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
 {
-    float d = vec3_plane_dist(root->plane, engine_camera.gl_transform + 12);
+    float d = vec3_plane_dist(root->plane, engine_camera.transform.M4x4 + 12);
 
     if(d >= 0)
     {
@@ -653,7 +653,7 @@ void CRender::DrawBSPFrontToBack(struct bsp_node_s *root)
 
 void CRender::DrawBSPBackToFront(struct bsp_node_s *root)
 {
-    float d = vec3_plane_dist(root->plane, engine_camera.gl_transform + 12);
+    float d = vec3_plane_dist(root->plane, engine_camera.transform.M4x4 + 12);
 
     if(d >= 0)
     {
@@ -825,7 +825,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
         qglDepthMask(GL_FALSE);
         tr[15] = 1.0;
         p = skybox->animations->frames->bone_tags->offset;
-        vec3_add(tr + 12, m_camera->gl_transform + 12, p);
+        vec3_add(tr + 12, m_camera->transform.M4x4 + 12, p);
         p = skybox->animations->frames->bone_tags->qrotate;
         Mat4_set_qrotation(tr, p);
         float fullView[16];
@@ -972,7 +972,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 for(int16_t i = f->vertex_count - 1; i >= 0; i--)
                 {
                     vec3_copy(v, f->vertex + 3 * i);                    v+=3;
-                    vec3_copy_inv(v, engine_camera.gl_transform + 8);   v+=3;
+                    vec3_copy_inv(v, engine_camera.transform.M4x4 + 8);   v+=3;
                     vec4_set_one(v);                                    v+=4;
                     v[0] = v[1] = 0.0;                                  v+=2;
                 }
@@ -1118,9 +1118,9 @@ void CRender::DrawRoomSprites(struct room_s *room)
     if (room->content->sprites_count > 0)
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
-        GLfloat *view = m_camera->gl_transform + 8;
-        GLfloat *up = m_camera->gl_transform + 4;
-        GLfloat *right = m_camera->gl_transform + 0;
+        GLfloat *view = m_camera->transform.M4x4 + 8;
+        GLfloat *up = m_camera->transform.M4x4 + 4;
+        GLfloat *right = m_camera->transform.M4x4 + 0;
 
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         qglUseProgramObjectARB(shader->program);
@@ -1198,7 +1198,7 @@ int  CRender::AddRoom(struct room_s *room)
         centre[0] = (room->bb_min[0] + room->bb_max[0]) / 2;
         centre[1] = (room->bb_min[1] + room->bb_max[1]) / 2;
         centre[2] = (room->bb_min[2] + room->bb_max[2]) / 2;
-        dist = vec3_dist(m_camera->gl_transform + 12, centre);
+        dist = vec3_dist(m_camera->transform.M4x4 + 12, centre);
 
         if(r_list_active_count < r_list_size)
         {

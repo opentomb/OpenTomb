@@ -86,7 +86,8 @@ typedef struct ss_animation_s
 {
     uint16_t                    type;
     uint16_t                    enabled : 1;
-    uint16_t                    frame_changing_state : 15;
+    uint16_t                    do_jump_anim : 1;
+    uint16_t                    frame_changing_state : 14;
     int16_t                     next_state;
     int16_t                     next_state_heavy;
     int16_t                     current_animation;
@@ -114,13 +115,9 @@ typedef struct ss_animation_s
 typedef struct ss_bone_frame_s
 {
     uint16_t                    bone_tag_count;                                 // number of bones
-    uint16_t                    do_move : 1;
-    uint16_t                    do_roll : 2;
-    uint16_t                    : 13;
-    
+    uint16_t                    flags;    
     struct ss_bone_tag_s       *bone_tags;                                      // array of bones
     float                       pos[3];                                         // position (base offset)
-    float                       move[3];
     float                       bb_min[3];                                      // bounding box min coordinates
     float                       bb_max[3];                                      // bounding box max coordinates
     float                       centre[3];                                      // bounding box centre
@@ -187,7 +184,7 @@ typedef struct state_change_s
 typedef struct animation_command_s
 {
     uint16_t                    id;
-    uint16_t                    unused;
+    int16_t                     frame;
     float                       data[3];
     struct animation_command_s *next;
 }animation_command_t, *animation_command_p;
@@ -197,7 +194,7 @@ typedef struct animation_effect_s
     uint16_t                    id;
     int16_t                     frame;
     int16_t                     data;
-    int16_t                     unused;
+    uint16_t                    extra;
     struct animation_effect_s  *next;
 }animation_effect_t, *animation_effect_p;
 

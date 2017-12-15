@@ -1071,9 +1071,9 @@ int lua_SetCameraPos(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
-        engine_camera.gl_transform[12 + 0] = lua_tonumber(lua, 1);
-        engine_camera.gl_transform[12 + 1] = lua_tonumber(lua, 2);
-        engine_camera.gl_transform[12 + 2] = lua_tonumber(lua, 3);
+        engine_camera.transform.M4x4[12 + 0] = lua_tonumber(lua, 1);
+        engine_camera.transform.M4x4[12 + 1] = lua_tonumber(lua, 2);
+        engine_camera.transform.M4x4[12 + 2] = lua_tonumber(lua, 3);
         Cam_Apply(&engine_camera);
     }
 
@@ -1085,10 +1085,10 @@ int lua_SetCameraAngles(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
-        engine_camera.ang[0] = lua_tonumber(lua, 1);
-        engine_camera.ang[1] = lua_tonumber(lua, 2);
-        engine_camera.ang[2] = lua_tonumber(lua, 3);
-        Cam_SetRotation(&engine_camera, engine_camera.ang);
+        engine_camera.transform.angles[0] = lua_tonumber(lua, 1);
+        engine_camera.transform.angles[1] = lua_tonumber(lua, 2);
+        engine_camera.transform.angles[2] = lua_tonumber(lua, 3);
+        Cam_SetRotation(&engine_camera, engine_camera.transform.angles);
     }
 
     return 0;

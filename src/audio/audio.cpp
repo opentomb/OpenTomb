@@ -234,7 +234,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     alloc.alloc_buffer_length_in_bytes = 256 * 1024;
     alloc.alloc_buffer = (char*)Sys_GetTempMem(alloc.alloc_buffer_length_in_bytes);
     stb_vorbis *ov = stb_vorbis_open_filename(path, &err, &alloc);
-    
+
     if(!ov)
     {
         Sys_DebugLog(SYS_LOG_FILENAME, "OGG: Couldn't open file: %s.", path);
@@ -247,7 +247,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
     sample_bitsize = 16;
     buffer_part = 96 * info.max_frame_size;
     rate = info.sample_rate;
-    
+
     {
         const size_t temp_buf_size = 64 * 1024 * 1024;
         size_t buffer_left = temp_buf_size / 2;
@@ -262,7 +262,7 @@ bool StreamTrackBuffer::Load_Ogg(const char *path)
         buffer_size *= 2;
         stb_vorbis_close(ov);
         Sys_ReturnTempMem(alloc.alloc_buffer_length_in_bytes);
-        
+
         if(buffer_size > 0)
         {
             buffer = (uint8_t*)malloc(buffer_size);
@@ -810,12 +810,12 @@ int Audio_StreamPlay(uint32_t track_index, const uint8_t mask)
             break;
         }
     }
-    
+
     if(audio_settings.use_effects)
     {
         StreamTrack_SetEffects(s, s->type == TR_AUDIO_STREAM_TYPE_CHAT);
     }
-    
+
     if(StreamTrack_Play(s) <= 0)
     {
         Con_AddLine("StreamPlay: CANCEL, stream play error.", FONTSTYLE_CONSOLE_WARNING);
@@ -836,7 +836,7 @@ void Audio_UpdateStreams(float time)
         {
             StreamTrackBuffer *stb = ((s->track >= 0) && (s->track < audio_world_data.stream_buffers_count)) ?
                 (audio_world_data.stream_buffers[s->track]) : (NULL);
-            
+
             while(stb && StreamTrack_IsNeedUpdateBuffer(s) && (s->buffer_offset < stb->buffer_size))
             {
                 size_t bytes = stb->buffer_part;
@@ -1927,18 +1927,18 @@ void Audio_UpdateListenerByCamera(struct camera_s *cam, float time)
 {
     ALfloat v[6];       // vec3 - forvard, vec3 - up
 
-    vec3_copy(v + 0, cam->gl_transform + 8);   // cam_OZ
-    vec3_copy(v + 3, cam->gl_transform + 4);   // cam_OY
+    vec3_copy(v + 0, cam->transform.M4x4 + 8);   // cam_OZ
+    vec3_copy(v + 3, cam->transform.M4x4 + 4);   // cam_OY
     alListenerfv(AL_ORIENTATION, v);
 
-    vec3_copy(v, cam->gl_transform + 12);
+    vec3_copy(v, cam->transform.M4x4 + 12);
     alListenerfv(AL_POSITION, v);
 
-    vec3_sub(v, cam->gl_transform + 12, cam->prev_pos);
+    vec3_sub(v, cam->transform.M4x4 + 12, cam->prev_pos);
     v[3] = 1.0 / time;
     vec3_mul_scalar(v, v, v[3]);
     alListenerfv(AL_VELOCITY, v);
-    vec3_copy(cam->prev_pos, cam->gl_transform + 12);
+    vec3_copy(cam->prev_pos, cam->transform.M4x4 + 12);
 
     if(cam->current_room)
     {

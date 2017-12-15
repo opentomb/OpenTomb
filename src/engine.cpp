@@ -969,7 +969,7 @@ void ShowModelView(float time)
     if(sm && (test_model.animations.model == sm))
     {
         float subModelView[16], subModelViewProjection[16];
-        float *cam_pos = engine_camera.gl_transform + 12;
+        float *cam_pos = engine_camera.transform.M4x4 + 12;
         animation_frame_p af = sm->animations + test_model.animations.current_animation;
         const int current_light_number = 0;
         const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
@@ -1009,14 +1009,14 @@ void ShowModelView(float time)
 
         test_model.transform = &tr;
         Mat4_E_macro(tr.M4x4);
-        Mat4_E_macro(engine_camera.gl_transform);
-        engine_camera.ang[0] = test_model_angles[0];
-        engine_camera.ang[1] = test_model_angles[1] + 90.0f;
-        engine_camera.ang[2] = test_model_angles[2];
-        Mat4_SetAnglesZXY(engine_camera.gl_transform, engine_camera.ang);
-        cam_pos[0] = -engine_camera.gl_transform[8 + 0] * test_model_dist;
-        cam_pos[1] = -engine_camera.gl_transform[8 + 1] * test_model_dist;
-        cam_pos[2] = -engine_camera.gl_transform[8 + 2] * test_model_dist + test_model_z_offset;
+        Mat4_E_macro(engine_camera.transform.M4x4);
+        engine_camera.transform.angles[0] = test_model_angles[0];
+        engine_camera.transform.angles[1] = test_model_angles[1] + 90.0f;
+        engine_camera.transform.angles[2] = test_model_angles[2];
+        Mat4_SetAnglesZXY(engine_camera.transform.M4x4, engine_camera.transform.angles);
+        cam_pos[0] = -engine_camera.transform.M4x4[8 + 0] * test_model_dist;
+        cam_pos[1] = -engine_camera.transform.M4x4[8 + 1] * test_model_dist;
+        cam_pos[2] = -engine_camera.transform.M4x4[8 + 2] * test_model_dist + test_model_z_offset;
         Cam_Apply(&engine_camera);
 
         test_model.animations.frame_time += time;
@@ -1058,7 +1058,8 @@ void ShowModelView(float time)
 
             for(animation_command_p cmd = af->commands; cmd; cmd = cmd->next)
             {
-                GLText_OutTextXY(30.0f, y += dy, "command[%d]: {%.1f,  %.1f,  %.1f}", (int)cmd->id, cmd->data[0], cmd->data[1], cmd->data[2]);
+                GLText_OutTextXY(30.0f, y += dy, "command[%d][frame = %d]: {%.1f,  %.1f,  %.1f}",
+                    (int)cmd->id, (int)cmd->frame, cmd->data[0], cmd->data[1], cmd->data[2]);
             }
 
             y = (float)screen_info.h + dy;
@@ -1583,7 +1584,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("Available commands:\0", FONTSTYLE_CONSOLE_WARNING);
             Con_AddLine("help - show help info\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("loadMap(\"file_name\") - load level \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("setgamef(game, level) - load level (ie: setgamef(2, 1) for TR2 level 1)\0", FONTSTYLE_CONSOLE_NOTIFY);            
+            Con_AddLine("setgamef(game, level) - load level (ie: setgamef(2, 1) for TR2 level 1)\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("save, load - save and load game state in \"file_name\"\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("exit - close program\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
@@ -1602,9 +1603,9 @@ extern "C" int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "goto"))
         {
             control_states.free_look = 1;
-            engine_camera.gl_transform[12 + 0] = SC_ParseFloat(&ch);
-            engine_camera.gl_transform[12 + 1] = SC_ParseFloat(&ch);
-            engine_camera.gl_transform[12 + 2] = SC_ParseFloat(&ch);
+            engine_camera.transform.M4x4[12 + 0] = SC_ParseFloat(&ch);
+            engine_camera.transform.M4x4[12 + 1] = SC_ParseFloat(&ch);
+            engine_camera.transform.M4x4[12 + 2] = SC_ParseFloat(&ch);
             return 1;
         }
         else if(!strcmp(token, "save"))
@@ -1755,7 +1756,7 @@ extern "C" int Engine_ExecCmd(char *ch)
             room_p r = engine_camera.current_room;
             if(r)
             {
-                room_sector_p sect = Room_GetSectorXYZ(r, engine_camera.gl_transform + 12);
+                room_sector_p sect = Room_GetSectorXYZ(r, engine_camera.transform.M4x4 + 12);
                 Con_Printf("ID = %d, x_sect = %d, y_sect = %d", r->id, r->sectors_x, r->sectors_y);
                 if(sect)
                 {

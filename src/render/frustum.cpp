@@ -214,7 +214,7 @@ void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
         for(uint16_t i = 0; i < p->vertex_count; i++, r += 4)
         {
             float t;
-            vec3_sub(V1, prev_v, cam->gl_transform + 12);
+            vec3_sub(V1, prev_v, cam->transform.M4x4 + 12);
             vec3_sub(V2, curr_v, prev_v);
             vec3_norm(V1, t);
             vec3_norm(V2, t);
@@ -228,7 +228,7 @@ void CFrustumManager::GenClipPlanes(frustum_p p, struct camera_s *cam)
             next_v += 3;
         }
 
-        p->cam_pos = cam->gl_transform + 12;
+        p->cam_pos = cam->transform.M4x4 + 12;
     }
 }
 
@@ -241,7 +241,7 @@ frustum_p CFrustumManager::PortalFrustumIntersect(struct portal_s *portal, frust
         float *n = cam->frustum->norm;
         float *v = portal->vertex;
 
-        if((dest_room == cam->current_room) || vec3_plane_dist(portal->norm, cam->gl_transform + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
+        if((dest_room == cam->current_room) || vec3_plane_dist(portal->norm, cam->transform.M4x4 + 12) < -SPLIT_EPSILON)            // non face or degenerate to the line portal
         {
             return NULL;
         }
