@@ -764,6 +764,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 {
     if(ss_anim->model)
     {
+        L_START:
         animation_frame_p next_af = ss_anim->model->animations + ss_anim->next_animation;
         animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
         ///@DO COMMANDS
@@ -800,14 +801,14 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 ss_anim->do_jump_anim = (effect->data == TR_EFFECT_CHANGEDIRECTION) ? 0x01 : ss_anim->do_jump_anim;
             }
         }
-    }
-    
-    if(ss_anim->do_jump_anim)
-    {
-        ss_anim->do_jump_anim = 0x00;
-        Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
-        Entity_UpdateTransform(entity);
-        Entity_DoAnimCommands(entity, ss_anim);
+        
+        if(ss_anim->do_jump_anim)
+        {
+            ss_anim->do_jump_anim = 0x00;
+            Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
+            Entity_UpdateTransform(entity);
+            goto L_START;
+        }
     }
 }
 

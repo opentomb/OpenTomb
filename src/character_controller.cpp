@@ -413,7 +413,17 @@ void Character_UpdateAI(struct entity_s *ent)
     {
         if(ent->character->bone_head > 0)
         {
-            Character_LookAt(ent, target->obb->centre);
+            float pos[3];
+            if(target->character)
+            {
+                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+                Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(pos, target->obb->centre);
+            }
+            Character_LookAt(ent, pos);
         }
         if(target->self->sector && (ent->character->path_target != target->self->sector))
         {
@@ -2131,7 +2141,17 @@ void Character_UpdateParams(struct entity_s *ent)
         entity_p target = World_GetEntityByID(ent->character->target_id);
         if(target)
         {
-            Character_LookAt(ent, target->obb->centre);
+            float pos[3];
+            if(target->character)
+            {
+                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+                Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(pos, target->obb->centre);
+            }
+            Character_LookAt(ent, pos);
         }
         else
         {

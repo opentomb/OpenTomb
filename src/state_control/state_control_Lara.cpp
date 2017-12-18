@@ -3163,6 +3163,16 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
+            float target_pos[3];
+            if(target->character)
+            {
+                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+                Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(target_pos, target->obb->centre);
+            }
             if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
@@ -3172,8 +3182,8 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
             }
             SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
-            SSBoneFrame_SetTarget(b_tag, target->obb->centre, bone_dir);
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target->obb->centre))
+            SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
+            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
             {
                 target = NULL;
                 silent = true;
@@ -3455,10 +3465,20 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
             const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
-            SSBoneFrame_SetTarget(b_tag, target->obb->centre, bone_dir);
+            float target_pos[3];
+            if(target->character)
+            {
+                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+                Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(target_pos, target->obb->centre);
+            }
+            SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
             SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
 
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target->obb->centre))
+            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
             {
                 target = NULL;
             }
