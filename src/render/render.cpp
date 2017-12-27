@@ -393,6 +393,7 @@ void CRender::DrawList()
             qglUseProgramObjectARB(shader->program);
             qglUniform1iARB(shader->sampler, 0);
             qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+            qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
             qglDepthMask(GL_FALSE);
             qglDisable(GL_ALPHA_TEST);
             qglEnable(GL_BLEND);
@@ -523,6 +524,7 @@ void CRender::DrawListDebugLines()
         qglUseProgramObjectARB(shader->program);
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         m_active_texture = 0;
         BindWhiteTexture();
@@ -834,6 +836,7 @@ void CRender::DrawSkyBox(const float modelViewProjectionMatrix[16])
         const unlit_tinted_shader_description *shader = shaderManager->getStaticMeshShader();
         qglUseProgramObjectARB(shader->program);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, fullView);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
         qglUniform1iARB(shader->sampler, 0);
         GLfloat tint[] = { 1, 1, 1, 1 };
         qglUniform4fvARB(shader->tint_mult, 1, tint);
@@ -960,6 +963,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             qglUseProgramObjectARB(shader->program);
             qglUniform1iARB(shader->sampler, 0);
             qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, engine_camera.gl_view_proj_mat);
+            qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
             qglEnable(GL_STENCIL_TEST);
             qglClear(GL_STENCIL_BUFFER_BIT);
             qglStencilFunc(GL_NEVER, 1, 0x00);
@@ -1012,6 +1016,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         qglUniform1fARB(shader->current_tick, (GLfloat) SDL_GetTicks());
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, modelViewProjectionTransform);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
         this->DrawMesh(room->content->mesh, NULL, NULL);
     }
 
@@ -1024,14 +1029,16 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
 
     if (room->content->static_mesh_count > 0)
     {
-        qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
+        const unlit_tinted_shader_description *shader = shaderManager->getStaticMeshShader();
+        qglUseProgramObjectARB(shader->program);
         for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
         {
             if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
                (!room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
             {
                 Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->content->static_mesh[i].transform);
-                qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
+                qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, transform);
+                qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
                 base_mesh_s *mesh = room->content->static_mesh[i].mesh;
                 GLfloat tint[4];
 
@@ -1042,7 +1049,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                 {
                     CalculateWaterTint(tint, 0);
                 }
-                qglUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
+                qglUniform4fvARB(shader->tint_mult, 1, tint);
                 this->DrawMesh(mesh, NULL, NULL);
             }
         }
@@ -1069,15 +1076,17 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         {
             if (near_room->content->static_mesh_count > 0)
             {
+                const unlit_tinted_shader_description *shader = shaderManager->getStaticMeshShader();
                 for(uint32_t si = 0; si < near_room->content->static_mesh_count; si++)
                 {
                     if(OBB_OBB_Test(near_room->content->static_mesh[si].obb, room->obb, 0.0f) &&
                        Frustum_IsOBBVisibleInFrustumList(near_room->content->static_mesh[si].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
                        (!near_room->content->static_mesh[si].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
                     {
-                        qglUseProgramObjectARB(shaderManager->getStaticMeshShader()->program);
+                        qglUseProgramObjectARB(shader->program);
                         Mat4_Mat4_mul(transform, modelViewProjectionMatrix, near_room->content->static_mesh[si].transform);
-                        qglUniformMatrix4fvARB(shaderManager->getStaticMeshShader()->model_view_projection, 1, false, transform);
+                        qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, transform);
+                        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
                         base_mesh_s *mesh = near_room->content->static_mesh[si].mesh;
                         GLfloat tint[4];
 
@@ -1088,7 +1097,7 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
                         {
                             CalculateWaterTint(tint, 0);
                         }
-                        qglUniform4fvARB(shaderManager->getStaticMeshShader()->tint_mult, 1, tint);
+                        qglUniform4fvARB(shader->tint_mult, 1, tint);
                         this->DrawMesh(mesh, NULL, NULL);
                     }
                 }
@@ -1126,6 +1135,7 @@ void CRender::DrawRoomSprites(struct room_s *room)
         qglUseProgramObjectARB(shader->program);
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
 
         for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
@@ -1363,6 +1373,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
 
         shader = shaderManager->getEntityShader(current_light_number);
         qglUseProgramObjectARB(shader->program);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
         qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
         qglUniform4fvARB(shader->light_color, current_light_number, colors);
         qglUniform3fvARB(shader->light_position, current_light_number, positions);
@@ -1373,6 +1384,7 @@ const lit_shader_description *CRender::SetupEntityLight(struct entity_s *entity,
     {
         shader = shaderManager->getEntityShader(0);
         qglUseProgramObjectARB(shader->program);
+        qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
     }
     return shader;
 }

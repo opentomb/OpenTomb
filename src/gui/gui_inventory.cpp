@@ -102,6 +102,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
     qglUseProgramObjectARB(shader->program);
     qglUniform1iARB(shader->number_of_lights, 0);
     qglUniform4fARB(shader->light_ambient, 1.0f, 1.0f, 1.0f, 1.0f);
+    qglUniform1fARB(shader->dist_fog, 65536.0f);
 
     if(size != 0.0f)
     {

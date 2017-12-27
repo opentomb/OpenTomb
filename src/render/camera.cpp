@@ -25,7 +25,7 @@ void Cam_Init(camera_p cam)
     cam->aspect = 1.0;
     cam->fov = 75.0;
     cam->dist_near = 1.0;
-    cam->dist_far = 65536.0;
+    cam->dist_far = 32768.0;
 
     cam->f = tanf(M_PI * cam->fov / 360.0);
     cam->h = 2.0 * cam->dist_near * cam->f;

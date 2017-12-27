@@ -1036,6 +1036,7 @@ void ShowModelView(float time)
         {
             GLfloat ambient_component[4] = {1.0f, 1.0f, 1.0f, 1.0f};
             qglUniform4fvARB(shader->light_ambient, 1, ambient_component);
+            qglUniform1fARB(shader->dist_fog, 65536.0f);
         }
         renderer.DrawSkeletalModel(shader, &test_model, subModelView, subModelViewProjection);
         renderer.debugDrawer->DrawAxis(4096.0f, tr.M4x4);

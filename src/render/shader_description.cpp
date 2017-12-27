@@ -55,6 +55,7 @@ unlit_shader_description::unlit_shader_description(const shader_stage &vertex, c
 : shader_description(vertex, fragment)
 {
     model_view_projection = qglGetUniformLocationARB(program, "modelViewProjection");
+    dist_fog = qglGetUniformLocationARB(program, "distFog");
 }
 
 lit_shader_description::lit_shader_description(const shader_stage &vertex, const shader_stage &fragment)

@@ -46,7 +46,8 @@ struct text_shader_description : public shader_description
 struct unlit_shader_description : public shader_description
 {
     GLint model_view_projection;
-    
+    GLint dist_fog;
+
     unlit_shader_description(const shader_stage &vertex, const shader_stage &fragment);
 };
 
