@@ -224,6 +224,28 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 }
 
 
+int lua_CopyModelAnimations(lua_State * lua)
+{
+    int top = lua_gettop(lua);
+
+    if(top >= 2)
+    {
+        skeletal_model_p dst = World_GetModelByID(lua_tointeger(lua, 1));
+        skeletal_model_p src = World_GetModelByID(lua_tointeger(lua, 2));
+        if(src && dst && (src != dst) && (src->mesh_count == dst->mesh_count))
+        {
+            SkeletalModel_CopyAnims(dst, src);
+        }
+    }
+    else
+    {
+        Con_Warning("copyModelAnimations: expecting arguments (model_dst_id, model_src_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetEntityAnimState(lua_State * lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -877,6 +899,7 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "setEntityBaseAnimModel", lua_SetEntityBaseAnimModel);
     lua_register(lua, "setModelCollisionMap", lua_SetModelCollisionMap);
     lua_register(lua, "setModelBodyPartFlag", lua_SetModelBodyPartFlag);
+    lua_register(lua, "copyModelAnimations", lua_CopyModelAnimations);
     lua_register(lua, "setStateChangeRange", lua_SetStateChangeRange);
 
     lua_register(lua, "getEntityModelID", lua_GetEntityModelID);

@@ -1067,6 +1067,17 @@ int lua_SetCinematicTransform(lua_State *lua)
 }
 
 
+int lua_SetCameraViewDistance(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        engine_camera.dist_far = lua_tonumber(lua, 1);
+        Cam_Apply(&engine_camera);
+    }
+    return 0;
+}
+
+
 int lua_SetCameraPos(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
@@ -1192,6 +1203,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "playFlyby", lua_PlayFlyby);
     lua_register(lua, "setCameraFrame", lua_SetCameraFrame);
     lua_register(lua, "setCinematicTransform", lua_SetCinematicTransform);
+    lua_register(lua, "setCameraViewDistance", lua_SetCameraViewDistance);
     lua_register(lua, "setCameraPos", lua_SetCameraPos);
     lua_register(lua, "setCameraAngles", lua_SetCameraAngles);
     lua_register(lua, "cameraLookAt", lua_CameraLookAt);

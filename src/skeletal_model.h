@@ -250,6 +250,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
 
 void SkeletalModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
+void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src);
 void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);

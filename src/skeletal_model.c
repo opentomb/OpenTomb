@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <memory.h>
 
 #include "core/system.h"
 #include "core/gl_util.h"
@@ -11,6 +12,8 @@
 
 
 void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_id);
+void Anim_Clear(struct animation_frame_s *anim);
+
 
 void SkeletalModel_Clear(skeletal_model_p model)
 {
@@ -31,53 +34,9 @@ void SkeletalModel_Clear(skeletal_model_p model)
 
         if(model->animation_count)
         {
-            animation_frame_p anim = model->animations;
-            for(uint16_t i = 0; i < model->animation_count; i++, anim++)
+            for(uint16_t i = 0; i < model->animation_count; i++)
             {
-                if(anim->state_change_count)
-                {
-                    for(uint16_t j = 0; j < anim->state_change_count; j++)
-                    {
-                        anim->state_change[j].anim_dispatch_count = 0;
-                        free(anim->state_change[j].anim_dispatch);
-                        anim->state_change[j].anim_dispatch = NULL;
-                        anim->state_change[j].id = 0;
-                    }
-                    anim->state_change_count = 0;
-                    free(anim->state_change);
-                    anim->state_change = NULL;
-                }
-
-                if(anim->frames_count)
-                {
-                    for(uint16_t j = 0; j < anim->frames_count; j++)
-                    {
-                        if(anim->frames[j].bone_tag_count)
-                        {
-                            anim->frames[j].bone_tag_count = 0;
-                            free(anim->frames[j].bone_tags);
-                            anim->frames[j].bone_tags = NULL;
-                        }
-                    }
-                    anim->frames_count = 0;
-                    anim->max_frame = 0;
-                    free(anim->frames);
-                    anim->frames = NULL;
-                }
-                
-                while(anim->commands)
-                {
-                    animation_command_p next_command = anim->commands->next;
-                    free(anim->commands);
-                    anim->commands = next_command;
-                }
-                
-                while(anim->effects)
-                {
-                    animation_effect_p next_effect = anim->effects->next;
-                    free(anim->effects);
-                    anim->effects = next_effect;
-                }
+                Anim_Clear(model->animations + i);
             }
             model->animation_count= 0;
             free(model->animations);
@@ -152,6 +111,78 @@ void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags
     {
         dst[i].mesh_base = src[i].mesh_base;
     }
+}
+
+
+void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src)
+{
+    animation_frame_p new_anims = (animation_frame_p)calloc(src->animation_count, sizeof(animation_frame_t));
+    animation_frame_p dst_a = new_anims;
+    animation_frame_p src_a = src->animations;
+    
+    for(uint16_t i = 0; i < src->animation_count; ++i, ++dst_a, ++src_a)
+    {
+        animation_command_p *last_cmd = &dst_a->commands;
+        animation_effect_p *last_effect = &dst_a->effects;
+        
+        for(animation_command_p cmd = src_a->commands; cmd; cmd = cmd->next)
+        {
+            *last_cmd = (animation_command_p)malloc(sizeof(animation_command_t));
+            **last_cmd = *cmd;
+            (*last_cmd)->next = NULL;
+            last_cmd = &((*last_cmd)->next);
+        }
+
+        for(animation_effect_p effect = src_a->effects; effect; effect = effect->next)
+        {
+            *last_effect = (animation_effect_p)malloc(sizeof(animation_effect_t));
+            **last_effect = *effect;
+            (*last_effect)->next = NULL;
+            last_effect = &((*last_effect)->next);
+        }
+
+        dst_a->frames_count = src_a->frames_count;
+        dst_a->frames = (bone_frame_p)calloc(src_a->frames_count, sizeof(bone_frame_t));
+        for(uint16_t i = 0; i < src_a->frames_count; ++i)
+        {
+            size_t sz = src_a->frames[i].bone_tag_count * sizeof(bone_tag_t);
+            dst_a->frames[i] = src_a->frames[i];
+            dst_a->frames[i].bone_tags = (bone_tag_p)malloc(sz);
+            memcpy(dst_a->frames[i].bone_tags, src_a->frames[i].bone_tags, sz);
+        }
+        
+        dst_a->state_change_count = src_a->state_change_count;
+        dst_a->state_change = (state_change_p)calloc(src_a->state_change_count, sizeof(state_change_t));
+        for(uint16_t i = 0; i < src_a->state_change_count; ++i)
+        {
+            size_t sz = src_a->state_change[i].anim_dispatch_count * sizeof(anim_dispatch_t);
+            dst_a->state_change[i] = src_a->state_change[i];
+            dst_a->state_change[i].anim_dispatch = (anim_dispatch_p)malloc(sz);
+            memcpy(dst_a->state_change[i].anim_dispatch, src_a->state_change[i].anim_dispatch, sz);
+        }
+        
+        dst_a->id = src_a->id;
+        dst_a->state_id = src_a->state_id;
+        dst_a->max_frame = src_a->max_frame;
+        dst_a->frames_count = src_a->frames_count;
+        dst_a->state_change_count = src_a->state_change_count;
+
+        dst_a->speed_x = src_a->speed_x;
+        dst_a->accel_x = src_a->accel_x;
+        dst_a->speed_y = src_a->speed_y;
+        dst_a->accel_y = src_a->accel_y;
+
+        dst_a->next_anim = dst->animations + src_a->next_anim->id;
+        dst_a->next_frame = src_a->next_frame;
+    }
+    
+    for(uint16_t i = 0; i < dst->animation_count; ++i)
+    {
+        Anim_Clear(dst->animations + i);
+    }
+    free(dst->animations);
+    dst->animations = new_anims;
+    dst->animation_count = src->animation_count;
 }
 
 
@@ -627,6 +658,55 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
 /*
  *******************************************************************************
  */
+void Anim_Clear(struct animation_frame_s *anim)
+{
+    if(anim->state_change_count)
+    {
+        for(uint16_t j = 0; j < anim->state_change_count; j++)
+        {
+            anim->state_change[j].anim_dispatch_count = 0;
+            free(anim->state_change[j].anim_dispatch);
+            anim->state_change[j].anim_dispatch = NULL;
+            anim->state_change[j].id = 0;
+        }
+        anim->state_change_count = 0;
+        free(anim->state_change);
+        anim->state_change = NULL;
+    }
+
+    if(anim->frames_count)
+    {
+        for(uint16_t j = 0; j < anim->frames_count; j++)
+        {
+            if(anim->frames[j].bone_tag_count)
+            {
+                anim->frames[j].bone_tag_count = 0;
+                free(anim->frames[j].bone_tags);
+                anim->frames[j].bone_tags = NULL;
+            }
+        }
+        anim->frames_count = 0;
+        anim->max_frame = 0;
+        free(anim->frames);
+        anim->frames = NULL;
+    }
+
+    while(anim->commands)
+    {
+        animation_command_p next_command = anim->commands->next;
+        free(anim->commands);
+        anim->commands = next_command;
+    }
+
+    while(anim->effects)
+    {
+        animation_effect_p next_effect = anim->effects->next;
+        free(anim->effects);
+        anim->effects = next_effect;
+    }
+}
+
+
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command)
 {
     animation_command_p *ptr = &anim->commands;

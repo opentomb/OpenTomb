@@ -10,7 +10,7 @@ void main(void)
 {
     gl_Position = modelViewProjection * gl_Vertex;
     float dd = length(gl_Position);
-    float d = clamp(2.0 * (1.0 - dd / distFog), 0.0, 1.0);
+    float d = clamp((distFog - dd) / (distFog * 0.4), 0.0, 1.0);
     varying_color = gl_Color * tintMult * d;
     varying_texCoord = gl_MultiTexCoord0.xy;
 }

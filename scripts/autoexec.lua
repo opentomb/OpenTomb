@@ -67,6 +67,7 @@ if (getLevelVersion() < TR_II) then
 
     -- auto pistols
     setDefaultModelAnimReplaceFlag(3);
+    copyModelAnimations(3, 1);
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 13, 0x01);
     setModelMeshReplaceFlag(3, 1, 0x03);
@@ -74,6 +75,7 @@ if (getLevelVersion() < TR_II) then
 
     -- UZI
     setDefaultModelAnimReplaceFlag(4);
+    copyModelAnimations(4, 1);
     setModelMeshReplaceFlag(4, 10, 0x01);
     setModelMeshReplaceFlag(4, 13, 0x01);
     setModelMeshReplaceFlag(4, 14, 0x01);
@@ -272,5 +274,7 @@ addItem(player, ITEM_LARAHOME, 1);
 addItem(player, ITEM_CONTROLS, 1);
 addItem(player, ITEM_AUDIO, 1);
 addItem(player, ITEM_PISTOL, 1);
+addItem(player, ITEM_UZI, 1);
+addItem(player, ITEM_UZI_AMMO, 1000);
 addItem(player, ITEM_SMALL_MEDIPACK, 3);
 addItem(player, ITEM_LARGE_MEDIPACK, 1);

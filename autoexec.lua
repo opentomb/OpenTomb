@@ -16,6 +16,7 @@ setGravity(0, 0, -5700.0);
 mlook(1);
 freelook(0);
 cam_distance(1024.0);
+setCameraViewDistance(32768);
 noclip(0);
 --playVideo(base_path .. "data/tr3/fmv/logo.rpl");
 --playVideo(base_path .. "data/tr3/fmv/Crsh_Eng.rpl");

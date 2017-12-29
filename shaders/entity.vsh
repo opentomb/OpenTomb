@@ -26,6 +26,6 @@ void main()
     // Copy attributes to varyings
     varying_texCoord = gl_MultiTexCoord0.xy;
     float dd = length(gl_Position);
-    float d = clamp(2.0 * (1.0 - dd / distFog), 0.0, 1.0);
+    float d = clamp((distFog - dd) / (distFog * 0.4), 0.0, 1.0);
     varying_color = gl_Color * d;
 }

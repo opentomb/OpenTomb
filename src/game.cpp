@@ -361,7 +361,7 @@ int Game_Save(const char* name)
     }
 
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_GetCurrentLevelPathLocal(), Gameflow_GetCurrentGameID(), Gameflow_GetCurrentLevelID());
-
+        
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
     uint8_t *flip_state;

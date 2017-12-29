@@ -45,7 +45,7 @@ void main(void)
     fFlicker = 0.4 * abs(sin(fFlickerTime)) + 0.6;
     vCol *=  mix(1.0, fFlicker, 0.6);
 #endif
-    float d = clamp(2.0 * (1.0 - dd / distFog), 0.0, 1.0);
+    float d = clamp((distFog - dd) / (distFog * 0.4), 0.0, 1.0);
     vCol *= vec4(d, d, d, 1.0);
 
     //Set texture co-ord
