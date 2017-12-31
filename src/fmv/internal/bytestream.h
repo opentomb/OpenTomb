@@ -25,10 +25,9 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
-//#include "libavutil/avassert.h"
 #include "common.h"
-//#include "libavutil/intreadwrite.h"
 
 typedef struct GetByteContext
 {
