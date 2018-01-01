@@ -181,7 +181,7 @@ and entity system rewrites.
 * Nickotte: interface programming, ring inventory implementation,
 camera fix-ups.
 * [pmatulka](https://github.com/pmatulka): Linux port and testing.
-* Richard_trle: Github migration, Github repo maintenance, website design.
+* [richardba](https://github.com/richardba): Github migration, Github repo maintenance, website design.
 * [Saracen](https://github.com/Saracen): room and static mesh lighting.
 * [T4Larson](https://github.com/T4Larson): general stability patches and bugfixing.
 * [vobject](https://github.com/vobject): nightly builds, maintaining general compiler compatibility.
