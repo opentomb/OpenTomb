@@ -24,8 +24,9 @@ code, as all attempts to retrieve source files from Eidos/Core were in vain.
 
 Instead, everything is being re-developed completely from scratch. It should be
 noted, however, that OpenTomb uses certain legacy routines from unfinished
-open-source projects, such as OpenRaider and VT project (found at icculus.org),
-plus some code from Quake Tenebrae.
+open-source projects, such as [OpenRaider](http://openraider.sourceforge.net/)
+and VT project (found at [icculus.org](https://icculus.org/)), plus some code
+from Quake Tenebrae.
 
 OpenTomb tries to recreate the original Tomb Raider series experience, although
 with contemporary updates, features and additions, being able to fully benefit
@@ -37,9 +38,10 @@ Links to forums and info:
 
 ### Why create a new engine? ###
 It's true that we have fully working Windows builds of TR2-5, and TR1 works
-perfectly through DosBox. However, as time progresses the situation will only
-worsen, with newer Operating Systems becoming increasingly unlikely to support
-the games. OpenTomb will always be able to be ported to any platform you wish.
+perfectly through [DosBox](https://www.dosbox.com/). However, as time 
+progresses the situation will only worsen, with newer Operating Systems 
+becoming increasingly unlikely to support the games. OpenTomb will always
+be able to be ported to any platform you wish.
 
 It is also true that there are patchers for the original engine, aiming to
 improve and update it: TREP, TRNG, etc. The advantage with OpenTomb is that we
