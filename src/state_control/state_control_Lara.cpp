@@ -314,7 +314,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, WALK_FORWARD_OFFSET);
                     global_offset[2] += ent->bf->bb_max[2];
                     vec3_add(global_offset, global_offset, pos);
-                    Character_GetHeightInfo(ent, global_offset, &next_fc);
+                    Character_GetHeightInfo(global_offset, &next_fc);
                     if(((Entity_CheckNextPenetration(ent, NULL, move, reaction, COLLISION_FILTER_CHARACTER) == 0) || (!state->wall_collide)) &&
                        (next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height)))
                     {
@@ -432,7 +432,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, -WALK_BACK_OFFSET);
                         global_offset[2] += ent->bf->bb_max[2];
                         vec3_add(global_offset, global_offset, pos);
-                        Character_GetHeightInfo(ent, global_offset, &next_fc);
+                        Character_GetHeightInfo(global_offset, &next_fc);
                         if((next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height)))
                         {
                             ent->dir_flag = ENT_MOVE_BACKWARD;
@@ -1176,7 +1176,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 vec3_mul_scalar(global_offset, ent->transform.M4x4 + 0, -RUN_FORWARD_OFFSET);  // not an error - RUN_... more correct here
                 global_offset[2] += ent->bf->bb_max[2];
                 vec3_add(global_offset, global_offset, pos);
-                Character_GetHeightInfo(ent, global_offset, &next_fc);
+                Character_GetHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
@@ -1209,7 +1209,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 vec3_mul_scalar(global_offset, ent->transform.M4x4 + 0, RUN_FORWARD_OFFSET);// not an error - RUN_... more correct here
                 global_offset[2] += ent->bf->bb_max[2];
                 vec3_add(global_offset, global_offset, pos);
-                Character_GetHeightInfo(ent, global_offset, &next_fc);
+                Character_GetHeightInfo(global_offset, &next_fc);
                 if(next_fc.floor_hit.hit && (next_fc.floor_hit.point[2] > pos[2] - ent->character->max_step_up_height) && (next_fc.floor_hit.point[2] <= pos[2] + ent->character->max_step_up_height))
                 {
                     if(curr_fc->water && (!curr_fc->floor_hit.hit || (curr_fc->floor_hit.point[2] - curr_fc->transition_level > ent->character->height - ent->character->swim_depth)))
@@ -2599,7 +2599,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->jump)
             {
                 t = pos[2];
-                Character_GetHeightInfo(ent, pos, &next_fc);
+                Character_GetHeightInfo(pos, &next_fc);
                 pos[2] = t;
                 ss_anim->next_state = TR_STATE_LARA_UNDERWATER_FORWARD;
                 ss_anim->onEndFrame = ent_set_underwater;                       // dive
@@ -2728,7 +2728,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             move[0] = pos[0];
             move[1] = pos[1];
             move[2] = pos[2] + 0.5 * (ent->bf->bb_max[2] - ent->bf->bb_min[2]);
-            Character_GetHeightInfo(ent, move, &next_fc);
+            Character_GetHeightInfo(move, &next_fc);
 
             Character_Lean(ent, cmd, 0.0f);
 
@@ -2811,7 +2811,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, CRAWL_FORWARD_OFFSET);
                     global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
                     vec3_add(global_offset, global_offset, pos);
-                    Character_GetHeightInfo(ent, global_offset, &next_fc);
+                    Character_GetHeightInfo(global_offset, &next_fc);
                     if((next_fc.floor_hit.point[2] < pos[2] + ent->character->min_step_up_height) &&
                        (next_fc.floor_hit.point[2] > pos[2] - ent->character->min_step_up_height))
                     {
@@ -2827,7 +2827,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, -CRAWL_FORWARD_OFFSET);
                     global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
                     vec3_add(global_offset, global_offset, pos);
-                    Character_GetHeightInfo(ent, global_offset, &next_fc);
+                    Character_GetHeightInfo(global_offset, &next_fc);
                     if((next_fc.floor_hit.point[2] < pos[2] + ent->character->min_step_up_height) &&
                        (next_fc.floor_hit.point[2] > pos[2] - ent->character->min_step_up_height))
                     {
@@ -2888,7 +2888,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, CRAWL_FORWARD_OFFSET);
             global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
             vec3_add(global_offset, global_offset, pos);
-            Character_GetHeightInfo(ent, global_offset, &next_fc);
+            Character_GetHeightInfo(global_offset, &next_fc);
 
             if((cmd->move[0] != 1) || (state->dead == 1))
             {
@@ -2917,7 +2917,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             vec3_mul_scalar(global_offset, ent->transform.M4x4 + 4, -CRAWL_FORWARD_OFFSET);
             global_offset[2] += 0.5 * (ent->bf->bb_max[2] + ent->bf->bb_min[2]);
             vec3_add(global_offset, global_offset, pos);
-            Character_GetHeightInfo(ent, global_offset, &next_fc);
+            Character_GetHeightInfo(global_offset, &next_fc);
             if((cmd->move[0] != -1) || (state->dead == 1))
             {
                 ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE; // Stop

@@ -325,7 +325,7 @@ void Character_UpdatePath(struct entity_s *ent, struct room_sector_s *target);
 void Character_GoByPathToTarget(struct entity_s *ent);
 void Character_UpdateAI(struct entity_s *ent);
 
-void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_info_s *fc, float v_offset = 0.0);
+void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset = 0.0);
 int  Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height_info_s *nfc);
 int  Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc);
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3]);

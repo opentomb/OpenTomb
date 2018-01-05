@@ -137,38 +137,36 @@ void Character_Delete(struct entity_s *ent)
 {
     character_p actor = ent->character;
 
-    if(actor == NULL)
+    if(actor)
     {
-        return;
-    }
-
-    actor->path_dist = 0;
-    actor->path[0] = NULL;
-    actor->path_target = NULL;
-    actor->ent = NULL;
-    if(actor->hairs)
-    {
-        for(int i = 0; i < actor->hair_count; i++)
+        actor->path_dist = 0;
+        actor->path[0] = NULL;
+        actor->path_target = NULL;
+        actor->ent = NULL;
+        if(actor->hairs)
         {
-            Hair_Delete(actor->hairs[i]);
-            actor->hairs[i] = NULL;
+            for(int i = 0; i < actor->hair_count; i++)
+            {
+                Hair_Delete(actor->hairs[i]);
+                actor->hairs[i] = NULL;
+            }
+            free(actor->hairs);
+            actor->hairs = NULL;
+            actor->hair_count = 0;
         }
-        free(actor->hairs);
-        actor->hairs = NULL;
-        actor->hair_count = 0;
+
+        if(actor->ragdoll)
+        {
+            Ragdoll_DeleteSetup(actor->ragdoll);
+            actor->ragdoll = NULL;
+        }
+
+        actor->height_info.water = 0x00;
+        actor->climb.edge_hit = 0x00;
+
+        free(ent->character);
+        ent->character = NULL;
     }
-
-    if(actor->ragdoll)
-    {
-        Ragdoll_DeleteSetup(actor->ragdoll);
-        actor->ragdoll = NULL;
-    }
-
-    actor->height_info.water = 0x00;
-    actor->climb.edge_hit = 0x00;
-
-    free(ent->character);
-    ent->character = NULL;
 }
 
 
@@ -506,13 +504,13 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     from[2] -= ent->speed[2] * engine_frame_time;
     from[0] = ent->transform.M4x4[12 + 0];
     from[1] = ent->transform.M4x4[12 + 1];
-    Character_GetHeightInfo(ent, from, hi, ent->character->height);
+    Character_GetHeightInfo(from, hi, ent->character->height);
 }
 
 /**
  * Start position are taken from ent->transform.M4x4
  */
-void Character_GetHeightInfo(struct entity_s *ent, float pos[3], struct height_info_s *fc, float v_offset)
+void Character_GetHeightInfo(float pos[3], struct height_info_s *fc, float v_offset)
 {
     float from[3], to[3];
     room_p r = (fc->self) ? (fc->self->room) : (NULL);
@@ -615,7 +613,7 @@ int Character_CheckNextStep(struct entity_s *ent, float offset[3], struct height
     ///penetration test?
 
     vec3_add(pos, ent->transform.M4x4 + 12, offset);
-    Character_GetHeightInfo(ent, pos, nfc);
+    Character_GetHeightInfo(pos, nfc);
 
     if(fc->floor_hit.hit && nfc->floor_hit.hit)
     {
@@ -714,7 +712,9 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
     float *v1 = ent->transform.M4x4 + 4;
     float *v2 = next_fc->floor_hit.normale;
 
-    return next_fc->floor_hit.hit && (next_fc->floor_hit.point[2] > pos[2]) && (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
+    return next_fc->floor_hit.hit &&
+           (next_fc->floor_hit.point[2] > pos[2]) &&
+           (next_fc->floor_hit.normale[2] < ent->character->critical_slant_z_component) &&
            (v1[0] * v2[0] + v1[1] * v2[1] < 0.0f);
 }
 
@@ -747,7 +747,7 @@ void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
  */
 void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *climb, float test_from[3], float test_to[3])
 {
-    const float z_step = -0.66 * ent->character->climb_r;
+    const float z_step = -0.66f * ent->character->climb_r;
     float from[3], to[3];
     float *pos = ent->transform.M4x4 + 12;
     double n0[4], n1[4];                                                        // planes equations
@@ -889,7 +889,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
             n1[0] * (n0[1] * n2[2] - n0[2] * n2[1]) -
             n2[0] * (n0[1] * n1[2] - n0[2] * n1[1]);
 
-        if(fabs(d) < 0.005)
+        if(fabs(d) < 0.005f)
         {
             return;
         }
@@ -936,7 +936,7 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         n2[2] = n2[0];
         n2[0] = n2[1];
         n2[1] =-n2[2];
-        n2[2] = 0.0;
+        n2[2] = 0.0f;
         if(n2[0] * ent->transform.M4x4[4 + 0] + n2[1] * ent->transform.M4x4[4 + 1] > 0)   // direction fixing
         {
             n2[0] = -n2[0];
@@ -944,9 +944,9 @@ void Character_CheckClimbability(struct entity_s *ent, struct climb_info_s *clim
         }
 
         vec3_copy(climb->n, n2);
-        climb->up[0] = 0.0;
-        climb->up[1] = 0.0;
-        climb->up[2] = 1.0;
+        climb->up[0] = 0.0f;
+        climb->up[1] = 0.0f;
+        climb->up[2] = 1.0f;
         climb->edge_z_ang = 180.0f * atan2f(n2[0], -n2[1]) / M_PI;
         climb->edge_tan_xy[0] = -n2[1];
         climb->edge_tan_xy[1] = n2[0];
@@ -1157,7 +1157,7 @@ void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lea
             else if(ent->transform.angles[2] < 180.0f) // Approaching from right
             {
                 ent->transform.angles[2] -= 0.5f * (fabs(ent->transform.angles[2]) + lean_coeff) * engine_frame_time;
-                if(ent->transform.angles[2] < 0.0) ent->transform.angles[2] += 360.0f;
+                if(ent->transform.angles[2] < 0.0f) ent->transform.angles[2] += 360.0f;
             }
             else    // Approaching from center
             {
@@ -1179,7 +1179,7 @@ void Character_LookAt(struct entity_s *ent, float target[3])
     {
         SSBoneFrame_SetTarget(head, target, bone_dir);
         SSBoneFrame_SetTargetingLimit(head, head_target_limit);
-        if((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING) &&
+        if(((ent->move_type == MOVE_ON_FLOOR) || (ent->move_type == MOVE_FREE_FALLING)) &&
            head->parent && head->parent->parent)
         {
             const float axis_mod[3] = {0.23f, 0.03f, 1.0f};
@@ -1353,7 +1353,7 @@ int Character_MoveOnFloor(struct entity_s *ent)
         if(ent->character->height_info.floor_hit.hit && (ent->character->height_info.floor_hit.point[2] + 1.0f >= pos[2] + ent->bf->bb_min[2]))
         {
             engine_container_p cont = ent->character->height_info.floor_hit.obj;
-            if((cont != NULL) && (cont->object_type == OBJECT_ENTITY))
+            if(cont && (cont->object_type == OBJECT_ENTITY))
             {
                 entity_p e = (entity_p)cont->object;
                 if(e->callback_flags & ENTITY_CALLBACK_STAND)
@@ -1810,40 +1810,54 @@ int Character_FindTraverse(struct entity_s *ch)
     room_sector_p ch_s, obj_s = NULL;
     ch_s = ch->self->sector;
 
-    if(ch_s == NULL)
+    if(ch_s)
     {
-        return 0;
-    }
+        ch->character->traversed_object = NULL;
 
-    ch->character->traversed_object = NULL;
+        // OX move case
+        if(ch->transform.M4x4[4 + 0] > 0.9f)
+        {
+            float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
+            obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
+        }
+        else if(ch->transform.M4x4[4 + 0] < -0.9f)
+        {
+            float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
+            obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
+        }
+        // OY move case
+        else if(ch->transform.M4x4[4 + 1] > 0.9f)
+        {
+            float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
+            obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
+        }
+        else if(ch->transform.M4x4[4 + 1] < -0.9f)
+        {
+            float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
+            obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
+        }
 
-    // OX move case
-    if(ch->transform.M4x4[4 + 0] > 0.9f)
-    {
-        float pos[] = {(float)(ch_s->pos[0] + TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
-        obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
-    }
-    else if(ch->transform.M4x4[4 + 0] < -0.9f)
-    {
-        float pos[] = {(float)(ch_s->pos[0] - TR_METERING_SECTORSIZE), (float)(ch_s->pos[1]), 0.0f};
-        obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
-    }
-    // OY move case
-    else if(ch->transform.M4x4[4 + 1] > 0.9f)
-    {
-        float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] + TR_METERING_SECTORSIZE), 0.0f};
-        obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
-    }
-    else if(ch->transform.M4x4[4 + 1] < -0.9f)
-    {
-        float pos[] = {(float)(ch_s->pos[0]), (float)(ch_s->pos[1] - TR_METERING_SECTORSIZE), 0.0f};
-        obj_s = Room_GetSectorRaw(ch->self->room->real_room, pos);
-    }
+        if(obj_s != NULL)
+        {
+            obj_s = Sector_GetPortalSectorTargetRaw(obj_s);
+            for(engine_container_p cont = obj_s->owner_room->containers; cont; cont = cont->next)
+            {
+                if(cont->object_type == OBJECT_ENTITY)
+                {
+                    entity_p e = (entity_p)cont->object;
+                    if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform.M4x4[12 + 2] - ch->transform.M4x4[12 + 2]) < 1.1f))
+                    {
+                        int oz = (ch->transform.angles[0] + 45.0f) / 90.0f;
+                        ch->transform.angles[0] = oz * 90.0f;
+                        ch->character->traversed_object = e;
+                        Entity_UpdateTransform(ch);
+                        return 1;
+                    }
+                }
+            }
+        }
 
-    if(obj_s != NULL)
-    {
-        obj_s = Sector_GetPortalSectorTargetRaw(obj_s);
-        for(engine_container_p cont = obj_s->owner_room->containers; cont; cont = cont->next)
+        for(engine_container_p cont = ch_s->owner_room->containers; cont; cont = cont->next)
         {
             if(cont->object_type == OBJECT_ENTITY)
             {
@@ -1856,22 +1870,6 @@ int Character_FindTraverse(struct entity_s *ch)
                     Entity_UpdateTransform(ch);
                     return 1;
                 }
-            }
-        }
-    }
-
-    for(engine_container_p cont = ch_s->owner_room->containers; cont; cont = cont->next)
-    {
-        if(cont->object_type == OBJECT_ENTITY)
-        {
-            entity_p e = (entity_p)cont->object;
-            if((e->type_flags & ENTITY_TYPE_TRAVERSE) && OBB_OBB_Test(e->obb, ch->obb, 32.0f) && (fabs(e->transform.M4x4[12 + 2] - ch->transform.M4x4[12 + 2]) < 1.1f))
-            {
-                int oz = (ch->transform.angles[0] + 45.0f) / 90.0f;
-                ch->transform.angles[0] = oz * 90.0f;
-                ch->character->traversed_object = e;
-                Entity_UpdateTransform(ch);
-                return 1;
             }
         }
     }
@@ -2214,30 +2212,28 @@ void Character_UpdateParams(struct entity_s *ent)
 
 int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value)
 {
-    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
-        return 0;
+        max_value = (max_value < 0) ? (0) : (max_value);    // Clamp max. to at least zero
+        ent->character->parameters.maximum[parameter] = max_value;
+        return 1;
     }
-
-    max_value = (max_value < 0) ? (0) : (max_value);    // Clamp max. to at least zero
-    ent->character->parameters.maximum[parameter] = max_value;
-    return 1;
+    
+    return 0;
 }
 
 int Character_SetParam(struct entity_s *ent, int parameter, float value)
 {
-    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
-        return 0;
+        float maximum = ent->character->parameters.maximum[parameter];
+        value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
+        value = (value <= maximum) ? (value) : (maximum);
+        ent->character->parameters.param[parameter] = value;
+        return 1;
     }
 
-    float maximum = ent->character->parameters.maximum[parameter];
-
-    value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
-    value = (value <= maximum) ? (value) : (maximum);
-
-    ent->character->parameters.param[parameter] = value;
-    return 1;
+    return 0;
 }
 
 float Character_GetParam(struct entity_s *ent, int parameter)
@@ -2252,34 +2248,33 @@ float Character_GetParam(struct entity_s *ent, int parameter)
 
 int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
 {
-    if(!ent || !ent->character || (parameter >= PARAM_LASTINDEX))
+    if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
-        return 0;
+        float maximum = ent->character->parameters.maximum[parameter];
+        float current = ent->character->parameters.param[parameter];
+
+        if((current == maximum) && (value > 0))
+            return 0;
+
+        current += value;
+
+        if(current < 0)
+        {
+            ent->character->parameters.param[parameter] = 0;
+            return 0;
+        }
+        else if(current > maximum)
+        {
+            ent->character->parameters.param[parameter] = ent->character->parameters.maximum[parameter];
+        }
+        else
+        {
+            ent->character->parameters.param[parameter] = current;
+        }
+        return 1;
     }
 
-    float maximum = ent->character->parameters.maximum[parameter];
-    float current = ent->character->parameters.param[parameter];
-
-    if((current == maximum) && (value > 0))
-        return 0;
-
-    current += value;
-
-    if(current < 0)
-    {
-        ent->character->parameters.param[parameter] = 0;
-        return 0;
-    }
-    else if(current > maximum)
-    {
-        ent->character->parameters.param[parameter] = ent->character->parameters.maximum[parameter];
-    }
-    else
-    {
-        ent->character->parameters.param[parameter] = current;
-    }
-
-    return 1;
+    return 0;
 }
 
 
