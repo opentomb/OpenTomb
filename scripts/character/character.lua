@@ -16,7 +16,7 @@
 --PARAM_EXTRA3     = 7;
 --PARAM_EXTRA4     = 8;
 
-PARAM_ABSOLUTE_MAX = -1;
+PARAM_ABSOLUTE_MAX = 0x7FFFFFFF;
 
 
 -------- Lara's model-------

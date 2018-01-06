@@ -305,7 +305,7 @@ end;
 
 items_funcs[ITEM_LARGE_MEDIPACK] = {};
 items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
-    setCharacterParam(id, PARAM_HEALTH, -1);
+    setCharacterParam(id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
     removeItem(id, ITEM_LARGE_MEDIPACK, 1);
     if(player == id) then
         playSound(SOUND_MEDIPACK);

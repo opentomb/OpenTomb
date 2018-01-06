@@ -2227,7 +2227,7 @@ int Character_SetParam(struct entity_s *ent, int parameter, float value)
     if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
         float maximum = ent->character->parameters.maximum[parameter];
-        value = (value >= 0) ? (value) : (maximum); // Char params can't be less than zero.
+        value = (value >= 0.0f) ? (value) : (0.0f);
         value = (value <= maximum) ? (value) : (maximum);
         ent->character->parameters.param[parameter] = value;
         return 1;
@@ -2251,27 +2251,12 @@ int Character_ChangeParam(struct entity_s *ent, int parameter, float value)
     if(ent && ent->character && (parameter < PARAM_LASTINDEX))
     {
         float maximum = ent->character->parameters.maximum[parameter];
-        float current = ent->character->parameters.param[parameter];
+        float current = ent->character->parameters.param[parameter] + value;
 
-        if((current == maximum) && (value > 0))
-            return 0;
-
-        current += value;
-
-        if(current < 0)
-        {
-            ent->character->parameters.param[parameter] = 0;
-            return 0;
-        }
-        else if(current > maximum)
-        {
-            ent->character->parameters.param[parameter] = ent->character->parameters.maximum[parameter];
-        }
-        else
-        {
-            ent->character->parameters.param[parameter] = current;
-        }
-        return 1;
+        current = (current >= 0.0f) ? (current) : (0.0f);
+        current = (current <= maximum) ? (current) : (maximum);
+        ent->character->parameters.param[parameter] = current;
+        return (current != 0.0f) && (current != maximum);
     }
 
     return 0;
