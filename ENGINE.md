@@ -1,5 +1,5 @@
-1. SOURCE DIRECTORIES
---------------
+# Source Directories
+
 - `extern`
     Contains build in libraries:
     - `al` - OpenAL 1.16 (or 1.17, needs confirmation) modified: used custom SDL2 backend; AL build-in library works on Windows and MacOS, but under Linux native AL library are required;
