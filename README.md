@@ -191,6 +191,7 @@ camera fix-ups.
 * [xproger](https://github.com/xproger): documentation updates.
 * [Banderi](https://github.com/Banderi): documentation, bugfixing.
 * [gabrielmtzcarrillo](https://github.com/gabrielmtzcarrillo): entity shader work.
+* [filfreire](https://github.com/filfreire): documentation.
 
 
 Additional contributions from: Ado Croft (extensive testing),
@@ -200,4 +201,4 @@ shabtronic (renderer fix-ups), [Tonttu](https://github.com/Tonttu) (console patc
 [xythobuz](https://github.com/xythobuz) (additional Mac compatibility patches).
 
 Translations by: [Joey79100](https://github.com/Joey79100) (French), Nickotte (Italian), [Lwmte](https://github.com/Lwmte) (Russian),
-[SuiKaze Raider](https://twitter.com/suikazeraider) (Spanish).
+[SuiKaze Raider](https://twitter.com/suikazeraider) (Spanish), [filfreire](https://github.com/filfreire) (Portuguese - Portugal).
