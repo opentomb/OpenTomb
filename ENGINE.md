@@ -58,6 +58,6 @@
     - `resource` - simple layer for conversion level data from VT format to engine format; here are floor data to collision geometry parser;
     - `room` - contains room structure and objects ownership manipulation (entity a contains in room c and moved to room d);
     - `skeletal_model` - contains base model animation representation structures, and in-game usage unique skeletal model structure; implemented smoothed skeletal model update algorithm, multi animation system algorithm and multi-targeting bone mutators algorithm (head tracking, weapons targeting);
-    - `trigger` - here is main (in-game) sector trigger handler/parser, objects functions caller;
+    - `trigger` - here is the main (in-game) sector trigger handler/parser and objects functions caller;
     - `world` - main level database storage (exclude sound): models, entities, rooms, meshes a.t.c. here are level loader/destructor and interface for accessing to rooms/entities by coordinates/ids;
 
