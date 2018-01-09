@@ -1,63 +1,63 @@
-# Source Directories
+# Source Folders
 
 - `extern`
-    Contains built-in libraries:
-    - `al` - OpenAL 1.16 (or 1.17, needs confirmation) modified: used custom SDL2 backend; AL build-in library works on Windows and MacOS, but under Linux native AL library are required;
-    - `bullet` 2.83 - no changes;
-    - `freetype2` - no changes;
-    - `ogg` - no changes, configured for build under Windows, under other platforms native libs are required;
+    Contains all built-in libraries:
+    - `al` - OpenAL 1.16 (or 1.17, needs confirmation) Changes: Uses custom SDL2 backend; AL built-in library works on Windows and MacOS. However, Linux is not supported thus it is important when building under Linux, native AL library are used instead.
+    - `bullet` 2.83 - No changes.
+    - `freetype2` - No changes.
+    - `ogg` - No changes, configured for build under Windows by default. Under other platforms, their native libs are required.
 
 - `src`
     Contains engine code:
-    - `core` - low-level code:
-         - `vmath` - base vector and quaternion mathematics, matrices 4x4, splines;
-         - `polygon` - base polygon structure;
-         - `obb` - oriented bounding box module;
-         - `utf8_32` - ut8 - 32 string manipulation functions;
-         - `console` - console implementation (allows UTF-8 string inputting);
-         - `gl_utils` - contains OpenGL functions pointers and base shader loading functions; module uses only `SDL_opengl` and `SDL_GL_GetProcAdress(...)`, so use ONLY `gl_ulils.h` as `gl` header and only qgl\* functions;
-         - `gl_font` - here implements true type font rendering in OpenGL context (works with UTF-8 strings);
-         - `redblack` - red-black tree for built-in data storage;
-         - `system` - basic debug print and error functions, file found function and screenshot making function;
+    - `core` - Low-level code:
+         - `vmath` - Base vector, Quaternion, Matrix 4x4 and spline mathematics.
+         - `polygon` - Base polygon structure.
+         - `obb` - Oriented bounding box module (OBB).
+         - `utf8_32` - UT8 - 32 string manipulation functions.
+         - `console` - Console implementation (allows reading UTF-8 strings inputted into the console window).
+         - `gl_utils` - Contains OpenGL function pointers and base shader loading functions; module only makes use of `SDL_opengl` and `SDL_GL_GetProcAdress(...)`. It is important that ONLY `gl_ulils.h` as `gl` header is used. Also, only use qgl\* functions for interaction with the OpenGL API.
+         - `gl_font` - Contains implementation of rendering for True Type Font lib within an OpenGL context. (works with UTF-8 strings).
+         - `redblack` - Red-black tree for built-in data storage.
+         - `system` - Contains basic debug print, error functions, check if file exists function and take screenshot function.
     - `notes`:
-         - \* - for files manipulation use `SDL_rwops` module, it works everywhere SDL works;
+         - \* - For file I/O operations. It is important to use `SDL_rwops`. This is part of SDL, works everywhere and is suggested to maintain continuity.
 
-    - `vt` - external trosettastone Tomb Raider resource loader project, rewritten and updated :-)
+    - `vt` - External trosettastone Tomb Raider resource loader project, rewritten and updated :-)
 
-    - `render` - here is sources for scene rendering;
-         - `bordered_texture_atlas`, `bsp_tree_2d` - [Cochrane](https://github.com/Cochrane)'s module for storing many original textures in single one;
-         - `bsp_tree` - module for transparent polygons sorting (BSP tree creation module, uses internal memory management);
-         - `camera` - structure with camera parameters, matrices + camera manipulation functions;
-         - `frustum` - special module for rooms and object visibility calculation by portal/frustum intersections (uses internal memory management);
-         - `shader_description`, shader_manager - module for shaders manipulations;
-         - `render` - the main scene rendering module, working in two steps: 1: generates rendering list by the camera, 2: render previously generated list; here implemented debug rendering;
+    - `render` - Contains the source for scene rendering.
+         - `bordered_texture_atlas`, `bsp_tree_2d` - [Cochrane](https://github.com/Cochrane)'s module for storing many original textures in a single one.
+         - `bsp_tree` - Module for transparent polygon sorting (BSP tree creation module, uses internal memory management).
+         - `camera` - Structure with camera related fields, matrices + camera manipulation functions.
+         - `frustum` - Special module for rooms and object visibility calculation. This is done via portal/frustum intersections (uses internal memory management).
+         - `shader_description`, shader_manager - Module for shader object creation/application.
+         - `render` - The main scene rendering module, works in two stages: 1: Generates room rendering list based on the camera. 2: render previously generated list, only used during debug rendering.
 
-    - `script` - contains LUA script functions;
-         - `script` - engine constants loading to LUA, parsers functions, system functions;
-         - `script_audio` - audio config parsing, audio starting / stopping / state getting;
-         - `script_character` - character parameters manipulation, inventory functions;
-         - `script_entity` - physics, positioning, flags, states manipulation;
-         - `script_skeletal_model` - animation control system;
-         - `script_world` - spawning objects, levels transition, level configuration functions, objects / effects generation;
+    - `script` - Contains LUA script functions.
+         - `script` - Engine constants loading to LUA, parsers functions, system functions.
+         - `script_audio` - Audio config file parsing, audio starting,  stopping and state retrieval.
+         - `script_character` - Character parameter manipulation and inventory related functions.
+         - `script_entity` - Physics, positioning, flags state manipulation.
+         - `script_skeletal_model` - Animation control system.
+         - `script_world` - Spawning objects, level transitions, level configuration functions, objects and effects generation.
 
-    - `anim_state_control` - only Lara's state control controller module;
-    - `audio` - AL audio sources and soundtrack manipulation and a storage module;
-    - `character_controller` - controls moving in different conditions (on floor, free fall, underwater, on water, climbing a.t.c...); + contains helpers functions and weapon state control functions;
-    - `controls` - parses input and updates engine control state structure;
-    - `engine` - contains main loop function, SDL event handlers, and debug output functions;
-    - `entity` - main in-game object type structure and manipulation functions; contains frame updates functions, callback callers, physics state updaters/checkers functions;
-    - `game` - contains main game frame function; also contains save / load functions, low-level game effects (flyby camera, look at control, load screen updater...);
-    - `gameflow` - contains levels loading order control functions and allows to get load screen info;
-    - `gui` - renders all debug strings, bars, load screen, inventory menu;
-    - `image` - layer module for reading pcx and png and saving png images; bpp = 24 or 32 only (RGB or RGBA only);
-    - `inventory` - only item structure and simplest add/remove item functions;
-    - `main_SDL` - only main function and engine start (+ todo list in comment);
-    - `mesh` - base item for rendering, contains vertices and VBO;
-    - `physics` - contains abstract engine interface for working with physics - use it only in engine code! here ray/sphere test functions, multi-mesh models for skeletal models;
-    - `physics_bullet` - stores all engine physics geometry; contains all physics code implementation with bullet library; creates own physics geometry from level resources;
-    - `resource` - simple layer for conversion level data from VT format to engine format; here are floor data to collision geometry parser;
-    - `room` - contains room structure and objects ownership manipulation (entity a contains in room c and moved to room d);
-    - `skeletal_model` - contains base model animation representation structures, and in-game usage unique skeletal model structure; implemented smoothed skeletal model update algorithm, multi animation system algorithm and multi-targeting bone mutators algorithm (head tracking, weapons targeting);
-    - `trigger` - here is the main (in-game) sector trigger handler/parser and objects functions caller;
-    - `world` - main level database storage (excluding sound): models, entities, rooms, meshes a.t.c. here are level loader/destructor and interface for accessing to rooms/entities by coordinates/ids;
+    - `anim_state_control` - Only Lara's state control control module.
+    - `audio` - AL audio sources, soundtrack manipulation and a storage module.
+    - `character_controller` - Manages controls for the character under different state conditions i.e whilst (on floor, free fall, underwater, on water or climbing etc.). Also, helper functions and weapon state control functions are included.
+    - `controls` - Parses input from SDL and updates engine input control state structure.
+    - `engine` - Contains main loop function, SDL event handlers, and debug output functions.
+    - `entity` - Main in-game object type structure and manipulation functions. Contains frame update functions, callback callers, physics state updater/checker functions.
+    - `game` - Contains main game frame function. Also contains save/load functions and low-level game effects (flyby camera, look at control, load screen updater).
+    - `gameflow` - Contains the base module for interfacing with external LUA "gameflow" scripts. This module is responsible for tracking secrets and transitioning between different game states (i.e play FMV, play level etc) or setting special game/level specific parameters.
+    - `gui` - Renders all debug strings, bars, load screen and the inventory menu.
+    - `image` - Layer module for reading pcx, png and saving png images. bpp = 24 or 32 only (RGB or RGBA only).
+    - `inventory` - Contains the item structure and simple add/remove item from inventory functions.
+    - `main_SDL` - Only main function and engine start (+ todo list in comment).
+    - `mesh` - Base item for rendering, contains vertices and VBO.
+    - `physics` - Contains abstract engine interface for working with physics. It is important to use it only within the engine code! Here ray/sphere test functions, multi-mesh models for skeletal models.
+    - `physics_bullet` - Stores all engine physics geometry. Contains all physics code implementation with bullet library, creates own physics geometry from level resources.
+    - `resource` - Simple layer for converting level data from VT format to a format this engine supports. There is also a floor data to collision geometry converter included.
+    - `room` - Contains room structure and object ownership manipulation (entity is within in room c and moved to room d).
+    - `skeletal_model` - Contains base model, animation representation structures for in-game usage. A unique skeletal model structure is implemented with a smooth skeletal model update algorithm. Multi-animation system algorithm, multi-targeting bone mutators algorithm (head tracking, weapons targeting).
+    - `trigger` - Here is the main (in-game) sector trigger handler/parser and object functions caller.
+    - `world` - Main level database storage (excluding sound): models, entities, rooms, meshes etc. here are level loader/destructor and interface for accessing to rooms/entities by coordinates/ids;
 
