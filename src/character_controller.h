@@ -241,6 +241,7 @@ typedef struct character_state_s
     uint32_t    crouch : 1;
     uint32_t    sprint : 1;
     uint32_t    tightrope : 1;
+    uint32_t    can_attack : 2;
 }character_state_t, *character_state_p;
 
 typedef struct character_param_s
@@ -290,6 +291,8 @@ typedef struct character_s
     uint16_t                    bone_r_hand_end;
     int16_t                     weapon_id;
     int16_t                     weapon_state;
+    uint16_t                    melee_dist;
+    uint16_t                    has_long_attack;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
@@ -339,6 +342,7 @@ void Character_SetToJump(struct entity_s *ent, float v_vertical, float v_horizon
 void Character_Lean(struct entity_s *ent, character_command_p cmd, float max_lean);
 void Character_LookAt(struct entity_s *ent, float target[3]);
 void Character_ClearLookAt(struct entity_s *ent);
+void Character_LookAtTarget(struct entity_s *ent, struct entity_s *target);
 
 int Character_MoveOnFloor(struct entity_s *ent);
 int Character_MoveFly(struct entity_s *ent);

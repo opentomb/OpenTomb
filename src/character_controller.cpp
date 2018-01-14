@@ -62,6 +62,8 @@ void Character_Create(struct entity_s *ent)
         ret->bone_r_hand_end = 0x00;
         ret->weapon_state = 0x00;
         ret->weapon_id = 0;
+        ret->melee_dist = 0;
+        ret->has_long_attack = 0;
 
         ret->state.floor_collide = 0x00;
         ret->state.ceiling_collide = 0x00;
@@ -76,6 +78,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.crouch = 0x00;
         ret->state.sprint = 0x00;
         ret->state.tightrope = 0x00;
+        ret->state.can_attack = 0x00;
 
         ret->cmd.action = 0x00;
         ret->cmd.crouch = 0x00;
@@ -409,25 +412,13 @@ void Character_UpdateAI(struct entity_s *ent)
     entity_p target = World_GetEntityByID(ent->character->target_id);
     if(target)
     {
-        if(ent->character->bone_head > 0)
-        {
-            float pos[3];
-            if(target->character)
-            {
-                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
-                Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
-            }
-            else
-            {
-                vec3_copy(pos, target->obb->centre);
-            }
-            Character_LookAt(ent, pos);
-        }
+        Character_LookAtTarget(ent, target);
         if(target->self->sector && (ent->character->path_target != target->self->sector))
         {
             ent->character->path_target = target->self->sector;
             Character_UpdatePath(ent, ent->character->path_target);
         }
+        ent->character->cmd.action = (ent->character->state.can_attack) ? (0x01) : (0x00);
     }
 
     Character_GoByPathToTarget(ent);
@@ -1208,6 +1199,29 @@ void Character_ClearLookAt(struct entity_s *ent)
     if(head->parent)
     {
         head->parent->is_targeted = 0x00;
+    }
+}
+
+
+void Character_LookAtTarget(struct entity_s *ent, struct entity_s *target)
+{
+    if(target && (ent->character->bone_head > 0))
+    {
+        float pos[3];
+        if(target->character)
+        {
+            float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+            Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
+        }
+        else
+        {
+            vec3_copy(pos, target->obb->centre);
+        }
+        Character_LookAt(ent, pos);
+    }
+    else
+    {
+        Character_ClearLookAt(ent);
     }
 }
 
@@ -2058,7 +2072,7 @@ void Character_ApplyCommands(struct entity_s *ent)
     }
 
     Character_UpdateCurrentHeight(ent);
-    
+
     if(ent->character->set_weapon_model_func)
     {
         if((ent->character->weapon_id < 0) && (ent->character->weapon_state == WEAPON_STATE_HIDE))
@@ -2070,7 +2084,7 @@ void Character_ApplyCommands(struct entity_s *ent)
             ent->character->set_weapon_model_func(ent, ent->character->weapon_id, WEAPON_STATE_HIDE_TO_READY);
         }
     }
-    
+
     if(ent->character->state_func)
     {
         ent->character->state_func(ent, &ent->bf->animations);
@@ -2081,7 +2095,7 @@ void Character_ApplyCommands(struct entity_s *ent)
     ent->character->state.ceiling_collide = 0x00;
     ent->character->state.wall_collide = 0x00;
     ent->character->state.step_z = 0x00;
-    
+
     if(!ent->no_move)
     {
         switch(ent->move_type)
@@ -2137,24 +2151,7 @@ void Character_UpdateParams(struct entity_s *ent)
     if(ent->character->weapon_state != WEAPON_STATE_HIDE)
     {
         entity_p target = World_GetEntityByID(ent->character->target_id);
-        if(target)
-        {
-            float pos[3];
-            if(target->character)
-            {
-                float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
-                Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
-            }
-            else
-            {
-                vec3_copy(pos, target->obb->centre);
-            }
-            Character_LookAt(ent, pos);
-        }
-        else
-        {
-            Character_ClearLookAt(ent);
-        }
+        Character_LookAtTarget(ent, target);
     }
 
     switch(ent->move_type)
@@ -2218,7 +2215,7 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
         ent->character->parameters.maximum[parameter] = max_value;
         return 1;
     }
-    
+
     return 0;
 }
 
