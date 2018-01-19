@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "core/vmath.h"
+#include "core/obb.h"
 #include "core/system.h"
 #include "core/console.h"
 #include "core/polygon.h"
@@ -62,8 +63,6 @@ void Character_Create(struct entity_s *ent)
         ret->bone_r_hand_end = 0x00;
         ret->weapon_state = 0x00;
         ret->weapon_id = 0;
-        ret->melee_dist = 0;
-        ret->has_long_attack = 0;
 
         ret->state.floor_collide = 0x00;
         ret->state.ceiling_collide = 0x00;
@@ -313,7 +312,7 @@ void Character_FixByBox(struct entity_s *ent)
 }
 
 
-void Character_GoByPathToTarget(struct entity_s *ent)
+void Character_GoByPathToTarget(struct entity_s *ent, struct entity_s *target)
 {
     if(ent->self->sector && ent->self->sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
@@ -326,7 +325,7 @@ void Character_GoByPathToTarget(struct entity_s *ent)
         ent->character->cmd.move[2] = 0;
         ent->character->cmd.shift = 0;
 
-        if(ent->character->path_target == ent->self->sector)
+        if(!target && (ent->character->path_target == ent->self->sector))
         {
             ent->character->path_target = NULL;
             return;
@@ -352,13 +351,14 @@ void Character_GoByPathToTarget(struct entity_s *ent)
 
         if(ent->character->path_dist == 1)
         {
-            vec3_copy(dir, ent->character->path_target->pos);
+            float *v = (target) ? (target->obb->centre) : (ent->character->path_target->pos);
+            vec3_copy(dir, v);
         }
         else
         {
             Room_GetOverlapCenter(ent->character->path[0], ent->character->path[1], dir);
             if(vec3_dist_sq(dir, ent->transform.M4x4 + 12) < 0.25f * TR_METERING_SECTORSIZE * TR_METERING_SECTORSIZE)
-            {
+            {//FIX to 2d condition
                 if(ent->character->path_dist > 2)
                 {
                     Room_GetOverlapCenter(ent->character->path[1], ent->character->path[2], dir);
@@ -412,16 +412,22 @@ void Character_UpdateAI(struct entity_s *ent)
     entity_p target = World_GetEntityByID(ent->character->target_id);
     if(target)
     {
+        if(target->character && target->character->state.dead)
+        {
+            ent->character->target_id = ENTITY_ID_NONE;
+            Character_LookAtTarget(ent, NULL);
+            return;
+        }
         Character_LookAtTarget(ent, target);
         if(target->self->sector && (ent->character->path_target != target->self->sector))
         {
             ent->character->path_target = target->self->sector;
             Character_UpdatePath(ent, ent->character->path_target);
         }
-        ent->character->cmd.action = (ent->character->state.can_attack) ? (0x01) : (0x00);
     }
 
-    Character_GoByPathToTarget(ent);
+    ent->character->cmd.action = (ent->character->state.can_attack) ? (0x01) : (0x00);
+    Character_GoByPathToTarget(ent, target);
 }
 
 

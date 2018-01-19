@@ -1274,8 +1274,8 @@ void ShowDebugInfo()
                     room_box_p box = ent->self->sector->box;
                     GLText_OutTextXY(30.0f, y += dy, "box = %d, floor = %d", (int)box->id, (int)box->bb_min[2]);
                     GLText_OutTextXY(30.0f, y += dy, "blockable = %d, blocked = %d", (int)box->is_blockable, (int)box->is_blocked);
-                    GLText_OutTextXY(30.0f, y += dy, "fly = %d", (int)box->zone.FlyZone_Normal);
-                    GLText_OutTextXY(30.0f, y += dy, "zones = %d, %d, %d, %d", (int)box->zone.GroundZone1_Normal, (int)box->zone.GroundZone2_Normal, (int)box->zone.GroundZone3_Normal, (int)box->zone.GroundZone4_Normal);
+                    GLText_OutTextXY(30.0f, y += dy, "fly = %d", (int)box->zone[0].FlyZone);
+                    GLText_OutTextXY(30.0f, y += dy, "zones = %d, %d, %d, %d", (int)box->zone[0].GroundZone1, (int)box->zone[0].GroundZone2, (int)box->zone[0].GroundZone3, (int)box->zone[0].GroundZone4);
                     for(box_overlap_p ov = box->overlaps; ov; ov++)
                     {
                         GLText_OutTextXY(30.0f, y += dy, "overlap = %d", (int)ov->box);

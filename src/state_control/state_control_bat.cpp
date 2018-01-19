@@ -5,6 +5,7 @@
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
+#include "../core/obb.h"
 
 #include "../render/camera.h"
 #include "../script/script.h"
@@ -16,6 +17,7 @@
 #include "../skeletal_model.h"
 #include "../entity.h"
 #include "../character_controller.h"
+#include "../world.h"
 #include "state_control_bat.h"
 #include "state_control.h"
 
@@ -60,6 +62,16 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     state->sprint = 0x00;
     state->attack = 0x00;
+    state->can_attack = 0x00;
+
+    if(!state->dead && (ent->character->target_id != ENTITY_ID_NONE))
+    {
+        entity_p target = World_GetEntityByID(ent->character->target_id);
+        if(target && Room_IsInNearRoomsList(ent->self->room, target->self->room))
+        {
+            state->can_attack = OBB_OBB_Test(ent->obb, target->obb, 64) ? (0x01) : (0x00);
+        }
+    }
 
     switch(current_state)
     {
@@ -111,6 +123,6 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             break;
     };
-    
+
     return 0;
 }

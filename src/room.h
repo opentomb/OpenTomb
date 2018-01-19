@@ -115,16 +115,11 @@ struct trigger_header_s;
 
 typedef struct room_zone_s
 {
-    int16_t GroundZone1_Normal;
-    int16_t GroundZone2_Normal;
-    int16_t GroundZone3_Normal;
-    int16_t GroundZone4_Normal;
-    int16_t FlyZone_Normal;
-    int16_t GroundZone1_Alternate;
-    int16_t GroundZone2_Alternate;
-    int16_t GroundZone3_Alternate;
-    int16_t GroundZone4_Alternate;
-    int16_t FlyZone_Alternate;
+    int16_t GroundZone1;
+    int16_t GroundZone2;
+    int16_t GroundZone3;
+    int16_t GroundZone4;
+    int16_t FlyZone;
 }room_zone_t, *room_zone_p;
 
 
@@ -144,7 +139,7 @@ typedef struct room_box_s
     float                   bb_min[3];
     float                   bb_max[3];
     struct box_overlap_s   *overlaps;
-    struct room_zone_s      zone;
+    struct room_zone_s      zone[2];
 }room_box_t, *room_box_p;
 
 

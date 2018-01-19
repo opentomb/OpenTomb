@@ -86,9 +86,6 @@ function Lara_init(id)
 
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
-        if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
-        end;
     end;
 end
 
@@ -126,7 +123,6 @@ function baddie_init(id)    -- INVALID!
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityActivity(object_id, false);
             -- DO KILL ANIM
         end;
@@ -188,7 +184,6 @@ function Doppelgagner_init(id)
         setCharacterParam(player, PARAM_HEALTH, hp);
         setCharacterParam(object_id, PARAM_HEALTH, hp);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setCharacterRagdollActivity(object_id, true);
         end;
     end;
@@ -262,7 +257,6 @@ function bat_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -312,7 +306,6 @@ function wolf_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -349,7 +342,6 @@ function bear_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -391,7 +383,6 @@ function raptor_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -433,7 +424,6 @@ function lion_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -475,7 +465,6 @@ function puma_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -535,7 +524,6 @@ function winged_mutant_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -586,7 +574,6 @@ function trex_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -630,7 +617,6 @@ function gorilla_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -672,7 +658,6 @@ function crocodile_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -713,7 +698,6 @@ function rat_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -753,7 +737,6 @@ function centaur_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -784,7 +767,6 @@ function Larson_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -839,7 +821,6 @@ function Pierre_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             if(not entity_funcs[object_id].is_flee) then
-                setCharacterTarget(activator_id, nil);
                 setEntityCollision(object_id, false);
             else
                 setCharacterParam(object_id, PARAM_HEALTH, 1);
@@ -900,7 +881,6 @@ function cowboy_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -935,7 +915,6 @@ function MrT_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -989,7 +968,6 @@ function skateboardist_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;
@@ -1039,7 +1017,6 @@ function TorsoBoss_init(id)
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(a ~= 13) then
-                setCharacterTarget(activator_id, nil);
                 setEntityCollision(object_id, false);
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 13, 0);
             end;
@@ -1081,7 +1058,6 @@ function Natla_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setCharacterTarget(activator_id, nil);
             setEntityCollision(object_id, false);
         end;
     end;

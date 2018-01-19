@@ -5,6 +5,7 @@
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
+#include "../core/obb.h"
 
 #include "../render/camera.h"
 #include "../script/script.h"
@@ -16,6 +17,7 @@
 #include "../skeletal_model.h"
 #include "../entity.h"
 #include "../character_controller.h"
+#include "../world.h"
 #include "state_control_wolf.h"
 #include "state_control.h"
 
@@ -48,6 +50,25 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
     state->sprint = 0x00;
     state->crouch = 0x00;
     state->attack = 0x00;
+    state->can_attack = 0x00;
+
+    if(!state->dead && (ent->character->target_id != ENTITY_ID_NONE))
+    {
+        entity_p target = World_GetEntityByID(ent->character->target_id);
+        if(target && Room_IsInNearRoomsList(ent->self->room, target->self->room))
+        {
+            float pos[3], *v = ent->bf->bone_tags[ent->character->bone_head].full_transform + 12;
+            Mat4_vec3_mul_macro(pos, ent->transform.M4x4, v);
+            pos[0] -= target->obb->centre[0];
+            pos[1] -= target->obb->centre[1];
+            pos[2] -= target->obb->centre[2];
+            if((pos[2] > -target->obb->extent[2]) && (pos[2] < target->obb->extent[2]) &&
+               (pos[0] * pos[0] + pos[1] * pos[1] < 400.0f * 400.0f))
+            {
+                state->can_attack = 0x01;
+            }
+        }
+    }
 
     switch(current_state)
     {
@@ -236,10 +257,10 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_WOLF_DEAD:// 11
             state->dead = 0x02;
             break;
-            
+
         default:
             cmd->rot[0] = 0;
-            break;            
+            break;
     };
 
     return 0;

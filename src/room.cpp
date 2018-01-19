@@ -787,6 +787,7 @@ static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, box_vali
 {
     if(next_box && !next_box->is_blocked)
     {
+        room_zone_p zone = (op->zone_alt) ? (next_box->zone + 1) : (next_box->zone);
         int32_t step = next_box->bb_min[2] - curr_box->bb_min[2];
         if((op->zone_type == ZONE_TYPE_FLY) || ((step >= 0) ? (step - op->step_up <= 1.0f) : (-1.0f <= step + op->step_down)))
         {
@@ -796,19 +797,19 @@ static bool Room_IsBoxForPath(room_box_p curr_box, room_box_p next_box, box_vali
                     return true;
 
                 case ZONE_TYPE_FLY:
-                    return (op->zone_alt) ? (op->zone & next_box->zone.FlyZone_Alternate) : (op->zone & next_box->zone.FlyZone_Normal);
+                    return zone->FlyZone;
 
                 case ZONE_TYPE_1:
-                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone1_Alternate) : (op->zone & next_box->zone.GroundZone1_Normal);
+                    return zone->GroundZone1;
 
                 case ZONE_TYPE_2:
-                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone2_Alternate) : (op->zone & next_box->zone.GroundZone2_Normal);
+                    return zone->GroundZone2;
 
                 case ZONE_TYPE_3:
-                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone3_Alternate) : (op->zone & next_box->zone.GroundZone3_Normal);
+                    return zone->GroundZone3;
 
                 case ZONE_TYPE_4:
-                    return (op->zone_alt) ? (op->zone & next_box->zone.GroundZone4_Alternate) : (op->zone & next_box->zone.GroundZone4_Normal);
+                    return zone->GroundZone4;
             }
         }
     }
