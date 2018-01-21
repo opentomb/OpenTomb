@@ -400,7 +400,7 @@ void Character_GoByPathToTarget(struct entity_s *ent, struct entity_s *target)
         }
         else
         {
-            ent->character->cmd.shift = (dir[3] < 4096.0f);
+            //ent->character->cmd.shift = (dir[3] < 4096.0f);
         }
         ent->character->cmd.move[0] = (dir[3] > 32.0f) ? (0x01) : (0x00);
     }

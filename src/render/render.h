@@ -29,6 +29,7 @@
 #define R_DRAW_TRIGGERS         0x00040000      // Trigger sectors drawing
 #define R_DRAW_AI_BOXES         0x00080000      // AI boxes drawing
 #define R_DRAW_AI_OBJECTS       0x00100000      // AI objects drawing
+#define R_DRAW_AI_PATH          0x00200000      // AI character target path drawing
 
 #define STENCIL_FRUSTUM 1
 

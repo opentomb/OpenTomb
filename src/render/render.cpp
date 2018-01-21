@@ -930,6 +930,27 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
             }
         }
     }
+    
+    if((this->r_flags & R_DRAW_AI_PATH) && entity->character && entity->character->path_dist)
+    {
+        GLfloat red[3] = {1.0f, 0.0f, 0.0f};
+        GLfloat from[3], to[3];
+        vec3_copy(from, entity->self->sector->pos);
+        from[2] = entity->transform.M4x4[12 + 2] + TR_METERING_STEP;
+        this->debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
+        for(int i = 1; i < entity->character->path_dist; ++i)
+        {
+            Room_GetOverlapCenter(entity->character->path[i], entity->character->path[i - 1], to);
+            this->debugDrawer->DrawLine(from, to, red, red);
+            vec3_copy(from, to);
+        }
+        if(entity->character->path_target)
+        {
+            vec3_copy(to, entity->character->path_target->pos);
+            to[2] = entity->transform.M4x4[12 + 2] + TR_METERING_STEP;
+            this->debugDrawer->DrawLine(from, to, red, red);
+        }
+    }
 }
 
 void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], const float modelViewProjectionMatrix[16])

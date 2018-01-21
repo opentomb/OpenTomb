@@ -3733,6 +3733,12 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
 
+    if((weapon_state != WEAPON_STATE_HIDE) &&
+       (ent->move_type != MOVE_FREE_FALLING) && (ent->move_type != MOVE_ON_FLOOR) && (ent->move_type != MOVE_QUICKSAND))
+    {
+        return;
+    }
+
     if(sm && (ent->bf->bone_tag_count == sm->mesh_count) && (sm->animation_count >= 4))
     {
         skeletal_model_p base_model = ent->bf->animations.model;
