@@ -178,7 +178,8 @@ void Character_Update(struct entity_s *ent)
     if(mask == (ent->state_flags & mask))
     {
         bool is_player = (World_GetPlayer() == ent);
-        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR))
+        if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR) &&
+           (ent->character->weapon_state == WEAPON_STATE_HIDE))
         {
             Entity_CheckActivators(ent);
         }

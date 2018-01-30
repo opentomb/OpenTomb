@@ -157,10 +157,57 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
 }
 
 
+static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
+{
+    switch(Anim_GetCurrentState(&ent->bf->animations))
+    {
+        case TR_STATE_LARA_UNDERWATER_STOP:
+        case TR_STATE_LARA_UNDERWATER_FORWARD:
+        case TR_STATE_LARA_UNDERWATER_INERTIA:
+        case TR_STATE_LARA_UNDERWATER_TURNAROUND:
+            if(weapon_model != 123)
+            {
+                return false;
+            }
+        case TR_STATE_LARA_WALK_FORWARD:
+        case TR_STATE_LARA_RUN_FORWARD:
+        case TR_STATE_LARA_STOP:
+        case TR_STATE_LARA_JUMP_FORWARD:
+        case TR_STATE_LARA_RUN_BACK:
+        case TR_STATE_LARA_TURN_RIGHT_SLOW:
+        case TR_STATE_LARA_TURN_LEFT_SLOW:
+        case TR_STATE_LARA_FREEFALL:
+        case TR_STATE_LARA_WALK_BACK:
+        case TR_STATE_LARA_JUMP_PREPARE:
+        case TR_STATE_LARA_TURN_FAST:
+        case TR_STATE_LARA_WALK_RIGHT:
+        case TR_STATE_LARA_WALK_LEFT:
+        case TR_STATE_LARA_ROLL_BACKWARD:
+        case TR_STATE_LARA_SLIDE_FORWARD:
+        case TR_STATE_LARA_JUMP_BACK:
+        case TR_STATE_LARA_JUMP_LEFT:
+        case TR_STATE_LARA_JUMP_RIGHT:
+        case TR_STATE_LARA_JUMP_UP:
+        case TR_STATE_LARA_FALL_BACKWARD:
+        case TR_STATE_LARA_SLIDE_BACK:
+        case TR_STATE_LARA_WADE_FORWARD:
+        case TR_STATE_LARA_CROUCH_IDLE:
+        case TR_STATE_LARA_CROUCH_TURN_LEFT:
+        case TR_STATE_LARA_CROUCH_TURN_RIGHT:
+        case TR_STATE_LARA_JUMP_ROLL:
+            return true;
+
+        default:
+            return false;
+    }
+}
+
+
 int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 {
     int i;
-    int clean_action = (ent->character->cmd.action && (ent->character->weapon_state == WEAPON_STATE_HIDE));
+    int wepon_ready = ent->character->weapon_state != WEAPON_STATE_HIDE;
+    int clean_action = (ent->character->cmd.action && (!wepon_ready));
     float t, *pos = ent->transform.M4x4 + 12;
     float global_offset[3], move[3], climb_from[3], climb_to[3], reaction[3];
     height_info_t next_fc, *curr_fc;
@@ -2250,7 +2297,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_REACH;
             }
-            else if(cmd->shift)
+            else if(cmd->shift && !wepon_ready)
             {
                 ss_anim->next_state = TR_STATE_LARA_SWANDIVE_BEGIN;             // fly like fish
             }
@@ -2736,11 +2783,11 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 ss_anim->next_state = TR_STATE_LARA_STOP;                       // Back to stand
             }
-            else if((cmd->move[0] != 0) || (state->dead == 1))
+            else if(!wepon_ready && ((cmd->move[0] != 0) || (state->dead == 1)))
             {
                 ss_anim->next_state = TR_STATE_LARA_CRAWL_IDLE;                 // Both forward & back provoke crawl stage
             }
-            else if(cmd->jump)
+            else if(!wepon_ready && cmd->jump)
             {
                 ss_anim->next_state = TR_STATE_LARA_CROUCH_ROLL;                // Crouch roll
             }
@@ -3338,7 +3385,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     b_tag->is_targeted = 0x01;
                 }
-                
+
                 if(!force_hide && !silent && ent->character->cmd.action)
                 {
                     // inc time, loop;
@@ -3733,8 +3780,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
 
-    if((weapon_state != WEAPON_STATE_HIDE) &&
-       (ent->move_type != MOVE_FREE_FALLING) && (ent->move_type != MOVE_ON_FLOOR) && (ent->move_type != MOVE_QUICKSAND))
+    if((weapon_state != WEAPON_STATE_HIDE) && !StateControl_LaraCanUseWeapon(ent, weapon_model))
     {
         return;
     }

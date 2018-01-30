@@ -14,6 +14,8 @@ add_subdirectory(extern/freetype2)
 add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
+    src/core/avl.c
+    src/core/avl.h
     src/core/base_types.c
     src/core/base_types.h
     src/core/console.c

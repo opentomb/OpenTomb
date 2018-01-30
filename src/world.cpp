@@ -10,9 +10,7 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include <map>
-#include <list>
-
+#include "core/avl.h"
 #include "core/gl_util.h"
 #include "core/console.h"
 #include "core/system.h"
@@ -82,8 +80,8 @@ extern "C" {
     struct entity_s                *player;                 // this is an unique Lara's pointer =)
     struct skeletal_model_s        *sky_box;                // global skybox
 
-    std::map<uint32_t, entity_p>    entity_tree;
-    std::map<uint32_t, base_item_p> items_tree;
+    struct avl_header_s            *entity_tree;
+    struct avl_header_s            *items_tree;
 
     uint32_t                        type;
 
@@ -166,8 +164,13 @@ void World_Prepare()
     global_world.skeletal_models = NULL;
     global_world.skeletal_models_count = 0;
     global_world.sky_box = NULL;
+    global_world.entity_tree = NULL;
+    global_world.items_tree = NULL;
 }
 
+
+extern "C" void AVL_DeleteEntity(void *p) { Entity_Delete((entity_p)p); }
+extern "C" void AVL_DeleteItem(void *p) { BaseItem_Delete((base_item_p)p); }
 
 void World_Open(const char *path, int trv)
 {
@@ -179,7 +182,12 @@ void World_Open(const char *path, int trv)
 
     global_world.version = tr->game_version;
 
-    World_ScriptsOpen(path);                // Open configuration scripts.
+    global_world.entity_tree = AVL_Init();
+    global_world.entity_tree->free_data = AVL_DeleteEntity;
+    global_world.items_tree = AVL_Init();
+    global_world.items_tree->free_data = AVL_DeleteItem;
+    
+    World_ScriptsOpen(path);            // Open configuration scripts.
     Gui_DrawLoadScreen(200);
 
     World_GenTextures(tr);              // Generate OGL textures
@@ -237,9 +245,9 @@ void World_Open(const char *path, int trv)
     Gui_DrawLoadScreen(860);
 
     // Generate entity functions.
-    for(const std::pair<uint32_t, entity_p> &it : global_world.entity_tree)
+    for(avl_node_p p = global_world.entity_tree->list; p; p = p->next)
     {
-        World_SetEntityFunction(it.second);
+        World_SetEntityFunction((entity_p)p->data);
     }
     Gui_DrawLoadScreen(910);
 
@@ -284,12 +292,8 @@ void World_Clear()
     global_world.player = NULL;
 
     /* entity empty must be done before rooms destroy */
-    for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
-    {
-        Entity_Delete(it.second);
-        it.second = NULL;
-    }
-    global_world.entity_tree.clear();
+    AVL_Free(global_world.entity_tree);
+    global_world.entity_tree = NULL;
 
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
@@ -365,12 +369,8 @@ void World_Clear()
     }
 
     /*items empty*/
-    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
-    {
-        BaseItem_Delete(it.second);
-        it.second = NULL;
-    }
-    global_world.items_tree.clear();
+    AVL_Free(global_world.items_tree);
+    global_world.items_tree = NULL;
 
     if(global_world.skeletal_models_count)
     {
@@ -471,10 +471,11 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         entity = Entity_Create();
         if(id < 0)
         {
-            entity->id = 0;
-            if(!global_world.entity_tree.empty())
+            avl_node_p max = global_world.entity_tree->root;
+            while(max)
             {
-                entity->id = global_world.entity_tree.rbegin()->first + 1;
+                entity->id = max->key + 1;
+                max = max->right;
             }
         }
         else
@@ -534,15 +535,8 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
 struct entity_s *World_GetEntityByID(uint32_t id)
 {
-    entity_p ent = NULL;
-    std::map<uint32_t, entity_p>::iterator it = global_world.entity_tree.find(id);
-
-    if(it != global_world.entity_tree.end())
-    {
-        ent = it->second;
-    }
-
-    return ent;
+    avl_node_p p = AVL_SearchNode(global_world.entity_tree, id);
+    return (p) ? ((entity_p)p->data) : (NULL);
 }
 
 
@@ -571,21 +565,21 @@ struct entity_s *World_GetPlayer()
 
 void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data)
 {
-    std::list<uint32_t> delete_list;
-    for(std::pair<const uint32_t, entity_p> &it : global_world.entity_tree)
+    for(avl_node_p p = global_world.entity_tree->list; p; )
     {
-        if(it.second->state_flags & ENTITY_STATE_DELETED)
+        entity_p ent = (entity_p)p->data;
+        if(ent->state_flags & ENTITY_STATE_DELETED)
         {
-            delete_list.push_back(it.first);
+            avl_node_p next = p->next;
+            AVL_DeleteNode(global_world.entity_tree, p);
+            p = next;
+            continue;
         }
-        if(iterator(it.second, data))
+        if(iterator(ent, data))
         {
             break;
         }
-    }
-    for(uint32_t id : delete_list)
-    {
-        World_DeleteEntity(id);
+        p = p->next;
     }
 }
 
@@ -598,28 +592,20 @@ struct flyby_camera_sequence_s *World_GetFlyBySequences()
 
 struct base_item_s *World_GetBaseItemByID(uint32_t id)
 {
-    base_item_p item = NULL;
-    std::map<uint32_t, base_item_p>::iterator it = global_world.items_tree.find(id);
-
-    if(it != global_world.items_tree.end())
-    {
-        item = it->second;
-    }
-
-    return item;
+    avl_node_p p = AVL_SearchNode(global_world.items_tree, id);
+    return (p) ? ((base_item_p)p->data) : (NULL);
 }
 
 
 struct base_item_s *World_GetBaseItemByWorldModelID(uint32_t id)
 {
-    for(std::pair<const uint32_t, base_item_p> &it : global_world.items_tree)
+    for(avl_node_p p = global_world.items_tree->list; p; p = p->next)
     {
-        if(it.second && (id == it.second->world_model_id))
+        if(p->data && (id == ((base_item_p)p->data)->world_model_id))
         {
-            return it.second;
+            return (base_item_p)p->data;
         }
     }
-
     return NULL;
 }
 
@@ -706,23 +692,18 @@ int World_AddAnimSeq(struct anim_seq_s *seq)
 
 int World_AddEntity(struct entity_s *entity)
 {
-    global_world.entity_tree[entity->id] = entity;
-
-    return 1;
+    return (AVL_InsertReplace(global_world.entity_tree, entity->id, entity)) ? (0x01) : (0x00);
 }
 
 
 int World_DeleteEntity(uint32_t id)
 {
-    std::map<uint32_t, entity_p>::iterator it = global_world.entity_tree.find(id);
-
-    if(it != global_world.entity_tree.end())
+    avl_node_p p = AVL_SearchNode(global_world.entity_tree, id);
+    if(p)
     {
-        Entity_Delete(it->second);
-        global_world.entity_tree.erase(it);
+        AVL_DeleteNode(global_world.entity_tree, p);
         return 1;
     }
-
     return 0;
 }
 
@@ -730,7 +711,7 @@ int World_DeleteEntity(uint32_t id)
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
     skeletal_model_p model = World_GetModelByID(model_id);
-    if(model && (global_world.items_tree.count(item_id) == 0))
+    if(model && (!AVL_SearchNode(global_world.items_tree, item_id)))
     {
         base_item_p item = BaseItem_Create(model, item_id);
         item->world_model_id = world_model_id;
@@ -740,9 +721,7 @@ int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_i
         {
             strncpy(item->name, name, sizeof(item->name));
         }
-        global_world.items_tree[item_id] = item;
-
-        return 1;
+        return (AVL_InsertReplace(global_world.items_tree, item_id, item)) ? (0x01) : (0x00);
     }
 
     return 0;
@@ -751,16 +730,13 @@ int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_i
 
 int World_DeleteItem(uint32_t item_id)
 {
-    std::map<uint32_t, base_item_p>::iterator it = global_world.items_tree.find(item_id);
-
-    if(it != global_world.items_tree.end())
+    avl_node_p p = AVL_SearchNode(global_world.items_tree, item_id);
+    if(p)
     {
-        BaseItem_Delete(it->second);
-        it->second = NULL;
-        global_world.items_tree.erase(it);
+        AVL_DeleteNode(global_world.items_tree, p);
+        return 1;
     }
-
-    return 1;
+    return 0;
 }
 
 
