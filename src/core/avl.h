@@ -29,14 +29,14 @@ typedef struct avl_header_s
     void (*free_data)(void *data);
 } avl_header_t, *avl_header_p;
 
-avl_header_p AVL_Init();
-void AVL_Free(avl_header_p p);
+avl_header_p AVL_Create();
+void AVL_Init(avl_header_p p);
+void AVL_Delete(avl_header_p p);
+void AVL_MakeEmpty(avl_header_p header);
 
-avl_node_p AVL_NewNode(uint32_t key, void *data);
 avl_node_p AVL_SearchNode(avl_header_p header, uint32_t key);
 avl_node_p AVL_InsertReplace(avl_header_p header, uint32_t key, void *data);
 void AVL_DeleteNode(avl_header_p header, avl_node_p node);
-void AVL_MakeEmpty(avl_header_p header);
 
 #endif  /* AVL_TREE_H */
 

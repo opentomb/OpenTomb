@@ -80,8 +80,8 @@ extern "C" {
     struct entity_s                *player;                 // this is an unique Lara's pointer =)
     struct skeletal_model_s        *sky_box;                // global skybox
 
-    struct avl_header_s            *entity_tree;
-    struct avl_header_s            *items_tree;
+    struct avl_header_s             entity_tree;
+    struct avl_header_s             items_tree;
 
     uint32_t                        type;
 
@@ -126,6 +126,9 @@ void World_FixRooms();
 void World_BuildNearRoomsList(struct room_s *room);
 void World_BuildOverlappedRoomsList(struct room_s *room);
 
+extern "C" void AVL_DeleteEntity(void *p) { Entity_Delete((entity_p)p); }
+extern "C" void AVL_DeleteItem(void *p) { BaseItem_Delete((base_item_p)p); }
+
 void World_Prepare()
 {
     global_world.id = 0;
@@ -164,13 +167,12 @@ void World_Prepare()
     global_world.skeletal_models = NULL;
     global_world.skeletal_models_count = 0;
     global_world.sky_box = NULL;
-    global_world.entity_tree = NULL;
-    global_world.items_tree = NULL;
+    AVL_Init(&global_world.entity_tree);
+    global_world.entity_tree.free_data = AVL_DeleteEntity;
+    AVL_Init(&global_world.items_tree);
+    global_world.items_tree.free_data = AVL_DeleteItem;
 }
 
-
-extern "C" void AVL_DeleteEntity(void *p) { Entity_Delete((entity_p)p); }
-extern "C" void AVL_DeleteItem(void *p) { BaseItem_Delete((base_item_p)p); }
 
 void World_Open(const char *path, int trv)
 {
@@ -181,11 +183,6 @@ void World_Open(const char *path, int trv)
     World_Clear();
 
     global_world.version = tr->game_version;
-
-    global_world.entity_tree = AVL_Init();
-    global_world.entity_tree->free_data = AVL_DeleteEntity;
-    global_world.items_tree = AVL_Init();
-    global_world.items_tree->free_data = AVL_DeleteItem;
     
     World_ScriptsOpen(path);            // Open configuration scripts.
     Gui_DrawLoadScreen(200);
@@ -245,7 +242,7 @@ void World_Open(const char *path, int trv)
     Gui_DrawLoadScreen(860);
 
     // Generate entity functions.
-    for(avl_node_p p = global_world.entity_tree->list; p; p = p->next)
+    for(avl_node_p p = global_world.entity_tree.list; p; p = p->next)
     {
         World_SetEntityFunction((entity_p)p->data);
     }
@@ -292,8 +289,7 @@ void World_Clear()
     global_world.player = NULL;
 
     /* entity empty must be done before rooms destroy */
-    AVL_Free(global_world.entity_tree);
-    global_world.entity_tree = NULL;
+    AVL_MakeEmpty(&global_world.entity_tree);
 
     /* Now we can delete physics misc objects */
     Physics_CleanUpObjects();
@@ -369,8 +365,7 @@ void World_Clear()
     }
 
     /*items empty*/
-    AVL_Free(global_world.items_tree);
-    global_world.items_tree = NULL;
+    AVL_MakeEmpty(&global_world.items_tree);
 
     if(global_world.skeletal_models_count)
     {
@@ -471,7 +466,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         entity = Entity_Create();
         if(id < 0)
         {
-            avl_node_p max = global_world.entity_tree->root;
+            avl_node_p max = global_world.entity_tree.root;
             while(max)
             {
                 entity->id = max->key + 1;
@@ -535,7 +530,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
 struct entity_s *World_GetEntityByID(uint32_t id)
 {
-    avl_node_p p = AVL_SearchNode(global_world.entity_tree, id);
+    avl_node_p p = AVL_SearchNode(&global_world.entity_tree, id);
     return (p) ? ((entity_p)p->data) : (NULL);
 }
 
@@ -565,13 +560,13 @@ struct entity_s *World_GetPlayer()
 
 void World_IterateAllEntities(int (*iterator)(struct entity_s *ent, void *data), void *data)
 {
-    for(avl_node_p p = global_world.entity_tree->list; p; )
+    for(avl_node_p p = global_world.entity_tree.list; p; )
     {
         entity_p ent = (entity_p)p->data;
         if(ent->state_flags & ENTITY_STATE_DELETED)
         {
             avl_node_p next = p->next;
-            AVL_DeleteNode(global_world.entity_tree, p);
+            AVL_DeleteNode(&global_world.entity_tree, p);
             p = next;
             continue;
         }
@@ -592,14 +587,14 @@ struct flyby_camera_sequence_s *World_GetFlyBySequences()
 
 struct base_item_s *World_GetBaseItemByID(uint32_t id)
 {
-    avl_node_p p = AVL_SearchNode(global_world.items_tree, id);
+    avl_node_p p = AVL_SearchNode(&global_world.items_tree, id);
     return (p) ? ((base_item_p)p->data) : (NULL);
 }
 
 
 struct base_item_s *World_GetBaseItemByWorldModelID(uint32_t id)
 {
-    for(avl_node_p p = global_world.items_tree->list; p; p = p->next)
+    for(avl_node_p p = global_world.items_tree.list; p; p = p->next)
     {
         if(p->data && (id == ((base_item_p)p->data)->world_model_id))
         {
@@ -692,16 +687,16 @@ int World_AddAnimSeq(struct anim_seq_s *seq)
 
 int World_AddEntity(struct entity_s *entity)
 {
-    return (AVL_InsertReplace(global_world.entity_tree, entity->id, entity)) ? (0x01) : (0x00);
+    return (AVL_InsertReplace(&global_world.entity_tree, entity->id, entity)) ? (0x01) : (0x00);
 }
 
 
 int World_DeleteEntity(uint32_t id)
 {
-    avl_node_p p = AVL_SearchNode(global_world.entity_tree, id);
+    avl_node_p p = AVL_SearchNode(&global_world.entity_tree, id);
     if(p)
     {
-        AVL_DeleteNode(global_world.entity_tree, p);
+        AVL_DeleteNode(&global_world.entity_tree, p);
         return 1;
     }
     return 0;
@@ -711,7 +706,7 @@ int World_DeleteEntity(uint32_t id)
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
     skeletal_model_p model = World_GetModelByID(model_id);
-    if(model && (!AVL_SearchNode(global_world.items_tree, item_id)))
+    if(model && (!AVL_SearchNode(&global_world.items_tree, item_id)))
     {
         base_item_p item = BaseItem_Create(model, item_id);
         item->world_model_id = world_model_id;
@@ -721,7 +716,7 @@ int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_i
         {
             strncpy(item->name, name, sizeof(item->name));
         }
-        return (AVL_InsertReplace(global_world.items_tree, item_id, item)) ? (0x01) : (0x00);
+        return (AVL_InsertReplace(&global_world.items_tree, item_id, item)) ? (0x01) : (0x00);
     }
 
     return 0;
@@ -730,10 +725,10 @@ int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_i
 
 int World_DeleteItem(uint32_t item_id)
 {
-    avl_node_p p = AVL_SearchNode(global_world.items_tree, item_id);
+    avl_node_p p = AVL_SearchNode(&global_world.items_tree, item_id);
     if(p)
     {
-        AVL_DeleteNode(global_world.items_tree, p);
+        AVL_DeleteNode(&global_world.items_tree, p);
         return 1;
     }
     return 0;

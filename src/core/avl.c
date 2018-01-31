@@ -7,6 +7,7 @@ static avl_node_p RotateRight(avl_node_p node);
 static avl_node_p RotateLeft(avl_node_p node);
 static avl_node_p BalanceNode(avl_node_p node);
 static void BalanceTree(avl_header_p header, avl_node_p p);
+static avl_node_p AVL_NewNode(uint32_t key, void *data);
 
 #define AVL_UPDATE_NODE_HEIGHT(node, t) \
     (node)->height = ((node)->left) ? ((node)->left->height) : 0;\
@@ -18,7 +19,7 @@ static void BalanceTree(avl_header_p header, avl_node_p p);
     t = (node->right) ? (node->right->height) : (0);\
     t -= ((node->left) ? (node->left->height) : (0));\
 
-avl_header_p AVL_Init()
+avl_header_p AVL_Create()
 {
     avl_header_p p = (avl_header_p)malloc(sizeof(struct avl_header_s));
     if(p == NULL)
@@ -30,12 +31,20 @@ avl_header_p AVL_Init()
     p->root = NULL;
     p->list = NULL;
     p->nodes_count = 0;
-
+    
     return p;
 }
 
 
-void AVL_Free(avl_header_p p)
+void AVL_Init(avl_header_p p)
+{
+    p->free_data = NULL;
+    p->root = NULL;
+    p->list = NULL;
+    p->nodes_count = 0;
+}
+
+void AVL_Delete(avl_header_p p)
 {
     AVL_MakeEmpty(p);
     free(p);
