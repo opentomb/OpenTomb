@@ -529,7 +529,7 @@ static inline int av_parity_c(uint32_t v)
 
 static inline int av_log2(uint32_t value)
 {
-#if 0
+#ifndef __GNUC__
     int ret = 0;
     for(; value; value >>= 1, ++ret);
     return ret ? ret - 1 : ret;
