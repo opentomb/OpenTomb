@@ -159,13 +159,33 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
 
 static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
 {
+    int ver;
     switch(Anim_GetCurrentState(&ent->bf->animations))
     {
         case TR_STATE_LARA_UNDERWATER_STOP:
         case TR_STATE_LARA_UNDERWATER_FORWARD:
         case TR_STATE_LARA_UNDERWATER_INERTIA:
         case TR_STATE_LARA_UNDERWATER_TURNAROUND:
-            if(weapon_model != 123)
+            ver = World_GetVersion();
+            if(ver < TR_II)
+            {
+                return false;
+            }
+            if(ver < TR_III)
+            {
+                if(weapon_model != 8)
+                {
+                    return false;
+                }
+            }
+            else if(ver < TR_IV)
+            {
+                if(weapon_model != 9)
+                {
+                    return false;
+                }
+            }
+            else
             {
                 return false;
             }
@@ -183,6 +203,7 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
         case TR_STATE_LARA_WALK_RIGHT:
         case TR_STATE_LARA_WALK_LEFT:
         case TR_STATE_LARA_ROLL_BACKWARD:
+        case TR_STATE_LARA_ROLL_FORWARD:
         case TR_STATE_LARA_SLIDE_FORWARD:
         case TR_STATE_LARA_JUMP_BACK:
         case TR_STATE_LARA_JUMP_LEFT:
@@ -230,13 +251,12 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
     state->sprint = 0x00;
     state->crouch = 0x00;
     state->tightrope = (current_state >= TR_STATE_LARA_TIGHTROPE_IDLE) && (current_state <= TR_STATE_LARA_TIGHTROPE_EXIT);
- /*
- * - On floor animations
- * - Climbing animations
- * - Landing animations
- * - Free fall animations
- * - Water animations
- */
+
+    if((ent->character->weapon_state != WEAPON_STATE_HIDE) && !StateControl_LaraCanUseWeapon(ent, ent->character->weapon_id))
+    {
+        ent->character->cmd.ready_weapon = 0x01;
+    }
+    
     switch(current_state)
     {
         /*

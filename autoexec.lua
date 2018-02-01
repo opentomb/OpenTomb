@@ -25,4 +25,4 @@ noclip(0);
 --loadMap(base_path .. "tests/heavy1/LEVEL1.PHD");
 --loadMap(base_path .. "tests/TRIGGERS.PHD");
 --setgamef(1, 0);
---dofile(base_path .. "save/qsave.lua");
+dofile(base_path .. "save/qsave.lua");
