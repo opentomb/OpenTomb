@@ -11,9 +11,9 @@
 #include <math.h>
 
 #include <ft2build.h>
-#include <freetype.h>
-#include <ftglyph.h>
-#include <ftmodapi.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
+#include FT_MODULE_H
 
 #include "utf8_32.h"
 #include "gl_font.h"
