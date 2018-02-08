@@ -204,6 +204,11 @@ set(OPENTOMB_SRCS
     src/world.h
 )
 
+# Disable warnings when using unsafe functions
+if(WIN32)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
