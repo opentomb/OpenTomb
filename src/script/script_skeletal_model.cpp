@@ -142,10 +142,10 @@ int lua_SetEntityBaseAnimModel(lua_State * lua)
             if(model && ent->bf->animations.model && (ent->bf->animations.model->mesh_count == model->mesh_count))
             {
                 ent->bf->animations.model = model;
+                ent->bf->animations.prev_animation = 0;
+                ent->bf->animations.prev_frame = 0;
                 ent->bf->animations.current_animation = 0;
                 ent->bf->animations.current_frame = 0;
-                ent->bf->animations.next_animation = 0;
-                ent->bf->animations.next_frame = 0;
             }
         }
         else
@@ -579,8 +579,8 @@ int lua_SetEntityAnim(lua_State * lua)
                     int16_t frame = lua_tointeger(lua, 6);
                     if((anim < ss_anim->model->animation_count) && (frame < ss_anim->model->animations[anim].frames_count))
                     {
-                        ss_anim->current_animation = anim;
-                        ss_anim->current_frame = frame;
+                        ss_anim->prev_animation = anim;
+                        ss_anim->prev_frame = frame;
                     }
                 }
             }
@@ -611,9 +611,9 @@ int lua_GetEntityAnim(lua_State * lua)
             ss_animation_p ss_anim = SSBoneFrame_GetOverrideAnim(ent->bf, anim_id);
             if(ss_anim && ss_anim->model)
             {
-                animation_frame_p af = ss_anim->model->animations + ss_anim->next_animation;
-                lua_pushinteger(lua, ss_anim->next_animation);
-                lua_pushinteger(lua, ss_anim->next_frame);
+                animation_frame_p af = ss_anim->model->animations + ss_anim->current_animation;
+                lua_pushinteger(lua, ss_anim->current_animation);
+                lua_pushinteger(lua, ss_anim->current_frame);
                 lua_pushinteger(lua, af->max_frame);
                 lua_pushinteger(lua, af->next_anim->id);
                 lua_pushinteger(lua, af->next_frame);
@@ -851,7 +851,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
             }
             else
             {
-                SSBoneFrame_DisableOverrideAnim(ent->bf, anim_type_id);
+                SSBoneFrame_DisableOverrideAnimByType(ent->bf, anim_type_id);
             }
         }
         else

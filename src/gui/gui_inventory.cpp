@@ -810,10 +810,10 @@ void gui_ItemNotifier::Draw()
         base_item_p item = World_GetBaseItemByID(mItem);
         if(item)
         {
-            int curr_anim = item->bf->animations.current_animation;
-            int next_anim = item->bf->animations.next_animation;
-            int curr_frame = item->bf->animations.current_frame;
-            int next_frame = item->bf->animations.next_frame;
+            int curr_anim = item->bf->animations.prev_animation;
+            int next_anim = item->bf->animations.current_animation;
+            int curr_frame = item->bf->animations.prev_frame;
+            int next_frame = item->bf->animations.current_frame;
             float time = item->bf->animations.frame_time;
             float ang = (mCurrRotX + mRotX) * M_PI / 180.0f;
             float matrix[16];
@@ -831,10 +831,10 @@ void gui_ItemNotifier::Draw()
             SSBoneFrame_Update(item->bf, 0.0f);
             Gui_RenderItem(item->bf, mSize, matrix);
 
-            item->bf->animations.current_animation = curr_anim;
-            item->bf->animations.next_animation = next_anim;
-            item->bf->animations.current_frame = curr_frame;
-            item->bf->animations.next_frame = next_frame;
+            item->bf->animations.prev_animation = curr_anim;
+            item->bf->animations.current_animation = next_anim;
+            item->bf->animations.prev_frame = curr_frame;
+            item->bf->animations.current_frame = next_frame;
             item->bf->animations.frame_time = time;
         }
     }

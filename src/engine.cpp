@@ -917,14 +917,14 @@ void TestModelApplyKey(int key)
             break;
 
         case SDL_SCANCODE_O:
-            if(test_model.animations.current_animation > 0)
+            if(test_model.animations.prev_animation > 0)
             {
-                Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation - 1, 0);
+                Anim_SetAnimation(&test_model.animations, test_model.animations.prev_animation - 1, 0);
             }
             break;
 
         case SDL_SCANCODE_P:
-            Anim_SetAnimation(&test_model.animations, test_model.animations.current_animation + 1, 0);
+            Anim_SetAnimation(&test_model.animations, test_model.animations.prev_animation + 1, 0);
             break;
 
         default:
@@ -970,7 +970,7 @@ void ShowModelView(float time)
     {
         float subModelView[16], subModelViewProjection[16];
         float *cam_pos = engine_camera.transform.M4x4 + 12;
-        animation_frame_p af = sm->animations + test_model.animations.current_animation;
+        animation_frame_p af = sm->animations + test_model.animations.prev_animation;
         const int current_light_number = 0;
         const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
 
@@ -1020,13 +1020,13 @@ void ShowModelView(float time)
         Cam_Apply(&engine_camera);
 
         test_model.animations.frame_time += time;
-        test_model.animations.current_frame = test_model.animations.frame_time / test_model.animations.period;
-        if(test_model.animations.current_frame >= af->frames_count)
+        test_model.animations.prev_frame = test_model.animations.frame_time / test_model.animations.period;
+        if(test_model.animations.prev_frame >= af->frames_count)
         {
             test_model.animations.frame_time = 0.0f;
-            test_model.animations.current_frame = 0;
+            test_model.animations.prev_frame = 0;
         }
-        test_model.animations.next_frame = test_model.animations.current_frame;
+        test_model.animations.current_frame = test_model.animations.prev_frame;
         SSBoneFrame_Update(&test_model, 0.0f);
 
         Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr.M4x4);
@@ -1053,8 +1053,8 @@ void ShowModelView(float time)
             float y = (float)screen_info.h + dy;
 
             GLText_OutTextXY(30.0f, y += dy, "MODEL[%d]; state: %d", (int)sm->id, (int)af->state_id);
-            GLText_OutTextXY(30.0f, y += dy, "anim: %d of %d", (int)test_model.animations.current_animation, (int)sm->animation_count);
-            GLText_OutTextXY(30.0f, y += dy, "frame: %d of %d, %d", (int)test_model.animations.current_frame, (int)af->max_frame, (int)af->frames_count);
+            GLText_OutTextXY(30.0f, y += dy, "anim: %d of %d", (int)test_model.animations.prev_animation, (int)sm->animation_count);
+            GLText_OutTextXY(30.0f, y += dy, "frame: %d of %d, %d", (int)test_model.animations.prev_frame, (int)af->max_frame, (int)af->frames_count);
             GLText_OutTextXY(30.0f, y += dy, "next a: %d,next f: %d", (int)af->next_anim->id, (int)af->next_frame);
 
             for(animation_command_p cmd = af->commands; cmd; cmd = cmd->next)
@@ -1158,9 +1158,9 @@ void ShowDebugInfo()
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
-                    animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.current_animation;
+                    animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.prev_animation;
                     GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.next_state);
-                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, ent->bf->animations.next_animation, ent->bf->animations.next_frame);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.prev_animation, ent->bf->animations.prev_frame, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
                     GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform.M4x4[12], ent->transform.M4x4[13], ent->transform.M4x4[14]);
                 }

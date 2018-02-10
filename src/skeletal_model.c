@@ -279,10 +279,10 @@ void SSBoneFrame_InitSSAnim(struct ss_animation_s *ss_anim, uint32_t anim_type_i
     ss_anim->next_state = 0;
     ss_anim->next_state_heavy = -1;
     ss_anim->lerp = 0.0;
+    ss_anim->prev_animation = 0;
+    ss_anim->prev_frame = 0;
     ss_anim->current_animation = 0;
     ss_anim->current_frame = 0;
-    ss_anim->next_animation = 0;
-    ss_anim->next_frame = 0;
     ss_anim->period = 1.0f / 30.0f;
 
     ss_anim->next = NULL;
@@ -338,10 +338,10 @@ void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src)
             }
             dst_a->enabled = src_a->enabled;
             dst_a->model = src_a->model;
+            dst_a->prev_animation = src_a->prev_animation;
+            dst_a->prev_frame = src_a->prev_frame;
             dst_a->current_animation = src_a->current_animation;
             dst_a->current_frame = src_a->current_frame;
-            dst_a->next_animation = src_a->next_animation;
-            dst_a->next_frame = src_a->next_frame;
             dst_a->lerp = src_a->lerp;
             dst_a->frame_time = src_a->frame_time;
             dst_a->next_state = src_a->next_state;
@@ -362,10 +362,10 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
     ss_bone_tag_p btag = bf->bone_tags;
     bone_tag_p src_btag, next_btag;
     skeletal_model_p model = bf->animations.model;
-    animation_frame_p curr_anim = model->animations + bf->animations.current_animation;
-    animation_frame_p next_anim = model->animations + bf->animations.next_animation;
-    bone_frame_p curr_bf = curr_anim->frames + bf->animations.current_frame;
-    bone_frame_p next_bf = next_anim->frames + bf->animations.next_frame;
+    animation_frame_p curr_anim = model->animations + bf->animations.prev_animation;
+    animation_frame_p next_anim = model->animations + bf->animations.current_animation;
+    bone_frame_p curr_bf = curr_anim->frames + bf->animations.prev_frame;
+    bone_frame_p next_bf = next_anim->frames + bf->animations.current_frame;
     
     vec3_interpolate_macro(bf->bb_max, curr_bf->bb_max, next_bf->bb_max, bf->animations.lerp, t);
     vec3_interpolate_macro(bf->bb_min, curr_bf->bb_min, next_bf->bb_min, bf->animations.lerp, t);
@@ -391,10 +391,10 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
             float ov_lerp = bf->animations.lerp;
             if(btag->alt_anim && btag->alt_anim->model && btag->alt_anim->enabled && (btag->alt_anim->model->mesh_tree[k].replace_anim != 0))
             {
-                curr_anim = btag->alt_anim->model->animations + btag->alt_anim->current_animation;
-                next_anim = btag->alt_anim->model->animations + btag->alt_anim->next_animation;
-                bone_frame_p ov_curr_bf = curr_anim->frames + btag->alt_anim->current_frame;
-                bone_frame_p ov_next_bf = next_anim->frames + btag->alt_anim->next_frame;
+                curr_anim = btag->alt_anim->model->animations + btag->alt_anim->prev_animation;
+                next_anim = btag->alt_anim->model->animations + btag->alt_anim->current_animation;
+                bone_frame_p ov_curr_bf = curr_anim->frames + btag->alt_anim->prev_frame;
+                bone_frame_p ov_next_bf = next_anim->frames + btag->alt_anim->current_frame;
                 ov_lerp = btag->alt_anim->lerp;
                 ov_src_btag = ov_curr_bf->bone_tags + k;
                 ov_next_btag = ov_next_bf->bone_tags + k;
@@ -627,7 +627,7 @@ void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animat
 }
 
 
-void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type)
+void SSBoneFrame_DisableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type)
 {
     for(ss_animation_p ss_anim = &bf->animations; ss_anim; ss_anim = ss_anim->next)
     {
@@ -641,6 +641,19 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_t
     for(uint16_t i = 0; i < bf->bone_tag_count; i++)
     {
         if(bf->bone_tags[i].alt_anim && bf->bone_tags[i].alt_anim->type == anim_type)
+        {
+            bf->bone_tags[i].alt_anim = NULL;
+        }
+    }
+}
+
+
+void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim)
+{
+    ss_anim->enabled = 0;
+    for(uint16_t i = 0; i < bf->bone_tag_count; i++)
+    {
+        if(bf->bone_tags[i].alt_anim && bf->bone_tags[i].alt_anim->type == ss_anim->type)
         {
             bf->bone_tags[i].alt_anim = NULL;
         }
@@ -758,7 +771,7 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 
 int Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id)
 {
-    animation_frame_p anim = ss_anim->model->animations + ss_anim->current_animation;
+    animation_frame_p anim = ss_anim->model->animations + ss_anim->prev_animation;
     state_change_p stc = anim->state_change;
 
     for(uint16_t i = 0; i < anim->state_change_count; i++, stc++)
@@ -768,7 +781,7 @@ int Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id)
             anim_dispatch_p disp = stc->anim_dispatch;
             for(uint16_t j = 0; j < stc->anim_dispatch_count; j++, disp++)
             {
-                if((disp->frame_high >= disp->frame_low) && (ss_anim->current_frame >= disp->frame_low) && (ss_anim->current_frame <= disp->frame_high))
+                if((disp->frame_high >= disp->frame_low) && (ss_anim->prev_frame >= disp->frame_low) && (ss_anim->prev_frame <= disp->frame_high))
                 {
                     return (int)j;
                 }
@@ -787,17 +800,17 @@ void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame)
         animation_frame_p anim = &ss_anim->model->animations[animation];
         ss_anim->lerp = 0.0;
         frame %= anim->max_frame;
-        frame = (frame >= 0) ? (frame) : (anim->max_frame - 1 + frame);
+        frame = (frame >= 0) ? (frame) : (anim->max_frame + frame);
         ss_anim->period = 1.0f / 30.0f;
 
         ss_anim->frame_changing_state = 0x04;
 
         ss_anim->next_state = anim->state_id;
 
-        ss_anim->next_animation = animation;
-        ss_anim->next_frame = frame;
         ss_anim->current_animation = animation;
         ss_anim->current_frame = frame;
+        ss_anim->prev_animation = animation;
+        ss_anim->prev_frame = frame;
 
         ss_anim->frame_time = (float)frame * ss_anim->period;
     }
@@ -810,7 +823,7 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
 {
     float dt;
     int32_t new_frame;
-    animation_frame_p next_anim = ss_anim->model->animations + ss_anim->next_animation;
+    animation_frame_p next_anim = ss_anim->model->animations + ss_anim->current_animation;
     state_change_p stc = Anim_FindStateChangeByID(next_anim, ss_anim->next_state);
     
     if((next_anim->state_id == ss_anim->next_state_heavy) && (next_anim->next_anim->state_id == ss_anim->next_state_heavy))
@@ -837,20 +850,20 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
      */
     if(ss_anim->anim_frame_flags & ANIM_FRAME_LOCK)
     {
-        ss_anim->current_frame = 0;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->prev_frame = 0;
+        ss_anim->prev_frame = ss_anim->current_frame;
+        ss_anim->prev_animation = ss_anim->current_animation;
         ss_anim->lerp = 0.0f;
         ss_anim->frame_time = 0.0f;
         return 0x00;
     }
     else if((new_frame + 1 >= next_anim->max_frame) && (ss_anim->anim_frame_flags == ANIM_LOOP_LAST_FRAME))
     {
-        ss_anim->next_frame = next_anim->max_frame - 1;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->current_animation = ss_anim->next_animation;
+        ss_anim->current_frame = next_anim->max_frame - 1;
+        ss_anim->prev_frame = ss_anim->current_frame;
+        ss_anim->prev_animation = ss_anim->current_animation;
         ss_anim->lerp = 0.0f;
-        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period;
+        ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period;
         return 0x00;
     }
     
@@ -864,14 +877,14 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
         {
             if((next_anim->max_frame == 1) || 
                (new_frame >= disp->frame_low) && (new_frame <= disp->frame_high) || 
-               (ss_anim->next_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
+               (ss_anim->current_frame <= disp->frame_high) && (new_frame >= disp->frame_high))
             {
-                ss_anim->current_animation = ss_anim->next_animation;
-                ss_anim->current_frame = ss_anim->next_frame;
-                ss_anim->next_animation = disp->next_anim;
-                ss_anim->next_frame = disp->next_frame;
-                ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-                ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
+                ss_anim->prev_animation = ss_anim->current_animation;
+                ss_anim->prev_frame = ss_anim->current_frame;
+                ss_anim->current_animation = disp->next_anim;
+                ss_anim->current_frame = disp->next_frame;
+                ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
+                ss_anim->next_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
                 ss_anim->frame_changing_state = 0x03;
                 return 0x03;
             }
@@ -883,26 +896,56 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
      */
     if(new_frame >= next_anim->max_frame)
     {
-        ss_anim->current_animation = ss_anim->next_animation;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->next_frame = next_anim->next_frame;
-        ss_anim->next_animation = next_anim->next_anim->id;
-        ss_anim->frame_time = (float)ss_anim->next_frame * ss_anim->period + dt;
-        ss_anim->next_state = ss_anim->model->animations[ss_anim->next_animation].state_id;
+        ss_anim->prev_animation = ss_anim->current_animation;
+        ss_anim->prev_frame = ss_anim->current_frame;
+        ss_anim->current_frame = next_anim->next_frame;
+        ss_anim->current_animation = next_anim->next_anim->id;
+        ss_anim->frame_time = (float)ss_anim->current_frame * ss_anim->period + dt;
+        ss_anim->next_state = ss_anim->model->animations[ss_anim->current_animation].state_id;
         ss_anim->frame_changing_state = 0x02;
         return 0x02;
     }
     
-    if(ss_anim->next_frame != new_frame)
+    if(ss_anim->current_frame != new_frame)
     {
-        ss_anim->current_animation = ss_anim->next_animation;
-        ss_anim->current_frame = ss_anim->next_frame;
-        ss_anim->next_frame = new_frame;
+        ss_anim->prev_animation = ss_anim->current_animation;
+        ss_anim->prev_frame = ss_anim->current_frame;
+        ss_anim->current_frame = new_frame;
         ss_anim->frame_changing_state = 0x01;
         return 0x01;
     }
     
     return 0x00;
+}
+
+
+int  Anim_IncTime(struct ss_animation_s *ss_anim, float time)
+{
+    ss_anim->frame_time += time;
+    if(ss_anim->frame_time <= 0.0f)
+    {
+        ss_anim->frame_time = 0.0f;
+        ss_anim->prev_frame = 0;
+        ss_anim->current_frame = 0;
+        ss_anim->lerp = 0.0f;
+        return 2;
+    }
+
+    animation_frame_p next_anim = ss_anim->model->animations + ss_anim->current_animation;
+    ss_anim->prev_frame = ss_anim->frame_time / ss_anim->period;
+    ss_anim->current_frame = ss_anim->prev_frame + 1;
+    if(ss_anim->current_frame >= next_anim->max_frame)
+    {
+        ss_anim->frame_time = ss_anim->period * (float)next_anim->max_frame;
+        ss_anim->prev_frame = next_anim->max_frame - 1;
+        ss_anim->current_frame = next_anim->max_frame - 1;
+        ss_anim->lerp = 1.0f;
+        return 1;
+    }
+
+    float dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
+    ss_anim->lerp = dt / ss_anim->period;
+    return 0;
 }
 
 

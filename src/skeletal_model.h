@@ -90,10 +90,10 @@ typedef struct ss_animation_s
     uint16_t                    frame_changing_state : 14;
     int16_t                     next_state;
     int16_t                     next_state_heavy;
+    int16_t                     prev_animation;
+    int16_t                     prev_frame;
     int16_t                     current_animation;
     int16_t                     current_frame;
-    int16_t                     next_animation;
-    int16_t                     next_frame;
     
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
@@ -159,8 +159,8 @@ typedef struct mesh_tree_tag_s
     uint16_t                    flag;                                           // 0x0001 = POP, 0x0002 = PUSH, 0x0003 = POP + PUSH
     uint16_t                    parent;                                         // parent index, can not be invalid
     uint32_t                    body_part;
-    uint8_t                     replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01, 0x02, 0x03)
-    uint8_t                     replace_anim;
+    uint16_t                    replace_mesh;                                   // flag for shoot / guns animations (0x00, 0x01)
+    uint16_t                    replace_anim;
 }mesh_tree_tag_t, *mesh_tree_tag_p;
 
 /*
@@ -267,7 +267,8 @@ struct ss_animation_s *SSBoneFrame_AddOverrideAnim(struct ss_bone_frame_s *bf, s
 struct ss_animation_s *SSBoneFrame_GetOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
 void SSBoneFrame_EnableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
-void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_DisableOverrideAnimByType(struct ss_bone_frame_s *bf, uint16_t anim_type);
+void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_animation_s *ss_anim);
 void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p model);
 
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
@@ -277,9 +278,10 @@ struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, 
 int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
 void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
+int  Anim_IncTime(struct ss_animation_s *ss_anim, float time);
 inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)
 {
-    return ss_anim->model->animations[ss_anim->next_animation].state_id;
+    return ss_anim->model->animations[ss_anim->current_animation].state_id;
 }
 
 #ifdef	__cplusplus

@@ -25,33 +25,33 @@ void ent_gorilla_fix_strafe(entity_p ent, ss_animation_p ss_anim)
     if(ss_anim->frame_changing_state >= 0x02)
     {
         float *ang = ent->transform.angles;
-        uint16_t curr_st = ss_anim->model->animations[ss_anim->current_animation].state_id;
-        uint16_t next_st = ss_anim->model->animations[ss_anim->next_animation].state_id;
+        uint16_t curr_st = ss_anim->model->animations[ss_anim->prev_animation].state_id;
+        uint16_t next_st = ss_anim->model->animations[ss_anim->current_animation].state_id;
         if((curr_st == TR_STATE_GORILLA_STRAFE_LEFT) && (next_st == TR_STATE_GORILLA_STAY))
         {
-            ss_anim->current_animation = ss_anim->next_animation;
-            ss_anim->current_frame = ss_anim->next_frame;
+            ss_anim->prev_animation = ss_anim->current_animation;
+            ss_anim->prev_frame = ss_anim->current_frame;
             ang[0] -= 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STRAFE_RIGHT) && (next_st == TR_STATE_GORILLA_STAY))
         {
-            ss_anim->current_animation = ss_anim->next_animation;
-            ss_anim->current_frame = ss_anim->next_frame;
+            ss_anim->prev_animation = ss_anim->current_animation;
+            ss_anim->prev_frame = ss_anim->current_frame;
             ang[0] += 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STAY) && (next_st == TR_STATE_GORILLA_STRAFE_LEFT))
         {
-            ss_anim->current_animation = ss_anim->next_animation;
-            ss_anim->current_frame = ss_anim->next_frame;
+            ss_anim->prev_animation = ss_anim->current_animation;
+            ss_anim->prev_frame = ss_anim->current_frame;
             ang[0] += 90.0f;
             Entity_UpdateTransform(ent);
         }
         else if((curr_st == TR_STATE_GORILLA_STAY) && (next_st == TR_STATE_GORILLA_STRAFE_RIGHT))
         {
-            ss_anim->current_animation = ss_anim->next_animation;
-            ss_anim->current_frame = ss_anim->next_frame;
+            ss_anim->prev_animation = ss_anim->current_animation;
+            ss_anim->prev_frame = ss_anim->current_frame;
             ang[0] -= 90.0f;
             Entity_UpdateTransform(ent);
         }

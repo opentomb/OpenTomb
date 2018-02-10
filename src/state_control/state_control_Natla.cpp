@@ -160,7 +160,7 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(state->dead)
             {
                 ent->move_type = MOVE_FREE_FALLING;
-                ss_anim->next_state = (ss_anim->current_animation == TR_ANIMATION_NATLA_FLY) ? TR_STATE_NATLA_FALL : TR_STATE_NATLA_DROPPED;
+                ss_anim->next_state = (ss_anim->prev_animation == TR_ANIMATION_NATLA_FLY) ? TR_STATE_NATLA_FALL : TR_STATE_NATLA_DROPPED;
             }
             else if((ent->move_type != MOVE_FLY) || cmd->crouch && hi->floor_hit.hit && (pos[2] < hi->floor_hit.point[2] + 256.0f))
             {

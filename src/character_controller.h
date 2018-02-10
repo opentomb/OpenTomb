@@ -64,12 +64,7 @@
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
 #define WEAPON_STATE_HIDE                       (0x00)
-#define WEAPON_STATE_HIDE_TO_READY              (0x01)
-#define WEAPON_STATE_IDLE                       (0x02)
-#define WEAPON_STATE_IDLE_TO_FIRE               (0x03)
-#define WEAPON_STATE_FIRE                       (0x04)
-#define WEAPON_STATE_FIRE_TO_IDLE               (0x05)
-#define WEAPON_STATE_IDLE_TO_HIDE               (0x06)
+#define WEAPON_STATE_READY                      (0x01)
 
 /*
  * ENTITY MOVEMENT TYPES

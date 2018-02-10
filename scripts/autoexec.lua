@@ -56,22 +56,22 @@ if (getLevelVersion() < TR_II) then
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
     setModelMeshReplaceFlag(1, 13, 0x01);
-    setModelMeshReplaceFlag(1, 1, 0x03);
-    setModelMeshReplaceFlag(1, 4, 0x03);
+    setModelMeshReplaceFlag(1, 1, 0x01);
+    setModelMeshReplaceFlag(1, 4, 0x01);
     
     -- shotgun
     setDefaultModelAnimReplaceFlag(2);
     setModelMeshReplaceFlag(2, 10, 0x01);
     setModelMeshReplaceFlag(2, 13, 0x01);
-    setModelMeshReplaceFlag(2, 7, 0x03);
+    setModelMeshReplaceFlag(2, 7, 0x01);
 
     -- auto pistols
     setDefaultModelAnimReplaceFlag(3);
     copyModelAnimations(3, 1);
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 13, 0x01);
-    setModelMeshReplaceFlag(3, 1, 0x03);
-    setModelMeshReplaceFlag(3, 4, 0x03);
+    setModelMeshReplaceFlag(3, 1, 0x01);
+    setModelMeshReplaceFlag(3, 4, 0x01);
 
     -- UZI
     setDefaultModelAnimReplaceFlag(4);
@@ -79,8 +79,8 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(4, 10, 0x01);
     setModelMeshReplaceFlag(4, 13, 0x01);
     setModelMeshReplaceFlag(4, 14, 0x01);
-    setModelMeshReplaceFlag(4, 1, 0x03);
-    setModelMeshReplaceFlag(4, 4, 0x03);
+    setModelMeshReplaceFlag(4, 1, 0x01);
+    setModelMeshReplaceFlag(4, 4, 0x01);
 
 elseif (getLevelVersion() < TR_III) then
     enableModelAnimReplaceFlags(12, true);
@@ -89,44 +89,44 @@ elseif (getLevelVersion() < TR_III) then
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
     setModelMeshReplaceFlag(1, 13, 0x01);
-    setModelMeshReplaceFlag(1, 1, 0x03);
-    setModelMeshReplaceFlag(1, 4, 0x03);
+    setModelMeshReplaceFlag(1, 1, 0x01);
+    setModelMeshReplaceFlag(1, 4, 0x01);
     
     -- shotgun
     setDefaultModelAnimReplaceFlag(3);
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 13, 0x01);
-    setModelMeshReplaceFlag(3, 14, 0x04);
+    setModelMeshReplaceFlag(3, 14, 0x02);
 
     -- auto pistols
     setDefaultModelAnimReplaceFlag(4);
     setModelMeshReplaceFlag(4, 10, 0x01);
     setModelMeshReplaceFlag(4, 13, 0x01);
-    setModelMeshReplaceFlag(4, 1, 0x03);
-    setModelMeshReplaceFlag(4, 4, 0x03);
+    setModelMeshReplaceFlag(4, 1, 0x01);
+    setModelMeshReplaceFlag(4, 4, 0x01);
 
     -- UZI
     setDefaultModelAnimReplaceFlag(5);
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 13, 0x01);
     setModelMeshReplaceFlag(5, 14, 0x01);
-    setModelMeshReplaceFlag(5, 1, 0x03);
-    setModelMeshReplaceFlag(5, 4, 0x03);
+    setModelMeshReplaceFlag(5, 1, 0x01);
+    setModelMeshReplaceFlag(5, 4, 0x01);
 
     -- M16
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
-    setModelMeshReplaceFlag(6, 14, 0x04);
+    setModelMeshReplaceFlag(6, 14, 0x02);
 
     -- grenade launcher
     setDefaultModelAnimReplaceFlag(7);
     setModelMeshReplaceFlag(7, 10, 0x01);
-    setModelMeshReplaceFlag(7, 14, 0x04);
+    setModelMeshReplaceFlag(7, 14, 0x02);
 
     -- harpoon gun
     setDefaultModelAnimReplaceFlag(8);
     setModelMeshReplaceFlag(8, 10, 0x01);
-    setModelMeshReplaceFlag(8, 14, 0x04);      -- 0x04 slot mesh model: draws with original mesh
+    setModelMeshReplaceFlag(8, 14, 0x02);      -- 0x02 slot mesh model: draws with original mesh
 
     -- flare
     setModelAnimReplaceFlag(9, 11, 0x01);
@@ -138,46 +138,46 @@ elseif (getLevelVersion() < TR_IV) then
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
     setModelMeshReplaceFlag(1, 13, 0x01);
-    setModelMeshReplaceFlag(1, 1, 0x03);
-    setModelMeshReplaceFlag(1, 4, 0x03);
+    setModelMeshReplaceFlag(1, 1, 0x01);
+    setModelMeshReplaceFlag(1, 4, 0x01);
     
     -- shotgun
     setDefaultModelAnimReplaceFlag(3);
     setModelMeshReplaceFlag(3, 10, 0x01);
-    setModelMeshReplaceFlag(3, 14, 0x04);
+    setModelMeshReplaceFlag(3, 14, 0x02);
 
     -- magnum
     setDefaultModelAnimReplaceFlag(4);
     setModelMeshReplaceFlag(4, 10, 0x01);
-    setModelMeshReplaceFlag(4, 4, 0x03);
+    setModelMeshReplaceFlag(4, 4, 0x01);
 
     -- UZI
     setDefaultModelAnimReplaceFlag(5);
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 13, 0x01);
     setModelMeshReplaceFlag(5, 14, 0x01);
-    setModelMeshReplaceFlag(5, 1, 0x03);
-    setModelMeshReplaceFlag(5, 4, 0x03);
+    setModelMeshReplaceFlag(5, 1, 0x01);
+    setModelMeshReplaceFlag(5, 4, 0x01);
 
     -- M16
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
-    setModelMeshReplaceFlag(6, 14, 0x04);
+    setModelMeshReplaceFlag(6, 14, 0x02);
 
     -- rocket launcher
     setDefaultModelAnimReplaceFlag(7);
     setModelMeshReplaceFlag(7, 10, 0x01);
-    setModelMeshReplaceFlag(7, 14, 0x04);
+    setModelMeshReplaceFlag(7, 14, 0x02);
 
     -- grenade launcher
     setDefaultModelAnimReplaceFlag(8);
     setModelMeshReplaceFlag(8, 10, 0x01);
-    setModelMeshReplaceFlag(8, 14, 0x04);
+    setModelMeshReplaceFlag(8, 14, 0x02);
 
     -- harpoon gun
     setDefaultModelAnimReplaceFlag(9);
     setModelMeshReplaceFlag(9, 10, 0x01);
-    setModelMeshReplaceFlag(9, 14, 0x04);
+    setModelMeshReplaceFlag(9, 14, 0x02);
 
     -- flare
     setModelAnimReplaceFlag(10, 11, 0x01);
@@ -192,8 +192,8 @@ elseif (getLevelVersion() <= TR_V) then
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
     setModelMeshReplaceFlag(1, 13, 0x01);
-    setModelMeshReplaceFlag(1, 1, 0x04);
-    setModelMeshReplaceFlag(1, 4, 0x04);
+    setModelMeshReplaceFlag(1, 1, 0x02);
+    setModelMeshReplaceFlag(1, 4, 0x02);
     
     -- UZI
     copyMeshFromModelToModel(2, 15, 1, 4);
@@ -201,29 +201,29 @@ elseif (getLevelVersion() <= TR_V) then
     setDefaultModelAnimReplaceFlag(2);
     setModelMeshReplaceFlag(2, 10, 0x01);
     setModelMeshReplaceFlag(2, 13, 0x01);
-    setModelMeshReplaceFlag(2, 1, 0x04);
-    setModelMeshReplaceFlag(2, 4, 0x04);
+    setModelMeshReplaceFlag(2, 1, 0x02);
+    setModelMeshReplaceFlag(2, 4, 0x02);
 
     -- shotgun
     setDefaultModelAnimReplaceFlag(3);
     setModelMeshReplaceFlag(3, 10, 0x01);
-    setModelMeshReplaceFlag(3, 14, 0x04);
+    setModelMeshReplaceFlag(3, 14, 0x02);
 
     -- crossbow
     setDefaultModelAnimReplaceFlag(4);
     setModelMeshReplaceFlag(4, 10, 0x01);
-    setModelMeshReplaceFlag(4, 14, 0x04);
+    setModelMeshReplaceFlag(4, 14, 0x02);
 
     -- grenade launcher
     setDefaultModelAnimReplaceFlag(5);
     setModelMeshReplaceFlag(5, 10, 0x01);
-    setModelMeshReplaceFlag(5, 14, 0x04);
+    setModelMeshReplaceFlag(5, 14, 0x02);
 
     -- magnum
     copyMeshFromModelToModel(6, 16, 4, 8);
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
-    setModelMeshReplaceFlag(6, 4, 0x04);
+    setModelMeshReplaceFlag(6, 4, 0x02);
 
     -- flare
     setModelAnimReplaceFlag(7, 11, 0x01);
