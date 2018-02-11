@@ -274,6 +274,8 @@ addItem(player, ITEM_LARAHOME, 1);
 addItem(player, ITEM_CONTROLS, 1);
 addItem(player, ITEM_AUDIO, 1);
 addItem(player, ITEM_PISTOL, 1);
+addItem(player, ITEM_SHOTGUN, 1);
+addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
 addItem(player, ITEM_UZI, 1);
 addItem(player, ITEM_UZI_AMMO, 1000);
 addItem(player, ITEM_SMALL_MEDIPACK, 3);

@@ -3386,14 +3386,12 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
     static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
     renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
-#if 0
     if(ss_anim->model->animation_count > 4)
     {
-        float dt;
-        int32_t t;
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
-        bool force_hide = (ent->character->weapon_id <= 0);
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
+        bool do_aim = ent->character->cmd.action;
+        int inc_state;
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
@@ -3410,190 +3408,49 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
             }
             SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
             SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
-
             if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
             {
                 target = NULL;
             }
+            do_aim |= (target != NULL);
         }
+
         b_tag->is_targeted = 0x00;
-        Character_ClearLookAt(ent);
-        switch(ss_anim->next_state)
+        switch(ss_anim->current_animation)
         {
-            case WEAPON_STATE_HIDE:
-                if(ent->character->cmd.ready_weapon)   // ready weapon
+            case 0: // idle < - > aim;
+                b_tag->is_targeted = (target) ? (0x01) : (0x00);
+                inc_state = Anim_IncTime(ss_anim, (ent->character->weapon_state && do_aim) ? (time) : (-time));
+                if((inc_state == 1) && ent->character->weapon_state && ent->character->cmd.action)
                 {
-                    ss_anim->prev_animation = 1;
-                    ss_anim->current_animation = 1;
-                    ss_anim->prev_frame = 0;
-                    ss_anim->current_frame = 0;
-                    ss_anim->frame_time = 0.0f;
-                    ss_anim->next_state = WEAPON_STATE_HIDE_TO_READY;
-                    ent->character->weapon_state = WEAPON_STATE_IDLE;
+                    Anim_SetAnimation(ss_anim, 2, 0);  // start fire
+                }
+                else if((inc_state == 2) && !ent->character->weapon_state)
+                {
+                    Anim_SetAnimation(ss_anim, 3, 0);  // start hide
                 }
                 break;
 
-            case WEAPON_STATE_HIDE_TO_READY:
-                ss_anim->frame_time += time;
-                ss_anim->prev_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->prev_animation].max_frame;
-
-                if(ss_anim->prev_frame == 11)
+            case 1: // hide -> idle;
+                if(Anim_IncTime(ss_anim, time))
+                {
+                    Anim_SetAnimation(ss_anim, 0, 0);  // to idle
+                }
+                if(ss_anim->prev_frame == 8)
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
                     StateControl_SetWeaponMeshOff(ent->bf, 7);
                 }
-                if(ss_anim->prev_frame < t - 1)
-                {
-                    ss_anim->current_frame = (ss_anim->prev_frame + 1) % t;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                }
-                else if(ss_anim->prev_frame < t)
-                {
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                }
-                else
-                {
-                    ss_anim->prev_frame = 0;
-                    ss_anim->prev_animation = 0;
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 0;
-                    ss_anim->frame_time = 0.0f;
-                    ss_anim->next_state = WEAPON_STATE_IDLE;
-                }
                 break;
 
-            case WEAPON_STATE_IDLE:
-                ss_anim->prev_frame = 0;
-                ss_anim->prev_animation = 0;
-                ss_anim->current_frame = 0;
-                ss_anim->current_animation = 0;
-                ss_anim->frame_time = 0.0f;
-                if(ent->character->cmd.ready_weapon)
+            case 2: // fire process;
+                b_tag->is_targeted = (target) ? (0x01) : (0x00);
+                if(Anim_IncTime(ss_anim, time))
                 {
-                    ss_anim->prev_animation = 3;
-                    ss_anim->current_animation = 3;
-                    //ss_anim->current_frame = ss_anim->next_frame = 0;
-                    ss_anim->frame_time = 0.0f;
-                    ss_anim->next_state = WEAPON_STATE_IDLE_TO_HIDE;
-                }
-                else if(!force_hide && (ent->character->cmd.action || target))
-                {
-                    ss_anim->next_state = WEAPON_STATE_IDLE_TO_FIRE;
-                }
-                else
-                {
-                    // do nothing here, may be;
-                }
-                break;
-
-            case WEAPON_STATE_FIRE_TO_IDLE:
-                // Yes, same animation, reverse frames order;
-                t = ss_anim->model->animations[ss_anim->prev_animation].max_frame;
-                ss_anim->frame_time += time;
-                ss_anim->prev_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                ss_anim->prev_frame = t - 1 - ss_anim->prev_frame;
-                if(ss_anim->prev_frame > 0)
-                {
-                    ss_anim->current_frame = ss_anim->prev_frame - 1;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                }
-                else
-                {
-                    ss_anim->current_frame = ss_anim->prev_frame = 0;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                    ss_anim->next_state = WEAPON_STATE_IDLE;
-                }
-                break;
-
-            case WEAPON_STATE_IDLE_TO_FIRE:
-                ss_anim->frame_time += time;
-                ss_anim->prev_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
-                t = ss_anim->model->animations[ss_anim->prev_animation].max_frame;
-
-                if(force_hide || ent->character->cmd.ready_weapon)
-                {
-                    ss_anim->prev_animation = 3;
-                    ss_anim->current_animation = 3;
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->next_state = WEAPON_STATE_IDLE_TO_HIDE;
-                    break;
-                }
-
-                if(target)
-                {
-                    b_tag->is_targeted = 0x01;
-                    if(!ent->character->cmd.action && !ent->character->cmd.ready_weapon)
+                    if(ent->character->weapon_state && ent->character->cmd.action)
                     {
-                        float max_time = (float)ss_anim->prev_frame * ss_anim->period;
-                        ss_anim->prev_frame = t - 1;
-                        if(ss_anim->frame_time > max_time)
-                        {
-                            ss_anim->frame_time = max_time;
-                        }
-                    }
-                }
-
-                if(ss_anim->prev_frame < t - 1)
-                {
-                    ss_anim->current_frame = ss_anim->prev_frame + 1;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                }
-                else if(ss_anim->prev_frame < t)
-                {
-                    ss_anim->current_frame = 0;
-                    ss_anim->current_animation = 2;
-                }
-                else if(ent->character->cmd.action)
-                {
-                    ss_anim->prev_frame = 0;
-                    ss_anim->current_frame = 1;
-                    ss_anim->prev_animation = 2;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                    ss_anim->next_state = WEAPON_STATE_FIRE;
-                }
-                else
-                {
-                    ss_anim->frame_time = 0.0f;
-                    ss_anim->prev_frame = ss_anim->model->animations[ss_anim->prev_animation].max_frame - 1;
-                    ss_anim->next_state = WEAPON_STATE_FIRE_TO_IDLE;
-                }
-                break;
-
-            case WEAPON_STATE_FIRE:
-                if(target)
-                {
-                    b_tag->is_targeted = 0x01;
-                }
-                if(!force_hide && ent->character->cmd.action)
-                {
-                    // inc time, loop;
-                    ss_anim->frame_time += time;
-                    ss_anim->prev_frame = (ss_anim->frame_time) / ss_anim->period;
-                    dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
-                    ss_anim->lerp = dt / ss_anim->period;
-                    t = ss_anim->model->animations[ss_anim->prev_animation].max_frame;
-
-                    if(ss_anim->prev_frame < t - 1)
-                    {
-                        ss_anim->current_frame = ss_anim->prev_frame + 1;
-                        ss_anim->current_animation = ss_anim->prev_animation;
-                    }
-                    else if(ss_anim->prev_frame < t)
-                    {
-                        ss_anim->current_frame = 0;
-                        ss_anim->current_animation = ss_anim->prev_animation;
-                    }
-                    else
-                    {
-                        Audio_Send(45, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        Anim_SetAnimation(ss_anim, 2, 0);
+                        Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
                         if(target)
                         {
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
@@ -3606,57 +3463,39 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                             Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->full_transform);
                             vec3_copy(from, tr + 12);
                             vec3_add_mul(to, from, tr + 8, -32768.0f);
-
                             //vec3_copy(d_from, from);
                             //vec3_copy(d_to, to);
-
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
                                 target = (entity_p)cs.obj->object;
                                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                             }
                         }
-                        ss_anim->frame_time = dt;
-                        ss_anim->prev_frame = 0;
-                        ss_anim->current_frame = 1;
+                    }
+                    else
+                    {
+                        Anim_SetAnimation(ss_anim, 4, 0);
                     }
                 }
-                else
-                {
-                    ss_anim->frame_time = 0.0;
-                    ss_anim->prev_animation = 0;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                    ss_anim->prev_frame = ss_anim->model->animations[ss_anim->prev_animation].max_frame - 1;
-                    ss_anim->current_frame = (ss_anim->prev_frame > 0) ? (ss_anim->prev_frame - 1) : (0);
-                    ss_anim->next_state = WEAPON_STATE_FIRE_TO_IDLE;
-                }
                 break;
-
-            case WEAPON_STATE_IDLE_TO_HIDE:
-                t = ss_anim->model->animations[ss_anim->prev_animation].max_frame;
-                ss_anim->frame_time += time;
-                ss_anim->prev_frame = (ss_anim->frame_time) / ss_anim->period;
-                dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
-                ss_anim->lerp = dt / ss_anim->period;
+                
+            case 3: // idle - > hide;
+                if(Anim_IncTime(ss_anim, time))
+                {
+                    SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
+                }
                 if(ss_anim->prev_frame == 23)
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 7);
                     StateControl_SetWeaponMeshOff(ent->bf, 10);
                 }
-                if(ss_anim->prev_frame < t - 1)
+                break;
+                
+            case 4: // aim - > idle;
+                if(Anim_IncTime(ss_anim, time))
                 {
-                    ss_anim->current_frame = ss_anim->prev_frame + 1;
-                    ss_anim->current_animation = ss_anim->prev_animation;
+                    Anim_SetAnimation(ss_anim, 0, 0);
                 }
-                else
-                {
-                    ss_anim->current_frame = ss_anim->prev_frame = 0;
-                    ss_anim->current_animation = ss_anim->prev_animation;
-                    ss_anim->next_state = WEAPON_STATE_HIDE;
-                    ent->character->weapon_state = WEAPON_STATE_HIDE;
-                    ent->character->set_weapon_model_func(ent, ent->character->weapon_id, WEAPON_STATE_HIDE);
-                }
-                b_tag->is_targeted = 0x00;
                 break;
         };
     }
@@ -3669,7 +3508,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
     {
         return 0x01;
     }
-#endif
+
     return 0x00;
 }
 
@@ -3692,6 +3531,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             {
                 anim_rh = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_RH);
                 anim_rh->current_animation = anim_rh->prev_animation = 1;
+                anim_rh->enabled = 0x00;
             }
             anim_rh->model = sm;
             anim_rh->onEndFrame = NULL;
@@ -3702,6 +3542,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             {
                 anim_lh = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_LH);
                 anim_lh->current_animation = anim_lh->prev_animation = 1;
+                anim_lh->enabled = 0x00;
             }
             anim_lh->model = sm;
             anim_lh->onEndFrame = NULL;
@@ -3742,41 +3583,32 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             if(!anim_th)
             {
                 anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_TH);
-                anim_th->model = sm;
-                anim_th->onEndFrame = NULL;
-                anim_th->onFrame = StateControl_LaraDoTwoHandWeponFrame; 
+                anim_th->current_animation = anim_th->prev_animation = 1;
+                anim_th->enabled = 0x00;
             }
+            anim_th->model = sm;
+            anim_th->onEndFrame = NULL;
+            anim_th->onFrame = StateControl_LaraDoTwoHandWeponFrame; 
 
             if(!anim_th->enabled)
             {
                 anim_th->model = sm;
                 ent->character->weapon_id = weapon_model;
+                StateControl_SetWeaponMeshOn(ent->bf, sm, 7);
                 if(weapon_state == WEAPON_STATE_READY)
                 {
                     SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
                     ent->character->weapon_state = weapon_state;
+                    Anim_SetAnimation(anim_th, 1, 0);
                 }
+            }
+            else if(!weapon_state && ent->character->weapon_state && anim_th->enabled &&
+                    (anim_th->current_animation == 0) && (anim_th->current_frame == 0))
+            {
+                ent->character->weapon_state = WEAPON_STATE_HIDE;
             }
         }
-
-        /*if(weapon_state == WEAPON_STATE_HIDE)
-        {
-            StateControl_SetWeaponMeshOn(ent->bf, sm, 7);
-            StateControl_SetWeaponMeshOn(ent->bf, sm, 1);
-            StateControl_SetWeaponMeshOn(ent->bf, sm, 4);
-            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
-            {
-                if((ss_anim->type == ANIM_TYPE_WEAPON_TH) || (ss_anim->type == ANIM_TYPE_WEAPON_LH) || (ss_anim->type == ANIM_TYPE_WEAPON_RH))
-                {
-                    ss_anim->enabled = 0;
-                }
-            }
-        }*/
     }
-    /*else if((ent->character->weapon_state == WEAPON_STATE_READY) && (weapon_state == WEAPON_STATE_HIDE))
-    {
-        ent->character->weapon_state = WEAPON_STATE_HIDE_PROCESS;
-    }*/
 }
 
 // 6 hide

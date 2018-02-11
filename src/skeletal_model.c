@@ -931,14 +931,15 @@ int  Anim_IncTime(struct ss_animation_s *ss_anim, float time)
         return 2;
     }
 
-    animation_frame_p next_anim = ss_anim->model->animations + ss_anim->current_animation;
+    animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
     ss_anim->prev_frame = ss_anim->frame_time / ss_anim->period;
     ss_anim->current_frame = ss_anim->prev_frame + 1;
-    if(ss_anim->current_frame >= next_anim->max_frame)
+    if(ss_anim->current_frame >= curr_anim->max_frame)
     {
-        ss_anim->frame_time = ss_anim->period * (float)next_anim->max_frame;
-        ss_anim->prev_frame = next_anim->max_frame - 1;
-        ss_anim->current_frame = next_anim->max_frame - 1;
+        ss_anim->frame_time = ss_anim->period * (float)(curr_anim->max_frame - 1);
+        ss_anim->frame_time = (ss_anim->frame_time < 0.0f) ? (0.0f) : (ss_anim->frame_time);
+        ss_anim->prev_frame = curr_anim->max_frame - 1;
+        ss_anim->current_frame = curr_anim->max_frame - 1;
         ss_anim->lerp = 1.0f;
         return 1;
     }
