@@ -156,6 +156,7 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
     }
 }
 
+void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 
 static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
 {
@@ -254,7 +255,8 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     if((ent->character->weapon_state != WEAPON_STATE_HIDE) && !StateControl_LaraCanUseWeapon(ent, ent->character->weapon_id))
     {
-        ent->character->cmd.ready_weapon = 0x01;
+        //ent->character->cmd.ready_weapon = 0x01;
+        StateControl_LaraSetWeaponModel(ent, ent->character->weapon_id, 0);
     }
 
     switch(current_state)
