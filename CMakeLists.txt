@@ -9,8 +9,29 @@ project(OpenTomb)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
+
+# Detect system FreeType
+
+if (FORCE_SYSTEM_FREETYPE)
+    find_package(freetype QUIET)
+    if (NOT FREETYPE_FOUND)
+        message(WARNING "FreeType not found. Enabling internal FreeType support.")
+        set(OPENTOMB_INTERNAL_FREETYPE ON)
+    else()
+        set(OPENTOMB_INTERNAL_FREETYPE OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_FREETYPE ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_FREETYPE)
+    add_subdirectory(extern/freetype2)
+    set(FREETYPE_INCLUDE_DIRS "")
+    set(FREETYPE_LIBRARIES freetype2)
+endif ()
+
 add_subdirectory(extern/bullet)
-add_subdirectory(extern/freetype2)
 add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
@@ -183,6 +204,11 @@ set(OPENTOMB_SRCS
     src/world.h
 )
 
+# Disable warnings when using unsafe functions
+if(WIN32)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
@@ -221,6 +247,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
+    ${FREETYPE_INCLUDE_DIRS}
     ${PNG_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
@@ -231,7 +258,7 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME}
     bullet
-    freetype2
+    ${FREETYPE_LIBRARIES}
     lua5.3
     ${PNG_LIBRARIES}
     ${OPENAL_LIBRARY}
