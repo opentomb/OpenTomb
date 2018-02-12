@@ -3294,6 +3294,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     StateControl_SetWeaponMeshOff(ent->bf, 1);
                     StateControl_SetWeaponMeshOff(ent->bf, 4);
                     Anim_SetAnimation(ss_anim, 2, 0);
+                    Audio_Send(7, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 else if((inc_state == 2) && !ent->character->weapon_state)
                 {
@@ -3315,6 +3316,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     StateControl_SetWeaponMeshOff(ent->bf, 10);
                     StateControl_SetWeaponMeshOff(ent->bf, 13);
                     Anim_SetAnimation(ss_anim, 1, -1);
+                    Audio_Send(6, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 break;
 
@@ -3549,8 +3551,26 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             }
         }
 
+        if(!weapon_state && ent->character->weapon_state && 
+           ((anim_th && anim_th->enabled && (anim_th->current_animation == 0)) ||
+            (anim_rh && anim_rh->enabled && (anim_rh->current_animation == 0)) ||
+            (anim_lh && anim_lh->enabled && (anim_lh->current_animation == 0))))
+        {
+            ent->character->weapon_state = WEAPON_STATE_HIDE;
+            return;
+        }
+        
+        if(ent->character->weapon_state || 
+           ((anim_th && anim_th->enabled) ||
+            (anim_rh && anim_rh->enabled) ||
+            (anim_lh && anim_lh->enabled)))
+        {
+            return;
+        }
+
         if(sm->animation_count == 4)
         {
+            ent->character->weapon_id = weapon_model;
             if(!anim_rh)
             {
                 anim_rh = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_RH);
@@ -3571,41 +3591,26 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             anim_lh->onEndFrame = NULL;
             anim_lh->onFrame = StateControl_LaraDoOneHandWeponFrame;
 
-            if((!anim_rh->enabled) && (!anim_lh->enabled) && !(anim_th && anim_th->enabled))
+            StateControl_SetWeaponMeshOn(ent->bf, sm, 1);
+            StateControl_SetWeaponMeshOn(ent->bf, sm, 4);
+            if(weapon_state == WEAPON_STATE_READY)
             {
-                anim_rh->model = sm;
-                anim_lh->model = sm;
-                ent->character->weapon_id = weapon_model;
-                StateControl_SetWeaponMeshOn(ent->bf, sm, 1);
-                StateControl_SetWeaponMeshOn(ent->bf, sm, 4);
-                if(weapon_state == WEAPON_STATE_READY)
-                {
-                    anim_rh->enabled = 1;
-                    anim_lh->enabled = 1;
-                    ent->bf->bone_tags[8].alt_anim = anim_rh;
-                    ent->bf->bone_tags[9].alt_anim = anim_rh;
-                    ent->bf->bone_tags[10].alt_anim = anim_rh;
-                    ent->bf->bone_tags[11].alt_anim = anim_lh;
-                    ent->bf->bone_tags[12].alt_anim = anim_lh;
-                    ent->bf->bone_tags[13].alt_anim = anim_lh;
-                    ent->character->weapon_state = weapon_state;
-                    Anim_SetAnimation(anim_rh, 1, 0);
-                    Anim_SetAnimation(anim_lh, 1, 0);
-                }
-            }
-            else if(!weapon_state && ent->character->weapon_state && anim_rh->enabled && anim_lh->enabled &&
-                    (anim_rh->current_animation == 0) && (anim_lh->current_animation == 0))
-            {
-                ent->character->weapon_state = WEAPON_STATE_HIDE;
-            }
-            else if(!weapon_state && ent->character->weapon_state && anim_th && anim_th->enabled &&
-                    (anim_th->current_animation == 0))
-            {
-                ent->character->weapon_state = WEAPON_STATE_HIDE;
+                anim_rh->enabled = 1;
+                anim_lh->enabled = 1;
+                ent->bf->bone_tags[8].alt_anim = anim_rh;
+                ent->bf->bone_tags[9].alt_anim = anim_rh;
+                ent->bf->bone_tags[10].alt_anim = anim_rh;
+                ent->bf->bone_tags[11].alt_anim = anim_lh;
+                ent->bf->bone_tags[12].alt_anim = anim_lh;
+                ent->bf->bone_tags[13].alt_anim = anim_lh;
+                ent->character->weapon_state = weapon_state;
+                Anim_SetAnimation(anim_rh, 1, 0);
+                Anim_SetAnimation(anim_lh, 1, 0);
             }
         }
         else
         {
+            ent->character->weapon_id = weapon_model;
             if(!anim_th)
             {
                 anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_TH);
@@ -3616,35 +3621,17 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             anim_th->onEndFrame = NULL;
             anim_th->onFrame = StateControl_LaraDoTwoHandWeponFrame;
 
-            if(!anim_th->enabled && !(anim_lh && anim_lh->enabled) && !(anim_rh && anim_rh->enabled))
+            StateControl_SetWeaponMeshOn(ent->bf, sm, 7);
+            if(weapon_state == WEAPON_STATE_READY)
             {
-                anim_th->model = sm;
-                ent->character->weapon_id = weapon_model;
-                StateControl_SetWeaponMeshOn(ent->bf, sm, 7);
-                if(weapon_state == WEAPON_STATE_READY)
-                {
-                    SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
-                    ent->character->weapon_state = weapon_state;
-                    Anim_SetAnimation(anim_th, 1, 0);
-                }
-            }
-            else if(!weapon_state && ent->character->weapon_state && anim_th->enabled &&
-                    (anim_th->current_animation == 0))
-            {
-                ent->character->weapon_state = WEAPON_STATE_HIDE;
-            }
-            else if(!weapon_state && ent->character->weapon_state && anim_rh && anim_rh->enabled && anim_lh && anim_lh->enabled &&
-                    (anim_rh->current_animation == 0) && (anim_lh->current_animation == 0))
-            {
-                ent->character->weapon_state = WEAPON_STATE_HIDE;
+                SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
+                ent->character->weapon_state = weapon_state;
+                Anim_SetAnimation(anim_th, 1, 0);
             }
         }
     }
 }
 
-// 6 hide
-// 7 draw
-// 8 shoot
 // 9 shotgun reload
 // 10 ricoshet
 // 43 UZI shoot

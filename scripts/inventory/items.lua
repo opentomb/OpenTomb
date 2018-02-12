@@ -322,7 +322,11 @@ end;
 items_funcs[ITEM_SHOTGUN] = {};
 items_funcs[ITEM_SHOTGUN].onUse = function(id)
     if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) then
-        setCharacterCurrentWeapon(id, 2);
+        if(getLevelVersion() < TR_II) then
+            setCharacterCurrentWeapon(id, 2);
+        else
+            setCharacterCurrentWeapon(id, 3);
+        end;
         return 1;
     end;
     return 0;
