@@ -370,34 +370,6 @@ void Engine_InitSDLVideo()
     // Check for correct number of antialias samples.
     if(renderer.settings.antialias)
     {
-        GLint maxSamples = 0;
-        PFNGLGETIINTEGERVPROC lglGetIntegerv = NULL;
-        /* I do not know why, but settings of this temporary window (zero position / size) are applied to the main window, ignoring screen settings */
-        sdl_window     = SDL_CreateWindow(NULL, screen_info.x, screen_info.y, screen_info.w, screen_info.h, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
-        sdl_gl_context = SDL_GL_CreateContext(sdl_window);
-        SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
-
-        lglGetIntegerv = (PFNGLGETIINTEGERVPROC)SDL_GL_GetProcAddress("glGetIntegerv");
-        lglGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-        maxSamples = (maxSamples > 16) ? (16) : (maxSamples);                   // Fix for faulty GL max. sample number.
-
-        if(renderer.settings.antialias_samples > maxSamples)
-        {
-            renderer.settings.antialias_samples = maxSamples;                   // Limit to max.
-            if(maxSamples == 0)
-            {
-                renderer.settings.antialias = 0;
-                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: can't use antialiasing");
-            }
-            else
-            {
-                Sys_DebugLog(SYS_LOG_FILENAME, "InitSDLVideo: wrong AA sample number, using %d", maxSamples);
-            }
-        }
-
-        SDL_GL_DeleteContext(sdl_gl_context);
-        SDL_DestroyWindow(sdl_window);
-
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, renderer.settings.antialias_samples);
     }
@@ -419,8 +391,15 @@ void Engine_InitSDLVideo()
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
+    if(!sdl_window)
+    {
+        Sys_Error("Could not create SDL window");
+    }
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
-    SDL_GL_MakeCurrent(sdl_window, sdl_gl_context);
+    if(!sdl_gl_context)
+    {
+        Sys_Error("Could not create GL context");
+    }
 
     lglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
     Con_AddLine((const char*)lglGetString(GL_VENDOR), FONTSTYLE_CONSOLE_INFO);

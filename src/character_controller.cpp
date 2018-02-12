@@ -2082,9 +2082,9 @@ void Character_ApplyCommands(struct entity_s *ent)
 
     if(ent->character->set_weapon_model_func)
     {
-        if((ent->character->weapon_id < 0) && (ent->character->weapon_state == WEAPON_STATE_HIDE))
+        if(ent->character->weapon_id < 0)
         {
-            ent->character->set_weapon_model_func(ent, -ent->character->weapon_id, WEAPON_STATE_READY);
+            ent->character->set_weapon_model_func(ent, -ent->character->weapon_id, WEAPON_STATE_HIDE);
         }
         else if(ent->character->cmd.ready_weapon && (ent->character->weapon_id > 0))
         {
