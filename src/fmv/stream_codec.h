@@ -31,6 +31,7 @@ extern "C" {
 typedef struct stream_codec_s
 {
     struct tiny_codec_s      codec;
+    int                      is_thread_run;
     pthread_t                thread;
     pthread_mutex_t          timer_mutex;
     pthread_mutex_t          video_buffer_mutex;
