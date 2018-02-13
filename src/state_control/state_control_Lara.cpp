@@ -3322,11 +3322,12 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
             case 3: // fire process;
                 b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                if(Anim_IncTime(ss_anim, time) || (ss_anim->frame_changing_state >= 4))
+                if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time))
                 {
                     if(ent->character->weapon_state && ent->character->cmd.action)
                     {
                         Anim_SetAnimation(ss_anim, 3, 0);
+                        ss_anim->frame_changing_state = 0x01;
                         Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
                         if(target)
                         {
@@ -3353,7 +3354,6 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     {
                         Anim_SetAnimation(ss_anim, 0, -1);
                     }
-                    ss_anim->frame_changing_state = 0x00;
                 }
                 break;
         };
@@ -3375,15 +3375,19 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
 int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
 {
    /* anims (TR_I - TR_V):
-    * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons):
-    * 0: idle to fire;
-    * 1: draw weapon;
-    * 2: fire process;
-    * 3: hide weapon;
-    * 4: idle to fire (targeted);
-    */
+    * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
     int16_t old_anim = ss_anim->current_animation;
     int16_t old_frame = ss_anim->current_frame;
+    int reload_snd = 0;
+    int ver = World_GetVersion();
+    if(ver < TR_II)
+    {
+        reload_snd = (ss_anim->model->id == 2) ? (9) : (0);
+    }
+    else
+    {
+        reload_snd = (ss_anim->model->id == 3) ? (9) : (0);
+    }
 
     /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
@@ -3448,11 +3452,12 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
             case 2: // fire process;
                 b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                if(Anim_IncTime(ss_anim, time) || (ss_anim->frame_changing_state >= 4))
+                if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time))
                 {
                     if(ent->character->weapon_state && ent->character->cmd.action)
                     {
                         Anim_SetAnimation(ss_anim, 2, 0);
+                        ss_anim->frame_changing_state = 0x01;
                         Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
                         if(target)
                         {
@@ -3484,7 +3489,10 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                         Anim_SetAnimation(ss_anim, 4, 0);
                     }
                 }
-                ss_anim->frame_changing_state = 0x00;
+                if((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && reload_snd)
+                {
+                    Audio_Send(reload_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
                 break;
 
             case 3: // idle - > hide;
@@ -3632,7 +3640,6 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
     }
 }
 
-// 9 shotgun reload
 // 10 ricoshet
 // 43 UZI shoot
 // 44 Colt shoot

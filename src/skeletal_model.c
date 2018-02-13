@@ -928,10 +928,12 @@ int  Anim_IncTime(struct ss_animation_s *ss_anim, float time)
         ss_anim->prev_frame = 0;
         ss_anim->current_frame = 0;
         ss_anim->lerp = 0.0f;
+        ss_anim->frame_changing_state = 0x02;
         return 2;
     }
 
     animation_frame_p curr_anim = ss_anim->model->animations + ss_anim->current_animation;
+    int16_t prev_frame = ss_anim->prev_frame;
     ss_anim->prev_frame = ss_anim->frame_time / ss_anim->period;
     ss_anim->current_frame = ss_anim->prev_frame + 1;
     if(ss_anim->current_frame >= curr_anim->max_frame)
@@ -941,11 +943,13 @@ int  Anim_IncTime(struct ss_animation_s *ss_anim, float time)
         ss_anim->prev_frame = curr_anim->max_frame - 1;
         ss_anim->current_frame = curr_anim->max_frame - 1;
         ss_anim->lerp = 1.0f;
+        ss_anim->frame_changing_state = 0x2;
         return 1;
     }
 
     float dt = ss_anim->frame_time - (float)ss_anim->prev_frame * ss_anim->period;
     ss_anim->lerp = dt / ss_anim->period;
+    ss_anim->frame_changing_state = (prev_frame == ss_anim->prev_frame) ? (0x00) : (0x01);
     return 0;
 }
 
