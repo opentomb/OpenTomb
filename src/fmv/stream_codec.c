@@ -22,7 +22,7 @@ void stream_codec_init(stream_codec_p s)
     s->state = VIDEO_STATE_STOPPED;
     s->stop = 0;
     s->update_audio = 1;
-    s->thread = 0;
+    s->is_thread_run = 0;
     pthread_mutex_init(&s->timer_mutex, NULL);
     pthread_mutex_init(&s->video_buffer_mutex, NULL);
     pthread_mutex_init(&s->audio_buffer_mutex, NULL);
@@ -33,10 +33,10 @@ void stream_codec_init(stream_codec_p s)
 void stream_codec_clear(stream_codec_p s)
 {
     s->stop = 1;
-    if(s->thread)
+    if(s->is_thread_run)
     {
         pthread_join(s->thread, NULL);
-        s->thread = 0;
+        s->is_thread_run = 0;
     }
 
     pthread_mutex_destroy(&s->timer_mutex);
@@ -49,10 +49,10 @@ int stream_codec_check_end(stream_codec_p s)
 {
     if(s->state == VIDEO_STATE_STOPPED)
     {
-        if(s->thread)
+        if(s->is_thread_run)
         {
             pthread_join(s->thread, NULL);
-            s->thread = 0;
+            s->is_thread_run = 0;
             return 1;
         }
         return 0;
@@ -64,10 +64,10 @@ int stream_codec_check_end(stream_codec_p s)
 void stream_codec_stop(stream_codec_p s, int wait)
 {
     s->stop = 1;
-    if(wait && s->thread)
+    if(wait && s->is_thread_run)
     {
         pthread_join(s->thread, NULL);
-        s->thread = 0;
+        s->is_thread_run = 0;
     }
 }
 
@@ -165,7 +165,9 @@ int stream_codec_play(stream_codec_p s)
     {
         s->state = VIDEO_STATE_QEUED;
         s->stop = 0;
-        return 0 != pthread_create(&s->thread, NULL, stream_codec_thread_func, s);
+
+        s->is_thread_run = (0 == pthread_create(&s->thread, NULL, stream_codec_thread_func, s));
+        return (s->is_thread_run == 0);
     }
     return 0;
 }
