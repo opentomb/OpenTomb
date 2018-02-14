@@ -281,7 +281,7 @@ int Save_Entity(entity_p ent, void *data)
                 fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
             }
 
-            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->weapon_state);
+            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready, ent->character->weapon_id_req);
             for(int i = 0; i < PARAM_LASTINDEX; i++)
             {
                 fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
@@ -631,7 +631,7 @@ void Game_Frame(float time)
                     player->character->target_id = target->id;
                 }
             }
-            else if(player->character->weapon_state != WEAPON_STATE_HIDE)
+            else if(player->character->state.weapon_ready)
             {
                 entity_p target = World_GetEntityByID(player->character->target_id);
                 if(!target || !Character_IsTargetAccessible(player, target))

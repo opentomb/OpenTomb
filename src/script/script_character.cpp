@@ -340,7 +340,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            lua_pushnumber(lua, ent->character->weapon_state);
+            lua_pushnumber(lua, ent->character->state.weapon_ready);
             return 1;
         }
     }
@@ -648,17 +648,22 @@ int lua_GetCharacterClimbPoint(lua_State *lua)
 
 int lua_SetCharacterWeaponModel(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 3)
+    int top = lua_gettop(lua);
+    if(top >= 3)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character && ent->character->set_weapon_model_func)
         {
+            if(top >= 4)
+            {
+                ent->character->weapon_id_req = lua_tointeger(lua, 4);
+            }
             ent->character->set_weapon_model_func(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
         }
     }
     else
     {
-        Con_Printf("setCharacterWeaponModel: expecting arguments (id_entity, id_weapon_model, armed_state)");
+        Con_Printf("setCharacterWeaponModel: expecting arguments (id_entity, id_weapon_model, armed_state, (id_weapon_model_req))");
     }
 
     return 0;

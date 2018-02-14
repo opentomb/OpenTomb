@@ -61,8 +61,8 @@ void Character_Create(struct entity_s *ent)
         ret->bone_l_hand_end = 0x00;
         ret->bone_r_hand_start = 0x00;
         ret->bone_r_hand_end = 0x00;
-        ret->weapon_state = 0x00;
         ret->weapon_id = 0;
+        ret->weapon_id_req = 0;
 
         ret->state.floor_collide = 0x00;
         ret->state.ceiling_collide = 0x00;
@@ -71,6 +71,7 @@ void Character_Create(struct entity_s *ent)
         ret->state.slide = 0x00;
         ret->state.uw_current = 0x00;
         ret->state.attack = 0x00;
+        ret->state.weapon_ready = 0x00;
         ret->state.dead = 0x00;
         ret->state.ragdoll = 0x00;
         ret->state.burn = 0x00;
@@ -179,7 +180,7 @@ void Character_Update(struct entity_s *ent)
     {
         bool is_player = (World_GetPlayer() == ent);
         if(ent->character->cmd.action && (ent->type_flags & ENTITY_TYPE_TRIGGER_ACTIVATOR) &&
-           (ent->character->weapon_state == WEAPON_STATE_HIDE))
+           (!ent->character->state.weapon_ready))
         {
             Entity_CheckActivators(ent);
         }
@@ -2082,13 +2083,9 @@ void Character_ApplyCommands(struct entity_s *ent)
 
     if(ent->character->set_weapon_model_func)
     {
-        if(ent->character->weapon_id < 0)
+        if(ent->character->cmd.ready_weapon || (ent->character->weapon_id != ent->character->weapon_id_req))
         {
-            ent->character->set_weapon_model_func(ent, -ent->character->weapon_id, WEAPON_STATE_HIDE);
-        }
-        else if(ent->character->cmd.ready_weapon && (ent->character->weapon_id > 0))
-        {
-            ent->character->set_weapon_model_func(ent, ent->character->weapon_id, !ent->character->weapon_state);
+            ent->character->set_weapon_model_func(ent, ent->character->weapon_id_req, !ent->character->state.weapon_ready);
         }
     }
 
@@ -2155,7 +2152,7 @@ void Character_UpdateParams(struct entity_s *ent)
 {
     float speed = engine_frame_time / GAME_LOGIC_REFRESH_INTERVAL;
 
-    if(ent->character->weapon_state != WEAPON_STATE_HIDE)
+    if(ent->character->state.weapon_ready)
     {
         entity_p target = World_GetEntityByID(ent->character->target_id);
         Character_LookAtTarget(ent, target);
@@ -2330,8 +2327,5 @@ void Character_SetTarget(struct entity_s *ent, uint32_t target_id)
 
 void Character_ChangeWeapon(struct entity_s *ent, int weapon_model)
 {
-    if((ent->character->weapon_id != weapon_model) && (ent->character->weapon_id != -weapon_model))
-    {
-        ent->character->weapon_id = (weapon_model > 0) ? (-weapon_model) : (weapon_model);
-    }
+    ent->character->weapon_id_req = weapon_model;
 }

@@ -357,7 +357,7 @@ void Gui_DrawBars()
     entity_p player = World_GetPlayer();
     if(player && player->character)
     {
-        if(player->character->weapon_state == WEAPON_STATE_READY)
+        if(player->character->state.weapon_ready)
         {
             Bar[BAR_HEALTH].Forced = true;
         }

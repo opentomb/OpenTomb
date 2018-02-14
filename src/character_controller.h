@@ -63,9 +63,6 @@
 #define CHARACTER_BASE_RADIUS   (128.0)
 #define CHARACTER_BASE_HEIGHT   (512.0)
 
-#define WEAPON_STATE_HIDE                       (0x00)
-#define WEAPON_STATE_READY                      (0x01)
-
 /*
  * ENTITY MOVEMENT TYPES
  */
@@ -230,6 +227,7 @@ typedef struct character_state_s
     uint32_t    slide : 2;      // 0 - none, 1 - back, 2 - front;
     uint32_t    uw_current : 1;
     uint32_t    attack : 1;
+    uint32_t    weapon_ready : 1;
     uint32_t    dead : 2;
     uint32_t    ragdoll : 1;
     uint32_t    burn : 1;
@@ -285,7 +283,7 @@ typedef struct character_s
     uint16_t                    bone_r_hand_start;
     uint16_t                    bone_r_hand_end;
     int16_t                     weapon_id;
-    int16_t                     weapon_state;
+    int16_t                     weapon_id_req;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
