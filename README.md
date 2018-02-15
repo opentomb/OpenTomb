@@ -1,110 +1,66 @@
-[![Build Status](https://travis-ci.org/opentomb/OpenTomb.svg?branch=master)](https://travis-ci.org/opentomb/OpenTomb)
+﻿[![Состояние сборки](https://travis-ci.org/opentomb/OpenTomb.svg?branch=master)](https://travis-ci.org/opentomb/OpenTomb)
 
-OpenTomb — an open-source Tomb Raider 1-5 engine remake
+OpenTomb — ресурс с открытым исходным кодом Tomb Raider 1-5 переделанный движок
 -------------------------------------------------------
 
-### Table of contents ###
+### Оглавление ###
 
-- [What is this?](#what-is-this)
-- [Why create a new engine?](#why-create-a-new-engine)
-- [Features](#features)
-- [Supported platforms](#supported-platforms)
-- [Setup](#setup)
-- [Compiling](#compiling)
-- [Running and Configuration](#running-and-configuration)
-- [Licensing](#licensing)
-- [Credits](#credits)
+- [Что это?](#what-is-this)
+- [Зачем нужен новый движок?](#why-create-a-new-engine)
+- [Особенности](#features)
+- [Поддерживаемые платформы](#supported-platforms)
+- [Установка](#setup)
+- [Компиляция](#compiling)
+- [Запуск и настройка](#running-and-configuration)
+- [Лицензирование](#licensing)
+- [Авторы](#credits)
 
 
-### What is this? ###
-OpenTomb is an open-source re-implementation of the classic Tomb Raider engine,
-intended to play levels from all classic-era Tomb Raider games (1—5), as well as
-custom TRLE levels. The project does not use any of the original Tomb Raider
-code, as all attempts to retrieve source files from Eidos/Core were in vain.
+### Что это? ###
+OpenTomb - это переиздание классического движка с открытым исходным кодом Tomb Raider, предназначенное для игры на разных уровнях из всех классических игр Tomb Raider (1-5), а также пользовательские уровни TRLE. В проекте не используется оригинальный код Tomb Raider, поскольку все попытки получить исходные файлы из Eidos / Core были напрасны.
 
-Instead, everything is being re-developed completely from scratch. It should be
-noted, however, that OpenTomb uses certain legacy routines from unfinished
-open-source projects, such as [OpenRaider](http://openraider.sourceforge.net/)
-and VT project (found at [icculus.org](https://icculus.org/)), plus some code
-from Quake Tenebrae.
+Вместо этого, разрабатывается все заново, полностью с нуля. Должно быть, что OpenTomb использует некоторые устаревшие подпрограммы из незавершенных проектов с открытым исходным кодом, такие как [OpenRaider](http://openraider.sourceforge.net/) и проект VT (см. [icculus.org](https://icculus.org/)), а также некоторый код от Quake Tenebrae.
 
-OpenTomb tries to recreate the original Tomb Raider series experience, although
-with contemporary updates, features and additions, being able to fully benefit
-from running on modern PCs with powerful CPUs and graphic cards.
+OpenTomb пытается воссоздать оригинальный игровой опыт серии Tomb Raider, но только уже с современными обновлениями, функциями и дополнениями, способными в полной мере воспользоваться преимуществами нынешних современных ПК с мощными процессорами и графическими картами.
 
-Links to forums and info:
-* TR forum link: http://www.tombraiderforums.com/showthread.php?t=197508
-* Discord channel: https://discord.gg/d8mQgdc
+Информационные ссылки:
+* Ссылка на TR форум: http://www.tombraiderforums.com/showthread.php?t=197508
+* Discord канал: https://discord.gg/d8mQgdc
 
-### Why create a new engine? ###
-It's true that we have fully working Windows builds of TR2-5, and TR1 works
-perfectly through [DosBox](https://www.dosbox.com/). However, as time 
-progresses the situation will only worsen, with newer Operating Systems 
-becoming increasingly unlikely to support the games. OpenTomb will always
-be able to be ported to any platform you wish.
+### Зачем нужен новый движок? ###
+Это правда, что у нас есть полностью работающие сборки Windows из TR2-5, а TR1 работает отлично через [DosBox](https://www.dosbox.com/). Однако со временем
+все прогрессирует и ситуация будет только ухудшаться, с более новыми операционными системами становится все менее вероятным поддерживать игры. OpenTomb всегда будет быть в состоянии перейти на любую платформу, которую вы хотите.
 
-It is also true that there are patchers for the original engine, aiming to
-improve and update it: TREP, TRNG, etc. The advantage with OpenTomb is that we
-are not limited by the original Binary, a huge limitation when it comes to new
-features, graphical enhancements, code modification and more. An open-source
-engine removes these limitations.
+Верно и то, что для оригинального движка есть патчи.
+улучшить и обновить его: TREP, TRNG и т. д. Преимущество OpenTomb заключается в том, что мы не ограничены оригинальным Binary, весомое ограничение, когда дело доходит до новых функций, графических улучшений, модификацию кода и многое другое. Открытый источник движка устраняет эти ограничения.
 
-### Features ###
-* OpenTomb has a completely different collision approach to the original engine,
-circumventing many of the limitations present. We use a terrain generator to
-make an optimized collision mesh for each room from so-called "floordata".
-* OpenTomb is capable of a variable frame rate, not limited to 30fps like the
-original engine.
-* OpenTomb uses common and flexible libraries, such as OpenGL, OpenAL, SDL and
-Bullet Physics.
-* OpenTomb implements a Lua scripting engine to define all entity functionality.
- This means that, again, unlike the original, much less is hardcoded into the
- engine itself, so functionality can be extended or modified without havng to
- modify and recompile the engine itself.
-* Many abandoned and unused features from the original engine have been enabled
-in OpenTomb. New animation, unused items, hidden PSX-specific structures inside
-level files, and so on!
+### Особенности ###
+* OpenTomb имеет совершенно другой подход коллизии к оригинальному движку, обходя многие из существующих ограничений. Мы используем генератор рельефа для создания оптимизированной сетки столкновений для каждой комнаты из так называемой «флордаты».
+* OpenTomb способен к переменной частоте кадров, не ограничиваясь 30fps, как
+оригинальный движок.
+* OpenTomb использует общие и гибкие библиотеки, такие как OpenGL, OpenAL, SDL и физику пули.
+* OpenTomb реализует механизм сценариев Lua для определения всех функций сущности.
+  Это означает, что, опять же, в отличие от оригинала, гораздо меньше жестко закодировано в самом движке, поэтому функциональность может быть расширена или изменена без модифицировании и перекомпилировании самого движка.
+* Многие заброшенные и неиспользуемые функции от исходного движка были включены в OpenTomb. Новая анимация, неиспользуемые элементы, скрытые структуры, специфичные для PSX, внутри файлы уровня и многое другое!
 
-### Supported platforms ###
-OpenTomb is a cross-platform engine: currently it can be ran on Windows, Mac or
-Linux. No mobile implementations are in development yet, but they are indeed
-possible.
+### Поддерживаемые платформы ###
+OpenTomb - кросс-платформенный движок: в настоящее время он может запускаться в Windows, Mac или Linux. Никаких мобильных реализаций пока нет, но они по сути возможны.
 
-### Setup ###
-To run any of the levels from the original games, you will need the assets from
-that respective game. These resources often tend to be in cryptic formats, with
-variations across games. Because of this, you'll need to convert some game
-resources to usable formats yourself, or get them from somewhere on the Net.
+### Установка ###
+Чтобы запустить любой из уровней из исходных игр, вам понадобятся активы из соответствующей игры. Эти ресурсы часто имеют тенденцию находится в загадочных форматах, вариаций в играх. Из-за этого вам нужно будет конвертировать некоторые игровые ресурсы к используемым форматам самостоятельно или получить их откуда-то в Сети.
 
-Here is the list of all needed assets and where to get them:
+Вот список всех необходимых активов и где их можно получить:
 
- * Data folders from each game. Get them from your retail game CDs or Steam/GOG
- bundles. Just take data folder from each game's folder, and put it into
- corresponding `/data/tr*/` folder. For instance, for TR3, the path would be
- `OpenTomb/data/tr3/data/`
+ * Папки данных из каждой игры. Получите их с компакт-дисков вашей приобретенной игры или Steam / GOG узлы. Просто возьмите папку с данными из папки каждой игры и поместите ее в соответствующей папке `/ data / tr * /`. Например, для TR3 путь будет `OpenTomb / данные / TR3 / данные /`
 
- * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you
- should convert original soundtracks by yourself, or just download whole TR1-5
- music package here: https://opentomb.earvillage.net
- PLEASE NOTE: Files may need to be renamed for this to work, please see
-  https://github.com/opentomb/OpenTomb/issues/447
+ * Аудиодорожки CD. OpenTomb поддерживает только OGG мгновенные аудиотреки, так что вы должны преобразовать оригинальные саундтреки самостоятельно или просто загрузить весь TR1-5 музыкальный пакет здесь: https://opentomb.earvillage.net ПОЖАЛУЙСТА, ОБРАТИТЕ ВНИМАНИЕ: файлы, возможно, потребуется переименовать, чтобы все работало, подробнее https://github.com/opentomb/OpenTomb/issues/447
 
- * Loading screens for TR1-3 and TR5. For TR3, get them from pix directory of
- your installed official game. Just put this pix directory into `/data/tr3/`
- folder. As for other games, it's a bit tricky to get loading screens, as there
- were no loading screens for PC versions TR1-2, TR4 used level screenshots as
- loading screens, and TR5 used an encrypted format to store all loading
- graphics. So, to ease your life, you can simply download loading screen package
-  here: http://trep.trlevel.de/temp/loading_screens.zip
- Just put it right into OpenTomb directory, and that should do the trick. Note:
- the engine supports png and pcx format of screen images.
+ * Загрузка экранов для TR1-3 и TR5. Для TR3, извлечь их из директории pix
+ вашей установленной официальной игры. Просто поместите этот каталог пиков в `/ data / tr3 /`папку. Что касается других игр, немного сложнее получить загрузочные экраны, так как там не было загрузочных экранов для версий ПК TR1-2, TR4 использовали скриншоты уровней как загрузочные экраны и TR5 использовали зашифрованный формат для хранения всей загрузки графики. Итак, чтобы облегчить вашу жизнь, вы можете просто загрузить загрузочный экран здесь: http://trep.trlevel.de/temp/loading_screens.zip
+ Просто поместите это прямо в каталог OpenTomb, и это должно быть хитростью. Заметка: движок поддерживает png и pcx формат изображений на экране.
 
-### Compiling ###
-There is a CMakeLists.txt file provided with source code, so you can compile
-OpenTomb using CMake. On Windows, you can also compile it from Code::Blocks IDE
-(project file is also provided). Alternatively, you can manually compile it in
-Code::Blocks by recursively adding all source files from /src directory, and
-adding these libraries in Linker Settings under Project Build options:
+### Компиляция ###
+Файл CMakeLists.txt имеет исходный код, поэтому вы можете компилировать OpenTomb с использованием CMake. В Windows вы также можете скомпилировать его из Code ID Blocks IDE (файл проекта также предоставляется). Кроме того, вы можете вручную скомпилировать его в Код::Блоки рекурсивного добавления всех исходных файлов из каталога / src и добавив эти библиотеки в настройки компоновщика в разделе «Параметры сборки проекта»:
 
 * libmingw32.a
 * libSDL2main.a
@@ -114,50 +70,36 @@ adding these libraries in Linker Settings under Project Build options:
 * libz.a
 * libpthread.a
 
-On Linux, just download the source code and run in terminal:
+В Linux просто загрузите исходный код и запустите в терминале:
 
     cmake . && make
 
-The required dependencies are the development headers for SDL2, png, LUA 5.2,
-ZLIB. You can install them in an Ubuntu-based distro with this command:
+Необходимыми зависимостями являются заголовки разработки для SDL2, png, LUA 5.2, ZLIB. Вы можете установить их в дистрибутив на основе Ubuntu с помощью этой команды:
 
     sudo apt-get install libopenal-dev libsdl2-dev libpng12-dev liblua5.2-dev libglu1-mesa-dev zlib1g-dev
 
-On Mac, use XCode project, which is also available in source code.
+На Mac используйте проект XCode, который также доступен в исходном коде.
 
-NB: Please note that OpenTomb requires C++11 (`-std=c++11`) flag to compile
-properly! You may use CPU-specific optimization flags (`-march=prescott`,
-`-march=i486`, `-march=core2`), as well as general optimization flags (`-O1` and `-O2`),
- but DON'T USE `-O3` flag, as Bullet tends to crash with this optimization level
- (GCC 5.1+ may compile it without errors).
+Примечание. Обратите внимание, что для OpenTomb требуется скомпилировать флаг C ++ 11 (`-std = c ++ 11`) должным образом! Вы можете использовать флаги оптимизации процессора (`-march = prescott`,`-march = i486`,` -march = core2`), а также общие флаги оптимизации (`-O1` и` -O2`),но НЕ ИСПОЛЬЗУЙТЕ флаг `-O3`, поскольку Bullet имеет тенденцию к сбою с этим уровнем оптимизации (GCC 5.1+ может скомпилировать его без ошибок).
 
-### Running and Configuration ###
-To run OpenTomb, simply run the executable generated by the build. By default,
-no command line options are needed. Access the console by pressing \`. This
-allows you to enter commands to select levels, change settings, and more. Enter
-'help' to get a list of commands. Enter 'exit' to quit the engine.
+### Запуск и настройка ###
+Чтобы запустить OpenTomb, просто запустите исполняемый файл, сгенерированный сборкой. По умолчанию, нет параметров командной строки. Войдите в консоль, нажав кнопку \. Эта кнопка позволяет вводить команды для выбора уровней, изменения настроек и т. д. Введите «help», чтобы получить список команд. Введите «exit», чтобы выйти из движка.
 
-Currently, all settings in OpenTomb are managed through config.lua and
-autoexec.lua. Config.lua contains persistent engine and game settings, while
-autoexec.lua contains any commands which should be executed on engine start-up.
+В настоящее время все настройки в OpenTomb управляются через config.lua и
+autoexec.lua. Config.lua содержит постоянные настройки движка и игры, в то время как autoexec.lua содержит любые команды, которые должны выполняться при запуске движка.
 
-Config.lua is divided into different sections: screen, audio, render, controls,
-console and system. In each of these sections, you can change numerous
-parameters, the names of which are usually fairly intuitive.
+Config.lua разделен на различные разделы: экран, аудио, рендеринг, элементы управления, консоли и системы. В каждом из этих разделов вы можете изменить многочисленные параметры, имена которых обычно довольно интуитивно понятны.
 
-Autoexec.lua is a simple list of commands which are ran at startup. Modifying
-existing commands may cause the engine to function incorrectly.
+Autoexec.lua - это простой список команд, запускаемых при запуске. Изменение
+существующих команды могут привести к неправильной работе движка.
 
-To select a level, enter 'setgamef(game, level) into either autoexec.lua or in
-the console, where game is 1-5. Mansion levels are generally 0, and games which
-do not have a mansion begin from level 1. For example, to load level 2 of TR3,
-you would enter `setgamef(3, 2)`.
+Чтобы выбрать уровень, введите 'setgamef (игра, уровень) в autoexec.lua или в
+консоль, где игра 1-5. Уровни особняка обычно равны 0, а игры, в которых
+нет особняка, начиная с уровня 1. Например, чтобы загрузить уровень 2 TR3,
+вы должны ввести `setgamef (3, 2)`.
 
-### Licensing ###
-OpenTomb is an open-source engine distributed under LGPLv3 license, which means
-that ANY part of the source code must be open-source as well. Hence, all used
-libraries and bundled resources must be open-source with GPL-compatible
-licenses. Here is the list of used libraries and resources and their licenses:
+### Лицензирование ###
+OpenTomb - это движок с открытым исходным кодом, распространяемый по лицензии LGPLv3, что означает что ЛЮБАЯ часть исходного кода также должна быть с открытым исходным кодом. Следовательно, все используемые библиотеки и связанные ресурсы должны быть открытыми с GPL-совместимыми лицензии. Ниже приведен список используемых библиотек и ресурсов и их лицензий.
 
 * OpenGL — does not need licensing (https://www.opengl.org/about/#11)
 * OpenAL Soft — LGPL
@@ -169,36 +111,33 @@ licenses. Here is the list of used libraries and resources and their licenses:
 
 * Droid Sans Mono, Roboto Condensed Regular and Roboto Regular fonts — Apache
 
-### Credits ###
-NB: Please note that authors and contributors list is constantly extending, as
-there is more and more people involved in project development, so someone may be
- missing from this list!
+### Авторы ###
+Примечание: Обратите внимание, что список авторов и участников постоянно расширяется, так как все больше людей участвует в разработке проектов, поэтому кто-то может быть отсутствует в этом списке!
 
-* [TeslaRus](https://github.com/TeslaRus): main developer.
-* [Cochrane](https://github.com/Cochrane): renderer rewrites and optimizing, Mac OS X support.
-* [Gh0stBlade](https://github.com/Gh0stBlade): renderer add-ons, shader port, gameflow implementation, state
-control fix-ups, camera and AI programming.
-* [Lwmte](https://github.com/Lwmte): state and scripting fix-ups, controls, GUI and audio modules, trigger
-and entity system rewrites.
-* Nickotte: interface programming, ring inventory implementation,
-camera fix-ups.
-* [pmatulka](https://github.com/pmatulka): Linux port and testing.
-* [richardba](https://github.com/richardba): Github migration, Github repo maintenance, website design.
-* [Saracen](https://github.com/Saracen): room and static mesh lighting.
-* [T4Larson](https://github.com/T4Larson): general stability patches and bugfixing.
-* [vobject](https://github.com/vobject): nightly builds, maintaining general compiler compatibility.
-* [vvs-](https://github.com/vvs-): testing, feedback, bug report.
-* [xproger](https://github.com/xproger): documentation updates.
-* [Banderi](https://github.com/Banderi): documentation, bugfixing.
-* [gabrielmtzcarrillo](https://github.com/gabrielmtzcarrillo): entity shader work.
-* [filfreire](https://github.com/filfreire): documentation.
+* [TeslaRus](https://github.com/TeslaRus): главный разработчик.
+* [Cochrane](https://github.com/Cochrane): рендеринг перезапись и оптимизация поддержки Mac OS X.
+* [Gh0stBlade](https://github.com/Gh0stBlade): настройки рендеринга, порт шейдера, реализация игрового процесса, состояния контрольных исправления, программирование камеры и AI.
+* [Lwmte](https://github.com/Lwmte): исправления состояния и сценариев, элементы управления, графический интерфейс и аудиомодули, триггер
+и систему сущностей перепизаписывает.
+* Nickotte: программирование интерфейса, реализация инвентаризации колец,
+исправление камеры.
+* [pmatulka](https://github.com/pmatulka): порт Linux и тестирование.
+* [richardba](https://github.com/richardba): миграция Github, обслуживание рефинансирования Github, дизайн сайта.
+* [Saracen](https://github.com/Saracen): освещение в комнате и статической сетке.
+* [T4Larson](https://github.com/T4Larson): общие исправления стабильности и исправление ошибок.
+* [vobject](https://github.com/vobject): ночные сборки, поддерживающие общую совместимость компилятора.
+* [vvs-](https://github.com/vvs-): тестирование, отзывы, отчет об ошибках.
+* [xproger](https://github.com/xproger): обновления документации.
+* [Banderi](https://github.com/Banderi): документация, исправление ошибок.
+* [gabrielmtzcarrillo](https://github.com/gabrielmtzcarrillo): работа шейдера объекта.
+* [filfreire](https://github.com/filfreire): документация.
 
 
-Additional contributions from: Ado Croft (extensive testing),
-E. Popov (TRN caustics shader port), [godmodder](https://github.com/godmodder) (general help),
-[jack9267](https://github.com/jack9267) (vt loader optimization), meta2tr (testing and bugtracking),
-shabtronic (renderer fix-ups), [Tonttu](https://github.com/Tonttu) (console patch) and
-[xythobuz](https://github.com/xythobuz) (additional Mac compatibility patches).
+Дополнительные взносы: Ado Croft (обширное тестирование),
+Попов Е. (порт шейдеров TRN каустики), [godmodder](https://github.com/godmodder) (общая помощь),
+[jack9267](https://github.com/jack9267) (оптимизация загрузчика vt), meta2tr (тестирование и bugtracking),
+shabtronic (исправления рендеринга), [Tonttu](https://github.com/Tonttu) (консольный патч) и
+[xythobuz](https://github.com/xythobuz) (дополнительные патчи для совместимости с Mac).
 
-Translations by: [Joey79100](https://github.com/Joey79100) (French), Nickotte (Italian), [Lwmte](https://github.com/Lwmte) (Russian),
-[SuiKaze Raider](https://twitter.com/suikazeraider) (Spanish), [filfreire](https://github.com/filfreire) (Portuguese - Portugal).
+Перевод: [Joey79100](https://github.com/Joey79100) (французский), Nickotte (итальянский), [Lwmte](https://github.com/Lwmte) (русский),
+[SuiKaze Raider](https://twitter.com/suikazeraider) (испанский), [filfreire](https://github.com/filfreire) (португальский - Португалия).
