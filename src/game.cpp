@@ -281,7 +281,7 @@ int Save_Entity(entity_p ent, void *data)
                 fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
             }
 
-            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready, ent->character->weapon_id_req);
+            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready ? 2 : 0, ent->character->weapon_id_req);
             for(int i = 0; i < PARAM_LASTINDEX; i++)
             {
                 fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);

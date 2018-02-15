@@ -654,11 +654,11 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character && ent->character->set_weapon_model_func)
         {
+            ent->character->set_weapon_model_func(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
             if(top >= 4)
             {
                 ent->character->weapon_id_req = lua_tointeger(lua, 4);
             }
-            ent->character->set_weapon_model_func(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
         }
     }
     else

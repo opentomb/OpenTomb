@@ -3238,6 +3238,23 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool do_aim = ent->character->cmd.action;
         int inc_state;
+        int shot_snd = 8; // 10 ricoshet
+        float fire_rate = 1.0f;
+        int ver = World_GetVersion();
+        if(ver < TR_II)
+        {
+            if(ss_anim->model->id == 4)
+            {
+                shot_snd = 43;
+                fire_rate = 4.0f;
+            }
+            else if(ss_anim->model->id == 3)
+            {
+                shot_snd = 44;
+                fire_rate = 1.5f;
+            }
+        }
+    
         if(target)
         {
             float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
@@ -3321,13 +3338,13 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
             case 3: // fire process;
                 b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time))
+                if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * fire_rate))
                 {
                     if(ent->character->state.weapon_ready && ent->character->cmd.action)
                     {
                         Anim_SetAnimation(ss_anim, 3, 0);
                         ss_anim->frame_changing_state = 0x01;
-                        Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
                         if(target)
                         {
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
@@ -3378,14 +3395,23 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
     int16_t old_anim = ss_anim->current_animation;
     int16_t old_frame = ss_anim->current_frame;
     int reload_snd = 0;
+    int num_shots = 1;
     int ver = World_GetVersion();
     if(ver < TR_II)
     {
-        reload_snd = (ss_anim->model->id == 2) ? (9) : (0);
+        if(ss_anim->model->id == 2)
+        {
+            reload_snd = 9;
+            num_shots = 12;
+        }
     }
     else
     {
-        reload_snd = (ss_anim->model->id == 3) ? (9) : (0);
+        if(ss_anim->model->id == 3)
+        {
+            reload_snd = 9;
+            num_shots = 12;
+        }
     }
 
     /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
@@ -3397,12 +3423,12 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         bool do_aim = ent->character->cmd.action;
+        float target_pos[3];
         int inc_state;
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
             const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
-            float target_pos[3];
             if(target->character)
             {
                 float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
@@ -3442,7 +3468,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     Anim_SetAnimation(ss_anim, 0, 0);  // to idle
                 }
-                if(ss_anim->prev_frame == 8)
+                if((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 8))
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
                     StateControl_SetWeaponMeshOff(ent->bf, 7);
@@ -3455,27 +3481,44 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     if(ent->character->state.weapon_ready && ent->character->cmd.action)
                     {
+                        collision_result_t cs;
+                        float from[3], to[3], tr[16], dir[3], t;
+                        ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
+
                         Anim_SetAnimation(ss_anim, 2, 0);
                         ss_anim->frame_changing_state = 0x01;
                         Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
+
+                        Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->full_transform);
+                        vec3_copy(from, tr + 12);
                         if(target)
                         {
-                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
+                            vec3_sub(dir, target_pos, from);
+                            vec3_norm(dir, t);
                         }
                         else
                         {
-                            collision_result_t cs;
-                            float from[3], to[3], tr[16];
-                            ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
-                            Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->full_transform);
-                            vec3_copy(from, tr + 12);
-                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+                            vec3_copy_inv(dir, tr + 8);
+                        }
+                        vec3_add_mul(to, from, dir, -32768.0f);
+                        for(int i = 1; i <= num_shots; ++i)
+                        {
                             //vec3_copy(d_from, from);
                             //vec3_copy(d_to, to);
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
                                 target = (entity_p)cs.obj->object;
                                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
+                            }
+                            t = (32768.0f * i) / num_shots;
+                            vec3_add_mul(to, from, dir, t);
+                            t = 8.0f * i;
+                            switch(i % 4)
+                            {
+                                case 0: vec3_add_mul(to, to, tr + 0, t); break;
+                                case 1: vec3_add_mul(to, to, tr + 4, t); break;
+                                case 2: vec3_add_mul(to, to, tr + 0,-t); break;
+                                case 3: vec3_add_mul(to, to, tr + 4,-t); break;
                             }
                         }
                     }
@@ -3499,7 +3542,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
                 }
-                if(ss_anim->prev_frame == 23)
+                if((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 23))
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 7);
                     StateControl_SetWeaponMeshOff(ent->bf, 10);
@@ -3532,7 +3575,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
 
-    if(weapon_state && !StateControl_LaraCanUseWeapon(ent, weapon_model))
+    if((weapon_state == 1) && !StateControl_LaraCanUseWeapon(ent, weapon_model))
     {
         return;
     }
@@ -3544,7 +3587,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
         ss_animation_p anim_rh = NULL;
         ss_animation_p anim_lh = NULL;
         ss_animation_p anim_th = NULL;
-        for(ss_animation_p it = &ent->bf->animations; it; it = it->next)
+        for(ss_animation_p it = ent->bf->animations.next; it; it = it->next)
         {
             switch(it->type)
             {
@@ -3569,10 +3612,10 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             return;
         }
         
-        if(ent->character->state.weapon_ready || 
+        if((weapon_state < 2) && (ent->character->state.weapon_ready || 
            ((anim_th && anim_th->enabled) ||
             (anim_rh && anim_rh->enabled) ||
-            (anim_lh && anim_lh->enabled)))
+            (anim_lh && anim_lh->enabled))))
         {
             return;
         }
@@ -3612,7 +3655,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
                 ent->bf->bone_tags[11].alt_anim = anim_lh;
                 ent->bf->bone_tags[12].alt_anim = anim_lh;
                 ent->bf->bone_tags[13].alt_anim = anim_lh;
-                ent->character->state.weapon_ready = weapon_state;
+                ent->character->state.weapon_ready = (weapon_state) ? (0x01) : (0x00);
                 Anim_SetAnimation(anim_rh, 1, 0);
                 Anim_SetAnimation(anim_lh, 1, 0);
             }
@@ -3634,14 +3677,9 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             if(weapon_state)
             {
                 SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
-                ent->character->state.weapon_ready = weapon_state;
+                ent->character->state.weapon_ready = (weapon_state) ? (0x01) : (0x00);
                 Anim_SetAnimation(anim_th, 1, 0);
             }
         }
     }
 }
-
-// 10 ricoshet
-// 43 UZI shoot
-// 44 Colt shoot
-// 45 Shotgun shoot
