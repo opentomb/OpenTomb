@@ -60,7 +60,7 @@
   strings[029] = "Pumili ng Mode ng Sunog";
 	strings[030] = "Gamitin";
   strings[031] = "Pagsamahin";
-	strings[032] = "Paghiwalayin";
+strings[032] = "Paghiwalayin";
 	strings[033] = "Suriin";
 	strings[034] = "Itapon Palayo";
 	
