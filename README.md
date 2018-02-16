@@ -193,7 +193,6 @@ camera fix-ups.
 * [gabrielmtzcarrillo](https://github.com/gabrielmtzcarrillo): entity shader work.
 * [filfreire](https://github.com/filfreire): documentation.
 
-
 Additional contributions from: Ado Croft (extensive testing),
 E. Popov (TRN caustics shader port), [godmodder](https://github.com/godmodder) (general help),
 [jack9267](https://github.com/jack9267) (vt loader optimization), meta2tr (testing and bugtracking),
