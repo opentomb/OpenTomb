@@ -210,7 +210,7 @@ void Character_Update(struct entity_s *ent)
         Character_UpdateParams(ent);
         Entity_CheckCollisionCallbacks(ent);
 
-        if(!is_player && !ent->character->state.dead && (ent->character->ai_zone >= 0))
+        if(!is_player && (ent->character->state.dead < 0x02) && (ent->character->ai_zone >= 0))
         {
             Character_FixByBox(ent);
         }
