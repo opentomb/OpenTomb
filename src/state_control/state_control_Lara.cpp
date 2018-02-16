@@ -254,7 +254,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
     if(ent->character->state.weapon_ready && !StateControl_LaraCanUseWeapon(ent, ent->character->weapon_id))
     {
-        StateControl_LaraSetWeaponModel(ent, ent->character->weapon_id, 0);
+        state->weapon_ready = 0x00;
     }
 
     switch(current_state)
