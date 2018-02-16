@@ -12,19 +12,16 @@
 --------------------------------------------------------------------------------
 
 strings         = {};   -- Define string array.
-sys_notify      = {};   -- Define system warnings array.
 
 -- Load default (english) resources at first.
 
 dofile(base_path .. "scripts/strings/english/generic.lua");
 dofile(base_path .. "scripts/strings/english/global_items.lua");
-dofile(base_path .. "scripts/strings/english/sys_notify.lua");
 
 
 function setLanguage(lang_name)
     dofile(base_path .. "scripts/strings/" .. lang_name .. "/generic.lua");
     dofile(base_path .. "scripts/strings/" .. lang_name .. "/global_items.lua");
-    dofile(base_path .. "scripts/strings/" .. lang_name .. "/sys_notify.lua");
     print("Language changed to " .. lang_name);
 end;
 
@@ -33,13 +30,5 @@ function getString(id)
     return strings[id];
    else
     return "MISSING";
-   end;
-end;
-
-function getSysNotify(id)
-   if(sys_notify[id] ~= nil) then
-    return sys_notify[id];
-   else
-    return "MISSING CONSOLE MESSAGE!";
    end;
 end;
