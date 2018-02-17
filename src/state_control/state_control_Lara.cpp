@@ -3221,9 +3221,6 @@ static void StateControl_SetWeaponMeshOff(ss_bone_frame_p bf, int bone)
 
 int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
 {
-    int16_t old_anim = ss_anim->current_animation;
-    int16_t old_frame = ss_anim->current_frame;
-
     /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
     static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -3375,16 +3372,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
         };
     }
 
-    if(old_anim != ss_anim->current_animation)
-    {
-        return 0x03;
-    }
-    if(old_frame != ss_anim->current_frame)
-    {
-        return 0x01;
-    }
-
-    return 0x00;
+    return ss_anim->frame_changing_state;
 }
 
 
@@ -3392,28 +3380,6 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 {
    /* anims (TR_I - TR_V):
     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
-    int16_t old_anim = ss_anim->current_animation;
-    int16_t old_frame = ss_anim->current_frame;
-    int reload_snd = 0;
-    int num_shots = 1;
-    int ver = World_GetVersion();
-    if(ver < TR_II)
-    {
-        if(ss_anim->model->id == 2)
-        {
-            reload_snd = 9;
-            num_shots = 12;
-        }
-    }
-    else
-    {
-        if(ss_anim->model->id == 3)
-        {
-            reload_snd = 9;
-            num_shots = 12;
-        }
-    }
-
     /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
     static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
@@ -3424,7 +3390,32 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
+        float range = 32768.0f;
         int inc_state;
+        int reload_snd = 0;
+        int ver = World_GetVersion();  
+        int num_shots = 1;
+        int shot_snd = 8;
+
+        if(ver < TR_II)
+        {
+            if(ss_anim->model->id == 2)
+            {
+                range = 16384.0f;
+                reload_snd = 9;
+                num_shots = 12;
+            }
+        }
+        else
+        {
+            if(ss_anim->model->id == 3)
+            {
+                range = 16384.0f;
+                reload_snd = 9;
+                num_shots = 12;
+            }
+        }
+
         if(target)
         {
             const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
@@ -3487,7 +3478,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
                         Anim_SetAnimation(ss_anim, 2, 0);
                         ss_anim->frame_changing_state = 0x01;
-                        Audio_Send(8, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
                         Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->full_transform);
                         vec3_copy(from, tr + 12);
@@ -3500,7 +3491,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                         {
                             vec3_copy_inv(dir, tr + 8);
                         }
-                        vec3_add_mul(to, from, dir, -32768.0f);
+                        vec3_add_mul(to, from, dir, range);
                         for(int i = 1; i <= num_shots; ++i)
                         {
                             //vec3_copy(d_from, from);
@@ -3510,7 +3501,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                                 target = (entity_p)cs.obj->object;
                                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                             }
-                            t = (32768.0f * i) / num_shots;
+                            t = (range * i) / num_shots;
                             vec3_add_mul(to, from, dir, t);
                             t = 8.0f * i;
                             switch(i % 4)
@@ -3558,16 +3549,7 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         };
     }
 
-    if(old_anim != ss_anim->current_animation)
-    {
-        return 0x03;
-    }
-    if(old_frame != ss_anim->current_frame)
-    {
-        return 0x01;
-    }
-
-    return 0x00;
+    return ss_anim->frame_changing_state;
 }
 
 
