@@ -59,7 +59,7 @@
          - `physics.h` - Public module interface.
          - `hair.h` - Public hair type interface.
          - `ragdoll.h` - Public ragdoll type interface.
-         - `physics_bullet` - Private implementation, based on bullet library.
+         - `physics_bullet` - Private implementation, based on bullet library. Stores all engine physics geometry, creates own physics geometry from level resources.
 
     - `gui` - Contains GUI management code (exclude console)
          - `gui` - Renders all debug strings, bars, load screen.
@@ -73,9 +73,8 @@
     - `gameflow` - Contains the base module for interfacing with external LUA "gameflow" scripts. This module is responsible for tracking secrets and transitioning between different game states (i.e play FMV, play level etc) or setting special game/level specific parameters.
     - `image` - Layer module for reading pcx, png and saving png images. bpp = 24 or 32 only (RGB or RGBA only).
     - `inventory` - Contains the item structure and simple add/remove item from inventory functions.
-    - `main_SDL` - Only main function and engine start (+ todo list in comment).
+    - `main_SDL` - Only main function and engine start.
     - `mesh` - Base item for rendering, contains vertices and VBO.
-    - `physics_bullet` - Stores all engine physics geometry. Contains all physics code implementation with bullet library, creates own physics geometry from level resources.
     - `resource` - Simple layer for converting level data from VT format to a format this engine supports. There is also a floor data to collision geometry converter included.
     - `room` - Contains room structure and object ownership manipulation (entity is within in room c and moved to room d).
     - `skeletal_model` - Contains base model, animation representation structures for in-game usage. A unique skeletal model structure is implemented with a smooth skeletal model update algorithm. Multi-animation system algorithm, multi-targeting bone mutators algorithm (head tracking, weapons targeting).
