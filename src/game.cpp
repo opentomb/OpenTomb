@@ -31,6 +31,7 @@ extern "C" {
 #include "character_controller.h"
 #include "gameflow.h"
 #include "inventory.h"
+#include "mesh.h"
 
 extern lua_State *engine_lua;
 
@@ -211,6 +212,26 @@ int Save_Entity(entity_p ent, void *data)
             fprintf(*f, "\nsetEntityActivationDirection(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->direction[0], ap->direction[1], ap->direction[2], ap->direction[3]);
         }
 
+        if(ent->character)
+        {
+            fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
+                    ent->character->climb.point[0], ent->character->climb.point[1], ent->character->climb.point[2]);
+            if(ent->character->target_id != ENTITY_ID_NONE)
+            {
+                fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
+            }
+            else
+            {
+                fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
+            }
+
+            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready ? 2 : 0, ent->character->weapon_id_req);
+            for(int i = 0; i < PARAM_LASTINDEX; i++)
+            {
+                fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
+            }
+        }
+        
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
         {
             ss_bone_tag_p b_tag = ent->bf->bone_tags + i;
@@ -220,6 +241,9 @@ int Save_Entity(entity_p ent, void *data)
             }
             if(ent->character)
             {
+                fprintf(*f, "\nentitySSAnimSetBoneMeshes(%d, %d, %d, %d);", ent->id, i,
+                        (b_tag->mesh_replace) ? (b_tag->mesh_replace->id) : (-1),
+                        (b_tag->mesh_slot) ? (b_tag->mesh_slot->id) : (-1));
                 if(b_tag->is_targeted)
                 {
                     fprintf(*f, "\nentitySSAnimSetTarget(%d, %d, %.2f, %.2f, %.2f, %.6f, %.6f, %.6f);", ent->id, i,
@@ -266,26 +290,6 @@ int Save_Entity(entity_p ent, void *data)
         for(inventory_node_p i = ent->inventory; i; i = i->next)
         {
             fprintf(*f, "\naddItem(%d, %d, %d);", ent->id, i->id, i->count);
-        }
-
-        if(ent->character)
-        {
-            fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
-                    ent->character->climb.point[0], ent->character->climb.point[1], ent->character->climb.point[2]);
-            if(ent->character->target_id != ENTITY_ID_NONE)
-            {
-                fprintf(*f, "\nsetCharacterTarget(%d, %d);", ent->id, ent->character->target_id);
-            }
-            else
-            {
-                fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
-            }
-
-            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready ? 2 : 0, ent->character->weapon_id_req);
-            for(int i = 0; i < PARAM_LASTINDEX; i++)
-            {
-                fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
-            }
         }
 
         fprintf(*f, "\nsetEntityLinearSpeed(%d, %.2f);", ent->id, ent->linear_speed);

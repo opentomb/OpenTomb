@@ -281,7 +281,7 @@ void World_Clear()
     // De-initialize and destroy all audio objects.
     Audio_DeInit();
 
-    if(main_inventory_manager != NULL)
+    if(main_inventory_manager)
     {
         main_inventory_manager->setInventory(NULL, ENTITY_ID_NONE);
     }
@@ -440,11 +440,11 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
 
         if(entity)
         {
-            if(pos != NULL)
+            if(pos)
             {
                 vec3_copy(entity->transform.M4x4 + 12, pos);
             }
-            if(ang != NULL)
+            if(ang)
             {
                 vec3_copy(entity->transform.angles, ang);
                 Entity_UpdateTransform(entity);
@@ -478,11 +478,11 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
             entity->id = id;
         }
 
-        if(pos != NULL)
+        if(pos)
         {
             vec3_copy(entity->transform.M4x4 + 12, pos);
         }
-        if(ang != NULL)
+        if(ang)
         {
             vec3_copy(entity->transform.angles, ang);
             Entity_UpdateTransform(entity);
@@ -516,7 +516,7 @@ uint32_t World_SpawnEntity(uint32_t model_id, uint32_t room_id, float pos[3], fl
         Physics_GenRigidBody(entity->physics, entity->bf);
 
         Entity_RebuildBV(entity);
-        if(entity->self->room != NULL)
+        if(entity->self->room)
         {
             Room_AddObject(entity->self->room, entity->self);
         }
@@ -735,6 +735,12 @@ int World_DeleteItem(uint32_t item_id)
 }
 
 
+struct base_mesh_s *World_GetMeshByID(uint32_t id)
+{
+    return (id < global_world.meshes_count) ? (global_world.meshes + id) : (NULL);
+}
+
+
 struct sprite_s *World_GetSpriteByID(uint32_t ID)
 {
     sprite_p sp = global_world.sprites;
@@ -813,11 +819,7 @@ struct skeletal_model_s* World_GetSkybox()
 
 struct room_s *World_GetRoomByID(uint32_t id)
 {
-    if(id < global_world.rooms_count)
-    {
-        return global_world.rooms + id;
-    }
-    return NULL;
+    return (id < global_world.rooms_count) ? (global_world.rooms + id) : (NULL);
 }
 
 

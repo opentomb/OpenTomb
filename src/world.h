@@ -35,6 +35,7 @@ int World_AddEntity(struct entity_s *entity);
 int World_DeleteEntity(uint32_t id);
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name);
 int World_DeleteItem(uint32_t item_id);
+struct base_mesh_s *World_GetMeshByID(uint32_t ID);
 struct sprite_s *World_GetSpriteByID(uint32_t ID);
 struct skeletal_model_s *World_GetModelByID(uint32_t id);
 struct skeletal_model_s* World_GetSkybox();

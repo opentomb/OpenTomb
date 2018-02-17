@@ -689,6 +689,38 @@ int lua_EntitySSAnimEnsureExists(lua_State * lua)
 }
 
 
+int lua_EntitySSAnimSetBoneMeshes(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        int ind = lua_tointeger(lua, 2);
+        if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
+        {
+            ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
+            if(!lua_isnil(lua, 3))
+            {
+                b_tag->mesh_replace = World_GetMeshByID(lua_tointeger(lua, 3));
+            }
+            if(!lua_isnil(lua, 4))
+            {
+                b_tag->mesh_slot = World_GetMeshByID(lua_tointeger(lua, 4));
+            }
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("entitySSAnimSetBoneMeshes: expecting arguments (entity_id, bone_id, replace_id, slot_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_EntitySSAnimSetTarget(lua_State * lua)
 {
     if(lua_gettop(lua) >= 8)
@@ -920,6 +952,7 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "setEntityAnim", lua_SetEntityAnim);
     lua_register(lua, "entitySSAnimCopy", lua_EntitySSAnimCopy);
     lua_register(lua, "entitySSAnimEnsureExists", lua_EntitySSAnimEnsureExists);
+    lua_register(lua, "entitySSAnimSetBoneMeshes", lua_EntitySSAnimSetBoneMeshes);
     lua_register(lua, "entitySSAnimSetTarget", lua_EntitySSAnimSetTarget);
     lua_register(lua, "entitySSAnimSetAxisMod", lua_EntitySSAnimSetAxisMod);
     lua_register(lua, "entitySSAnimSetTargetingLimit", lua_EntitySSAnimSetTargetingLimit);
