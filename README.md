@@ -101,15 +101,14 @@ Here is the list of all needed assets and where to get them:
 
 ### Compiling ###
 There is a CMakeLists.txt file provided with source code, so you can compile
-OpenTomb using CMake. On Windows, you can also compile it from Code::Blocks IDE
-(project file is also provided). Alternatively, you can manually compile it in
-Code::Blocks by recursively adding all source files from /src directory, and
-adding these libraries in Linker Settings under Project Build options:
+OpenTomb using CMake. On Windows, you can also compile it from Code::Blocks or Netbeans IDE.
+Alternatively, you can manually compile it in Code::Blocks or Netbeans by recursively
+adding all source files from /src directory, and adding these libraries in Linker Settings
+under Project Build options:
 
 * libmingw32.a
 * libSDL2main.a
 * libSDL2.dll.a
-* liblua.a
 * libpng.a
 * libz.a
 * libpthread.a
@@ -118,17 +117,17 @@ On Linux, just download the source code and run in terminal:
 
     cmake . && make
 
-The required dependencies are the development headers for SDL2, png, LUA 5.2,
-ZLIB. You can install them in an Ubuntu-based distro with this command:
+The required dependencies are the development headers for SDL2, png, ZLIB.
+You can install them in an Ubuntu-based distro with this command:
 
-    sudo apt-get install libopenal-dev libsdl2-dev libpng12-dev liblua5.2-dev libglu1-mesa-dev zlib1g-dev
+    sudo apt-get install libopenal-dev libsdl2-dev libpng12-dev libglu1-mesa-dev zlib1g-dev
 
 On Mac, use XCode project, which is also available in source code.
 
 NB: Please note that OpenTomb requires C++11 (`-std=c++11`) flag to compile
 properly! You may use CPU-specific optimization flags (`-march=prescott`,
-`-march=i486`, `-march=core2`), as well as general optimization flags (`-O1` and `-O2`),
- but DON'T USE `-O3` flag, as Bullet tends to crash with this optimization level
+`-march=i486`, `-march=core2`), as well as general optimization flags (`-O1`, `-O2` and `-O3`),
+ but `-O3` flag on old GCC versions may prevent to engine crash as Bullet tends to crash with this optimization level
  (GCC 5.1+ may compile it without errors).
 
 ### Running and Configuration ###
@@ -185,6 +184,7 @@ camera fix-ups.
 * [pmatulka](https://github.com/pmatulka): Linux port and testing.
 * [richardba](https://github.com/richardba): Github migration, Github repo maintenance, website design.
 * [Saracen](https://github.com/Saracen): room and static mesh lighting.
+* [Stohrendorf](https://github.com/stohrendorf): code review, original game logic information, auto build system.
 * [T4Larson](https://github.com/T4Larson): general stability patches and bugfixing.
 * [vobject](https://github.com/vobject): nightly builds, maintaining general compiler compatibility.
 * [vvs-](https://github.com/vvs-): testing, feedback, bug report.

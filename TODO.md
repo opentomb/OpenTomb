@@ -63,10 +63,8 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Implemented entity spawning and safety deleting, projectiles, player switching...
 
 * Todo:
-	* Add activation callbacks for inventory items (no more `read-only` for inventory)
 	* Reduce globals using (shared between modules globals)
 	* Move out the console.c rendering code 
-	* Make alt-room state savable in cases where there's a chain of 3 or more alt-rooms
 
 6. Collision system
 -------------------
@@ -80,8 +78,8 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 		* Find body parts that stop Lara
 		* Tune collision form, or disable collision checking for them
 		* Bind with 3
-	* Make rigid body parts shapes tunable by config
-	* For future optimazation, add switchable single ghost object for character
+	* Make rigid body parts shapes tunable by config (partially done)
+	* For future optimization, add switchable single ghost object for character
 	* Add _Long Ray Test_ (pierces rooms portals and builds room list for collisional checking) - needed for long range shooting and AI
 	* Re-implement Character_FixPosByFloorInfoUnderLegs(...) it has been deleted
 	* Check room tween butterfly normals
@@ -89,10 +87,9 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 7. Character controller
 -----------------------
 * Todo:
-	* Base AI, path finding, boxes...
-	* Weapon control system needs to be refactored/fixed (2-handed weapon model switches in wrong frame)
-	* Add auto weapon hiding in water environment e.t.c. (simple task)
-	* Fix usage of weapons while crouching
+	* Base AI (tune behavior, mud), path finding (fix boxes filtering logic), ...
+	* Fix usage of weapons while crouching (no target targeting forward)
+	* Add correct implementation for TR2+ weapons
 
 8. Animation control
 --------------------
@@ -105,14 +102,11 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 	* Fix forward and backward consecutive jump rolls (mid-air rolls) not concatenating correctly on keypress (TR2+)
 	* Fix swan dive not doable when jumping off of irregular (diamond shaped <>) slopes
 	* Fix edge climbing:
-		* Climbability distance threshold too high when jumping (i.e. reaching heights that shouldn't be reached)
-		* Reduce height correction when Lara lets go the hold on an edge (let go hold button)
+		* Just fix configuration in state control
 
 9. Camera control
 -----------------
 * Todo:
-	* Fix camera targeting to correct body part or OBB center (add special function to get targeting pos by target entity id)
-	* Implement camera flags and their function (e.g. "flyby", "once")
 	* Add special `camera_entity`, store it in world module, access by `entity_p World_GetCameraEntity();` - needed for heavy triggers
 
 10. Scripting
@@ -128,8 +122,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 ---------
 * Current situation:
 	* Sound tracks playing was disabled
-	* AL build-in library works on Windows and MacOS, but under Linux native AL library are required
+	* AL build-in library works on Windows, Linux and MacOS, but some people prefer to use only native AL library
 * Todo:
-	* In `audio.cpp` implement class for sound track data manipulation (e.g. `result GetBufferData(track_id, buffer, size, offset, flag)`)
 	* Implement own audio routine thread (APIs like `Audio_Send(...)` allow that)
 	* Use something else instead of Vorbis (it can't read _OGG_ from memory, and uses default functions for files opening, so engine can't precache tracks in memory or use `SDL_rwops`)

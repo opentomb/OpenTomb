@@ -3236,6 +3236,8 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
         bool do_aim = ent->character->cmd.action;
         int inc_state;
         int shot_snd = 8; // 10 ricoshet
+        int draw_snd = 7;
+        int hide_snd = 6;
         float fire_rate = 1.0f;
         int ver = World_GetVersion();
         if(ver < TR_II)
@@ -3307,7 +3309,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     StateControl_SetWeaponMeshOff(ent->bf, 1);
                     StateControl_SetWeaponMeshOff(ent->bf, 4);
                     Anim_SetAnimation(ss_anim, 2, 0);
-                    Audio_Send(7, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(draw_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 else if((inc_state == 2) && !ent->character->state.weapon_ready)
                 {
@@ -3329,7 +3331,7 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     StateControl_SetWeaponMeshOff(ent->bf, 10);
                     StateControl_SetWeaponMeshOff(ent->bf, 13);
                     Anim_SetAnimation(ss_anim, 1, -1);
-                    Audio_Send(6, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(hide_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
                 break;
 
@@ -3396,6 +3398,8 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
         int ver = World_GetVersion();  
         int num_shots = 1;
         int shot_snd = 8;
+        int draw_snd = 0;
+        int hide_snd = 0;
 
         if(ver < TR_II)
         {
@@ -3404,6 +3408,8 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 range = 16384.0f;
                 reload_snd = 9;
                 num_shots = 12;
+                draw_snd = 7;
+                hide_snd = 6;
             }
         }
         else
@@ -3463,6 +3469,10 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
                     StateControl_SetWeaponMeshOff(ent->bf, 7);
+                    if(draw_snd)
+                    {
+                        Audio_Send(draw_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
                 }
                 break;
 
@@ -3537,6 +3547,10 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
                 {
                     StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 7);
                     StateControl_SetWeaponMeshOff(ent->bf, 10);
+                    if(hide_snd)
+                    {
+                        Audio_Send(hide_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
                 }
                 break;
 
