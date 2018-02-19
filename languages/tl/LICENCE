@@ -1,0 +1,165 @@
+                   GNU LESSER GENERAL PUBLIC LICENSE
+                       Bersyon 3, Hunyo 29, 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+ Ang lahat ay pinahihintulutan na kopyahin at ipamahagi ang mga kopya ng dokumentong verbatim
+ ito ng lisensya, ngunit hindi pinapayagan ang pagbabago nito.
+
+
+ Ang bersyon na ito ng GNU Lesser General Public License ay pinagsasama
+ang mga tuntunin at kundisyon ng bersyon 3 ng Lisensya ng GNU General Public, 
+na pupunan ng mga karagdagang pahintulot na nakalista sa ibaba.
+
+  0. Mga Karagdagang Kahulugan.
+
+ Tulad ng ginamit dito, ang "Itong lisensya" ay tumutukoy sa bersyon 3 ng GNU Lesser
+Pangkalahatang Lisensya ng Publiko, at ang "GNU GPL" ay tumutukoy sa bersyon 3 ng GNU
+Pangkalahatang Lisensya ng Publiko.
+
+  Ang "Library" ay tumutukoy sa isang sakop na gawain na pinamamahalaan nitong lisensiya,
+maliban sa isang aplikasyon o isang pinagsamang trabaho na tinukoy sa ibaba.
+
+  Ang isang "Aplikasyon" ay anumang trabaho na gumagamit ng isang interface na ibinigay
+ng Library, ngunit kung saan ay hindi batay sa Library.
+Ang pagtukoy sa isang subclass ng isang klase na tinukoy ng Library ay itinuturing na isang mode
+ng paggamit ng isang interface na ibinigay ng Library.
+
+ Ang "Pinagsamang trabaho" ay isang trabaho na ginawa sa pamamagitan ng pagsasama o pag-link ng isang
+aplikasyon sa Library. Ang partikular na bersyon ng Library
+na kung saan ginawa ang pinagsamang trabaho ay tinatawag ding "Naka-link na
+Bersyon ".
+
+  Ang "Minimal na Kaukulang Pinagmumulan" para sa isang Pinagsamang Trabaho ay nangangahulugang ang
+Kaukulang Pinagmulan para sa Pinagsamang Trabaho, hindi kasama ang anumang source code
+para sa mga bahagi ng pinagsama na trabaho , isinasaalang-alang sa paghihiwalay, ay
+batay sa Aplikasyon, at hindi sa Naka-link na Bersyon.
+  
+Ang "Kaukulang Aplikasyon Code" para sa isang Combined Work ay nangangahulugang ang
+object code at / o source code para sa Aplikasyon, kabilang ang anumang datos
+at mga programang utility na kailangan para sa muling paggawa ng Pinagsamang Trabaho mula sa
+Aplikason, ngunit hindi kasama ang Mga sistema ng aklatan ng Pinagsamang Trabaho.
+
+1. Pagbubukod sa Seksiyon 3 ng GNU GPL.
+  
+Maaari kang maghatid ng sakop na gawain sa ilalim ng mga seksyon 3 at 4 ng Lisensiyang ito
+nang hindi nakagapos ng seksyon 3 ng GNU GPL.
+
+  2. Paghahatid sa binagong bersyon.
+
+  Kung binago mo ang isang kopya ng aklatan, at, sa iyong mga pagbabago, ay
+Ang pasilidad na tumutukoy sa isang function o datos na ibibigay ng isang Aplikasyon
+na gumagamit ng pasilidad (maliban sa bilang isang argument na ipinasa kapag ang
+ang pasilidad ay ginagamit), pagkatapos ay maaari mong ihatid ang isang kopya ng nabago
+bersyon:
+
+   a) sa ilalim ng Lisensiyang ito, sa kondisyon na gumawa ka ng magandang pagsusumikap na
+   siguraduhin, kung ang isang Aplikasyon ay hindi nagbibigay ng
+   function o datos, ang pasilidad ay nakakapatakbo pa rin, at gumaganap
+   anumang bahagi ng layunin nito ay mananatiling makabuluhan, o
+   b) sa ilalim ng GNU GPL, na wala sa mga karagdagang pahintulot ng
+   ang Lisensyang ito na naaangkop sa kopyang iyon.
+
+ 3. Object Code Incorporating Materyal mula sa Mga Library Header File.
+
+  Ang form ng object code ng isang Aplikasyon ay maaaring magsama ng materyales mula sa
+isang header file na bahagi ng Aklatan. Maaari mong ihatid ang gayong bagay
+na code sa ilalim ng mga termino na iyong pinili, sa kondisyon na, kung ang inkorporada
+na materyales ay hindi limitado sa mga numerong parameter, istraktura ng datos
+mga layout at accessor, o mga maliliit na macro, mga inline na function at mga template
+(sampu o mas kaunting mga linya ang haba), ginagawa mo ang parehong sumusunod:
+
+   a) Bigyan ang kilalang paunawa sa bawat kopya ng object code na ang
+    aklatan ay ginagamit dito at ang aklatan na ang paggamit nito ay
+   sakop ng Lisensiyang ito.
+
+   b) Isama ang object code sa isang kopya ng GNU GPL at sa lisensyang ito
+   dokumento.
+
+  4. Mga Pinagsamang trabaho.
+
+ Maaari mong ihatid ang isang Pinagsama na trabaho sa ilalim ng mga termino na iyong pinili na,
+kinuhang magkasama, epektibo na hindi paghigpitan ang pagbabago ng
+mga bahagi ng aklatan na nakapaloob sa Pinagsamang Trabaho at reverse
+engineering para sa pag-debug ng naturang mga pagbabago, kung gagawin mo rin ang bawat isa
+sa mga sumusunod:
+
+  a) Bigyan ng bantog na paunawa sa bawat kopya ng pinagsamang trabaho na
+   ang aklatan ay ginagamit dito at ang aklatan at ang paggamit nito ay
+   sakop ng Lisensiyang ito.
+  
+b) Kasama ang Pinagsamang Trabaho na may kopya ng GNU GPL at lisensyang ito
+   dokumento.
+
+  c) Para sa isang Pinagsamang Trabaho na nagpapakita ng mga abiso sa copyright sa panahon ng
+   pagpapatupad, isama ang paunawa sa copyright para sa Aklatan sa
+   mga abiso na ito, pati na rin ang reperensya na nagtutulak sa gumagamit sa
+   mga kopya ng GNU GPL at dokumento ng lisensya na ito.
+
+   d) Gawin ang isa sa mga sumusunod:
+
+       0) Ibigay ang Minimal na Kaukulang Pinagmumulan sa ilalim ng mga tuntunin ng Lisensyang ito
+   , at ang Kaugnayan ng Code ng aplikasyon sa isang form na
+       angkop para sa, at sa ilalim ng mga tuntunin na pinahihintulutan, ang gumagamit
+       muling isama o i-relink ang Aplikasyon sa isang binagong bersyon ng
+       ang Naka-link na Bersyon upang makabuo ng isang binago na Pinagsamang Trabaho, sa
+       paraan na tinukoy ng seksyon 6 ng GNU GPL para sa conveying
+       Kaukulang Pinagmulan.
+
+     1) Gumamit ng angkop na ibinahaging aklatan ng mekanismo para sa pag-link sa
+       Aklatan. Ang isang naaangkop na mekanismo ay isa na (a) gumagamit sa run time
+       isang kopya ng Library na naroroon sa computer ng gumagamit
+       sistema, at (b) ay gumana ng maayos sa isang binagong bersyon
+       ng Library na interface-katugma sa Linked
+       Bersyon.
+
+   e) Magbigay ng Impormasyon sa Pag-install, ngunit kung gagawin mo at kung hindi man
+   ay kinakailangan na magbigay ng naturang impormasyon sa ilalim ng seksyon 6 ng
+   GNU GPL, at lamang sa lawak na ang naturang impormasyon ay
+   kailangan upang i-install at magsagawa ng binagong bersyon ng
+   Pinagsamang Trabaho na ginawa sa pamamagitan ng muling pagsasama o pag-relink sa
+   Aplikasyon gamit ang isang binagong bersyon ng Naka-link na Bersyon. (Kung
+   gagamitin mo ang opsyon 4d0, dapat na samahan ang Impormasyon sa Pag-install
+   ang Minimal na Kaukulang Pinagmulan at Katumbas na Aplikasyon ng
+   Code. Kung gumagamit ka ng opsyon na 4d1, dapat mong ibigay ang Pag-install
+   Impormasyon sa paraang tinukoy ng seksyon 6 ng GNU GPL
+   para sa conveying Kaukulang Pinagmulan.)
+
+  5. Mga Pinagsamang Mga Aklatan.
+
+ Maaari kang maglagay ng mga pasilidad sa library na isang gawain batay sa
+magkasama ang aklatan sa isang aklatan kasama ng ibang aklatan ng
+mga pasilidad na hindi Mga Aplikasyon at hindi sakop ng mga ito
+Lisensya, at ihatid ang ganitong pinagsamang library sa ilalim ng iyong mga tuntunin
+pagpili, kung gagawin mo ang parehong mga sumusunod:
+
+   a) Magkasama sa pinagsamang aklatan na may isang kopya ng parehong batay sa trabaho
+   sa aklatan, na hindi kasama ang anumang iba pang mga pasilidad sa aklatan,
+   ipinahayag sa ilalim ng mga tuntunin ng Lisensiyang ito.
+
+   b) Bigyan ang kilalang paunawa sa pinagsamangaklatan na bahagi nito
+   ay isang gawain batay sa aklatan, at nagpapaliwanag kung saan matatagpuan ang
+   kasama ng walang kapantay na porma ng parehong gawain.
+
+  6. Mga Binagong Bersyon ng GNU Lesser General Public License.
+
+  Maaaring mag-publish ang Free Software Foundation ng binago at / o mga bagong bersyon
+ng GNU Lesser General Public License mula sa oras-oras. Ang nasabing bago na
+mga bersyon ay magkapareho sa espiritu sa kasalukuyang bersyon, ngunit maaaring
+iba-iba ang detalye upang matugunan ang mga bagong problema o alalahanin.
+
+ Ang bawat bersyon ay binibigyan ng isang tanging numero ng bersyon. Kung ang
+Tinutukoy ng natanggap mo na aklatan na ang isang tiyak na bilang na bersyon
+ng GNU Lesser General Public License "o anumang ibang bersyon na"
+Nalalapat dito, mayroon kang pagpipilian sa pagsunod sa mga tuntunin at
+mga kondisyon alinman sa na-publish na bersyon o ng anumang ibang bersyon
+na inilathala ng Free Software Foundation. Kung ang aklatan na bilang mo ay
+natanggap ito ay hindi tumutukoy sa isang numero ng bersyon ng GNU Lesser ng
+Pangkalahatang Lisensya ng Publiko, maaari kang pumili ng anumang bersyon ng GNU Lesser
+Pangkalahatang Lisensya ng Publiko na inilathala ng Free Software Foundation.
+
+ Kung ang aklatan na bilang natanggap mo ito ay tumutukoy na maaaring magpasya ang isang proxy
+kung ang mga bersyon sa hinaharap ng GNU Lesser General Public License ay dapat bang
+ilapat, ang pampublikong pahayag ng proxy na pagtanggap ng anumang bersyon ay
+permanenteng pahintulot para sa iyo na piliin ang bersyon na iyon para sa
+Aklatan.
+
