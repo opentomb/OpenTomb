@@ -47,7 +47,7 @@ Una kailangan nating ipatupad ay ang TR1 gameplay, para ang TR1 / 2/3 na functio
 	6.Lumikha ng isang pagsasanib (hilahin) ng kahilingan sa GitHub web UI
 	7. Pagkatapos tanggapin ang pagsasama, tanggalin ang tampok na sangay
 
-* _extern_ Hindi dapat baguhin ang folder - ito ay isang lugar para sa mga panlabas na mga pinagkukunan ng library / mga header
+* _extern_ Hindi dapat baguhin ang folder - ito ay isang lugar para sa mga panlabas na mga pinagkukunan ng liraries / mga header
 * _src/core_ folder: tanging sa pamamagitan ng TeslaRus, hilingin kung gusto mong baguhin ang isang bagay
 * Other folders: sa pamamagitan ng pagsasama ng mga kahilingan sa TeslaRus o, pagkatapos ng pag-review ng code (sa pamamagitan ng kahilingan ng pagsasanib) sa pamamagitan ng command (mas maraming mga detalye ang tatalakayin); Magsasagawa ako ng ilan pagkatapos ng kahilingan sa pagsasama (ang bilang ng mga pagkakamali ay mabawasan nang malaki sa kaso ng pagsusuri)
 
