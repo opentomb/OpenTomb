@@ -217,6 +217,7 @@ void Engine_Shutdown(int val)
         engine_lua = NULL;
     }
 
+    Gameflow_Destroy();
     Physics_Destroy();
     Gui_Destroy();
     Con_Destroy();

@@ -18,7 +18,8 @@
 
 #define GF_MAX_SECRETS 256
 
-#define GF_NOENTRY     -1
+#define GF_NOENTRY     (-1)
+#define GF_FREE_LIST   (-2)
 
 enum GF_OP
 {
@@ -49,6 +50,7 @@ enum GF_OP
 };
 
 void Gameflow_Init();
+void Gameflow_Destroy();
 bool Gameflow_Send(int opcode, int operand);
 void Gameflow_ProcessCommands();
 

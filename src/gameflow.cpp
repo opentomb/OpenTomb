@@ -16,27 +16,30 @@ extern "C" {
 
 #include <assert.h>
 #include <string.h>
-#include <vector>
 
 typedef struct gameflow_action_s
 {
-    int16_t      m_opcode;
-    uint16_t     m_operand;
+    int16_t                     opcode;
+    uint16_t                    operand;
+    struct gameflow_action_s   *next;
+    struct gameflow_action_s   *prev;
 } gameflow_action_t;
 
 struct gameflow_s
 {
-    int                             m_currentGameID;
-    int                             m_currentLevelID;
+    int                     m_currentGameID;
+    int                     m_currentLevelID;
 
-    int                             m_nextGameID;
-    int                             m_nextLevelID;
+    int                     m_nextGameID;
+    int                     m_nextLevelID;
 
-    char                            m_currentLevelName[LEVEL_NAME_MAX_LEN];
-    char                            m_currentLevelPath[MAX_ENGINE_PATH];
-    char                            m_secretsTriggerMap[GF_MAX_SECRETS];
+    char                    m_currentLevelName[LEVEL_NAME_MAX_LEN];
+    char                    m_currentLevelPath[MAX_ENGINE_PATH];
+    char                    m_secretsTriggerMap[GF_MAX_SECRETS];
 
-    std::vector<gameflow_action_t>    m_actions;
+    gameflow_action_t      *head;
+    gameflow_action_t      *tail;
+    gameflow_action_t      *vacate;
 } global_gameflow;
 
 typedef struct level_info_s
@@ -60,29 +63,72 @@ void Gameflow_Init()
     memset(global_gameflow.m_currentLevelName, 0, sizeof(global_gameflow.m_currentLevelName));
     memset(global_gameflow.m_currentLevelPath, 0, sizeof(global_gameflow.m_currentLevelPath));
     memset(global_gameflow.m_secretsTriggerMap, 0, sizeof(global_gameflow.m_secretsTriggerMap));
-    global_gameflow.m_actions.clear();
+    
+    global_gameflow.head = (gameflow_action_t*)malloc(sizeof(gameflow_action_t));
+    global_gameflow.head->opcode = GF_FREE_LIST;
+    global_gameflow.head->operand = 0;
+    global_gameflow.head->next = NULL;
+    global_gameflow.head->prev = NULL;
+    global_gameflow.tail = global_gameflow.vacate = global_gameflow.head;
+}
+
+
+void Gameflow_Destroy()
+{
+    global_gameflow.vacate = NULL;
+    global_gameflow.tail = NULL;
+    while(global_gameflow.head)
+    {
+        gameflow_action_t *next = global_gameflow.head->next;
+        free(global_gameflow.head);
+        global_gameflow.head = next;
+    }
 }
 
 
 bool Gameflow_Send(int opcode, int operand)
 {
-    gameflow_action_t act;
-
-    act.m_opcode = opcode;
-    act.m_operand = operand;
-    global_gameflow.m_actions.push_back(act);
-
-    return true;
+    if(global_gameflow.vacate)
+    {
+        global_gameflow.vacate->opcode = opcode;
+        global_gameflow.vacate->operand = operand;
+        if(!global_gameflow.vacate->next)
+        {
+            global_gameflow.vacate->next = (gameflow_action_t*)malloc(sizeof(gameflow_action_t));
+            global_gameflow.vacate->next->opcode = GF_FREE_LIST;
+            global_gameflow.vacate->next->operand = 0;
+            global_gameflow.vacate->next->next = NULL;
+            global_gameflow.vacate->next->prev = global_gameflow.vacate->next;
+        }
+        global_gameflow.vacate = global_gameflow.vacate->next;
+        return true;
+    }
+    return false;
 }
 
 
 void Gameflow_ProcessCommands()
 {
     level_info_t info;
-    for(; !Engine_IsVideoPlayed() && !global_gameflow.m_actions.empty(); global_gameflow.m_actions.pop_back())
+    while(!Engine_IsVideoPlayed() && (global_gameflow.head->opcode != GF_FREE_LIST))
     {
-        gameflow_action_t &it = global_gameflow.m_actions.back();
-        switch(it.m_opcode)
+        gameflow_action_t *processed = global_gameflow.head;
+        int16_t opcode = processed->opcode;
+        uint16_t operand = processed->operand;
+        
+        processed->opcode = GF_FREE_LIST;
+        if(processed->next)
+        {
+            global_gameflow.head = processed->next;
+            global_gameflow.head->prev = NULL;
+
+            processed->next = NULL;
+            processed->prev = global_gameflow.tail;
+            global_gameflow.tail->next = processed;
+            global_gameflow.tail = processed;
+        }
+        
+        switch(opcode)
         {
             case GF_OP_LEVELCOMPLETE:
                 if(World_GetPlayer())
@@ -102,11 +148,11 @@ void Gameflow_ProcessCommands()
                 break;
 
             case GF_OP_SETTRACK:
-                Audio_StreamPlay(it.m_operand);
+                Audio_StreamPlay(operand);
                 break;
 
             case GF_OP_STARTFMV:
-                if(Gameflow_GetFMVPath(&info, it.m_operand))
+                if(Gameflow_GetFMVPath(&info, operand))
                 {
                     Engine_PlayVideo(info.path);
                 }

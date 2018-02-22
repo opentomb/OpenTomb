@@ -36,7 +36,7 @@
 #include <SDL2/SDL.h>
 
 #include "../tiny_codec.h"
-#include "avcodec.h"
+#include "../internal/avcodec.h"
 #include "adpcm.h"
 #include "adpcm_data.h"
 #define BITSTREAM_READER_LE
