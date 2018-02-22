@@ -65,11 +65,11 @@ set(OPENTOMB_SRCS
     src/fmv/tiny_codec.c
     src/fmv/stream_codec.h
     src/fmv/stream_codec.c
+    src/fmv/internal/avcodec.h
     src/fmv/internal/common.h
     src/fmv/internal/bytestream.h
     src/fmv/internal/get_bits.h
     src/fmv/containers/rpl.c
-    src/fmv/codecs/avcodec.h
     src/fmv/codecs/adpcm.h
     src/fmv/codecs/adpcm.c
     src/fmv/codecs/adpcm_data.c
