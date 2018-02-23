@@ -465,7 +465,7 @@ void Physics_DeletePhysicsData(struct physics_data_s *physics)
     {
         for(collision_node_p cn = physics->collision_track; cn;)
         {
-            collision_node_p next = cn->next;
+            collision_node_p next = cn->next_bucket;
             free(cn);
             cn = next;
         }
@@ -737,6 +737,7 @@ collision_node_p Physics_GetGhostCurrentCollision(struct physics_data_s *physics
     // paircache and the ghostobject's internal paircache at the same time.    /BW
 
     collision_node_p *cn = &(physics->collision_track);
+    collision_node_p *cnb = &(physics->collision_track);
     btPairCachingGhostObject *ghost = physics->ghost_objects[index];
     if(ghost && ghost->getBroadphaseHandle())
     {
@@ -783,8 +784,12 @@ collision_node_p Physics_GetGhostCurrentCollision(struct physics_data_s *physics
                             {
                                 if(*cn == NULL)
                                 {
-                                    *cn = (collision_node_p)malloc(sizeof(collision_node_t));
-                                    (*cn)->next = NULL;
+                                    *cn = *cnb = (collision_node_p)calloc(4, sizeof(collision_node_t));
+                                    for(int bi = 0; bi < 4 - 1; ++bi)
+                                    {
+                                        (*cnb)[bi].next = *cnb + bi + 1;
+                                    }
+                                    cnb = &((*cnb)->next_bucket);
                                 }
 
                                 (*cn)->obj = cont;

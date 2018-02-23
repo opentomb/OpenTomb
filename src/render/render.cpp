@@ -326,6 +326,19 @@ void CRender::DrawList()
         m_active_texture = 0;
         this->DrawSkyBox(m_camera->gl_view_proj_mat);
 
+        if(fabs(m_camera->transform.M4x4[0 + 2]) < fabs(m_camera->transform.M4x4[4 + 2]))
+        {
+            vec3_copy(m_cam_right, m_camera->transform.M4x4 + 0);
+        }
+        else
+        {
+            vec3_copy(m_cam_right, m_camera->transform.M4x4 + 4);
+        }
+        m_cam_right[2] = 1.0f / sqrtf(m_cam_right[0] * m_cam_right[0] + m_cam_right[1] * m_cam_right[1]);
+        m_cam_right[0] *= m_cam_right[2];
+        m_cam_right[1] *= m_cam_right[2];
+        m_cam_right[2] = 0.0f;
+        
         /*
          * room rendering
          */
@@ -1149,15 +1162,13 @@ void CRender::DrawRoomSprites(struct room_s *room)
     {
         const unlit_tinted_shader_description *shader = shaderManager->getRoomShader(false, false);
         GLfloat *view = m_camera->transform.M4x4 + 8;
-        GLfloat *up = m_camera->transform.M4x4 + 4;
-        GLfloat *right = m_camera->transform.M4x4 + 0;
 
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         qglUseProgramObjectARB(shader->program);
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
         qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
-
+    
         for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
             room_sprite_p s = room->content->sprites + i;
@@ -1167,21 +1178,21 @@ void CRender::DrawRoomSprites(struct room_s *room)
             vec3_copy_inv(v[2].normal, view);
             vec3_copy_inv(v[3].normal, view);
 
-            v[0].position[0] = s->pos[0] + s->sprite->right * right[0] + s->sprite->top * up[0];
-            v[0].position[1] = s->pos[1] + s->sprite->right * right[1] + s->sprite->top * up[1];
-            v[0].position[2] = s->pos[2] + s->sprite->right * right[2] + s->sprite->top * up[2];
+            v[0].position[0] = s->pos[0] + s->sprite->right * m_cam_right[0];
+            v[0].position[1] = s->pos[1] + s->sprite->right * m_cam_right[1];
+            v[0].position[2] = s->pos[2] + s->sprite->right * m_cam_right[2] + s->sprite->top;
 
-            v[1].position[0] = s->pos[0] + s->sprite->left * right[0] + s->sprite->top * up[0];
-            v[1].position[1] = s->pos[1] + s->sprite->left * right[1] + s->sprite->top * up[1];
-            v[1].position[2] = s->pos[2] + s->sprite->left * right[2] + s->sprite->top * up[2];
+            v[1].position[0] = s->pos[0] + s->sprite->left * m_cam_right[0];
+            v[1].position[1] = s->pos[1] + s->sprite->left * m_cam_right[1];
+            v[1].position[2] = s->pos[2] + s->sprite->left * m_cam_right[2] + s->sprite->top;
 
-            v[2].position[0] = s->pos[0] + s->sprite->left * right[0] + s->sprite->bottom * up[0];
-            v[2].position[1] = s->pos[1] + s->sprite->left * right[1] + s->sprite->bottom * up[1];
-            v[2].position[2] = s->pos[2] + s->sprite->left * right[2] + s->sprite->bottom * up[2];
+            v[2].position[0] = s->pos[0] + s->sprite->left * m_cam_right[0];
+            v[2].position[1] = s->pos[1] + s->sprite->left * m_cam_right[1];
+            v[2].position[2] = s->pos[2] + s->sprite->left * m_cam_right[2] + s->sprite->bottom;
 
-            v[3].position[0] = s->pos[0] + s->sprite->right * right[0] + s->sprite->bottom * up[0];
-            v[3].position[1] = s->pos[1] + s->sprite->right * right[1] + s->sprite->bottom * up[1];
-            v[3].position[2] = s->pos[2] + s->sprite->right * right[2] + s->sprite->bottom * up[2];
+            v[3].position[0] = s->pos[0] + s->sprite->right * m_cam_right[0];
+            v[3].position[1] = s->pos[1] + s->sprite->right * m_cam_right[1];
+            v[3].position[2] = s->pos[2] + s->sprite->right * m_cam_right[2] + s->sprite->bottom;
         }
 
         qglBindTexture(GL_TEXTURE_2D, room->content->sprites->sprite->texture_index);

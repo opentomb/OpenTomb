@@ -188,6 +188,7 @@ class CRender
         uint16_t                    m_active_transparency;
         GLuint                      m_active_texture;
 
+        GLfloat                     m_cam_right[3];
         uint32_t                    r_list_size;
         uint32_t                    r_list_active_count;
         struct render_list_s       *r_list;
