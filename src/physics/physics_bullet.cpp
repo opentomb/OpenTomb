@@ -1896,7 +1896,7 @@ struct hair_s *Hair_Create(struct hair_setup_s *setup, struct physics_data_s *ph
         // bodies (e. g. animated meshes), or else Lara's ghost object or anything else will be able to
         // collide with hair!
         hair->elements[i].body->setUserPointer(hair->container);
-        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, btBroadphaseProxy::DebrisFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::CharacterFilter);
+        bt_engine_dynamicsWorld->addRigidBody(hair->elements[i].body, btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::StaticFilter | btBroadphaseProxy::KinematicFilter | btBroadphaseProxy::CharacterFilter);
 
         hair->elements[i].body->activate();
     }
