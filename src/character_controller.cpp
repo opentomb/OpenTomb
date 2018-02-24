@@ -289,7 +289,7 @@ void Character_FixByBox(struct entity_s *ent)
             fix_y = curr_box->bb_min[1] - ent->transform.M4x4[12 + 1] + r;
         }
 
-        if(fix_x && fix_y || !next_box)
+        if((fix_x && fix_y) || !next_box)
         {
             ent->transform.M4x4[12 + 0] += fix_x;
             ent->transform.M4x4[12 + 1] += fix_y;
@@ -2198,10 +2198,7 @@ void Character_UpdateParams(struct entity_s *ent)
         case MOVE_UNDERWATER:
             if(!ent->character->state.dead && !Character_ChangeParam(ent, PARAM_AIR, -speed))
             {
-                if(!Character_ChangeParam(ent, PARAM_HEALTH, -3.0f * speed))
-                {
-                    ent->character->state.dead = 0x01;
-                }
+                Character_ChangeParam(ent, PARAM_HEALTH, -3.0f * speed);
             }
             break;
 
