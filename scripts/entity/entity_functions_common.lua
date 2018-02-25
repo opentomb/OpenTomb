@@ -153,7 +153,6 @@ end
 
 function anim_single_init(id)      -- Ordinary one way animatings
 
-    local version = getLevelVersion();
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
    
@@ -172,24 +171,6 @@ function anim_single_init(id)      -- Ordinary one way animatings
         if(tick_state == TICK_STOPPED) then
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 0);
             setEntityActivity(object_id, false);
-        end;
-    end;
-
-    --TODO: move that hack to level script (after loading scripts system backporting?)
-    if(version == TR_I) then
-        if(id == 12) then
-            entity_funcs[id].onLoop = function(object_id, tick_state)
-                local x, y, z = getEntityPos(object_id);
-                if(x > 48896) then
-                    x = x - 1024.0 * frame_time;
-                    if(x < 48896) then
-                        x = 48896;
-                    end;
-                    setEntityPos(object_id, x, y, z);
-                else
-                    entity_funcs[id].onLoop = nil;
-                end;
-            end;
         end;
     end;
 end

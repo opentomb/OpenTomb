@@ -19,3 +19,14 @@ level_PreLoad = function()
     static_tbl[39] = {coll = COLLISION_GROUP_STATIC_OBLECT, shape = COLLISION_SHAPE_TRIMESH};       -- Wall bricks
     static_tbl[43] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Icicle
 end;
+
+
+function ScionHolder_init(id)
+    setEntityTypeFlag(id, ENTITY_TYPE_ACTOR, 1);  -- make it targetable
+    entity_funcs[id].onHit = function(object_id, activator_id)
+        setCharacterTarget(activator_id, nil);
+        setEntityActivity(object_id, false);
+        setEntityTypeFlag(0x6b, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
+        disableEntity(0x69);
+    end;
+end;
