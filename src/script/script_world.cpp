@@ -892,6 +892,44 @@ int lua_SetRoomActiveContent(lua_State *lua)
 }
 
 
+int lua_SetRoomStaticEnability(lua_State *lua)
+{
+    if(lua_gettop(lua) == 3)
+    {
+        room_p r = World_GetRoomByID(lua_tointeger(lua, 1));        
+        if(r)
+        {
+            uint32_t id = lua_tointeger(lua, 2);
+            for(uint32_t i = 0; i < r->content->static_mesh_count; ++i)
+            {
+                if(r->content->static_mesh[i].object_id == id)
+                {
+                    r->content->static_mesh[i].hide = !lua_toboolean(lua, 3);
+                    if(r->content->static_mesh[i].physics_body)
+                    {
+                        if(r->content->static_mesh[i].hide)
+                        {
+                            Physics_DisableObject(r->content->static_mesh[i].physics_body);
+                        }
+                        else
+                        {
+                            Physics_EnableObject(r->content->static_mesh[i].physics_body);
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    else
+    {
+        Con_Warning("setRoomStaticEnability: expecting arguments (room_id, static_id, value)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetBoxBlocked(lua_State *lua)
 {
     if(lua_gettop(lua) == 2)
@@ -1173,6 +1211,7 @@ void Script_LuaRegisterWorldFuncs(lua_State *lua)
     lua_register(lua, "setFlipState", lua_SetFlipState);
     lua_register(lua, "getFlipState", lua_GetFlipState);
     lua_register(lua, "setRoomActiveContent", lua_SetRoomActiveContent);
+    lua_register(lua, "setRoomStaticEnability", lua_SetRoomStaticEnability);
     lua_register(lua, "setBoxBlocked", lua_SetBoxBlocked);
 
     lua_register(lua, "createBaseItem", lua_CreateBaseItem);

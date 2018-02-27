@@ -191,7 +191,7 @@ tr1_entity_tbl[150] = {coll = COLLISION_NONE,            shape = COLLISION_SHAPE
 -- ANIMATINGS --
 
 tr1_entity_tbl[161] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "centaur_statue"};  -- Centaur statue
-tr1_entity_tbl[162] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "natla_cabin_TR1"}; -- Natla's mines cabin
+--tr1_entity_tbl[162] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "natla_cabin"};     -- Natla's mines cabin
 tr1_entity_tbl[163] = {coll = COLLISION_GROUP_KINEMATIC, shape = COLLISION_SHAPE_TRIMESH, func = "mutant_egg"};      -- Mutant egg
 
 -- SERVICE OBJECTS --

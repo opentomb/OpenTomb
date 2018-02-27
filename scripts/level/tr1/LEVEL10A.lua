@@ -3,10 +3,6 @@
 
 print("Level script loaded (LEVEL10A.lua)");
 
-level_PostLoad = function()
-
-end;
-
 level_PreLoad = function()
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
@@ -21,8 +17,9 @@ level_PreLoad = function()
 end;
 
 
-function natla_cabin_TR1_init(id)
+function natla_cabin_init(id)
 
+    entity_funcs[id] = {};
     entity_funcs[id].onActivate = function(object_id, activator_id)
         local st = getEntityAnimState(object_id, ANIM_TYPE_BASE);
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
@@ -47,8 +44,9 @@ function natla_cabin_TR1_init(id)
 end
 
 
-function anim_single_init(id)      -- Ordinary one way animatings
+function anim_rotor_init(id)      -- Ordinary one way animatings
 
+    entity_funcs[id] = {};
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
     setEntityActivity(id, false);
 
@@ -76,3 +74,53 @@ function anim_single_init(id)      -- Ordinary one way animatings
         end;
     end;
 end
+
+
+function anim_boat_init(id)      -- Ordinary one way animatings
+
+    entity_funcs[id] = {};
+
+    setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
+    setEntityActivity(id, false);
+
+    entity_funcs[id].onActivate = function(object_id, activator_id)
+        local x, y, z = getEntityPos(object_id);
+        if(y > 26112.0) then
+            enableEntity(object_id);
+            setEntityVisibility(object_id, true);
+            setEntityActivity(object_id, true);
+            setRoomStaticEnability(3, 11, false);
+        end;
+        return ENTITY_TRIGGERING_ACTIVATED;
+    end;
+
+    local x_min = 49664.0;
+    local y_min = 25089.0;
+    entity_funcs[id].onLoop = function(object_id, tick_state)
+        local x, y, z = getEntityPos(object_id);
+        if(y > y_min) then
+            y = y - 2048.0 * frame_time;
+            if(y < y_min) then
+                y = y_min;
+            elseif (y < y_min + 3072.0) then
+                x = x - 768.0 * frame_time;
+                if(x < x_min) then
+                    x = x_min;
+                end;
+            end;
+            setRoomStaticEnability(3, 11, false);
+            setEntityPos(object_id, x, y, z);
+        else
+            entity_funcs[id].onLoop = nil;
+            disableEntity(object_id);
+            setRoomStaticEnability(3, 11, true);
+        end;
+    end;
+end
+
+
+level_PostLoad = function()
+    anim_boat_init(2);
+    anim_rotor_init(12);
+    natla_cabin_init(84);
+end;

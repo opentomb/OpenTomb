@@ -840,6 +840,14 @@ int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time)
     ss_anim->frame_time = (ss_anim->frame_time >= 0.0f) ? (ss_anim->frame_time) : (0.0f);
     ss_anim->frame_time += time;
     new_frame = ss_anim->frame_time / ss_anim->period;
+    if((ss_anim->current_animation == ss_anim->prev_animation) && 
+       (ss_anim->current_frame == ss_anim->prev_frame) && 
+       (ss_anim->current_frame == new_frame))
+    {
+        ++new_frame;
+        ss_anim->frame_time += ss_anim->period;
+    }
+    
     dt = ss_anim->frame_time - (float)new_frame * ss_anim->period;
     ss_anim->lerp = dt / ss_anim->period;
     

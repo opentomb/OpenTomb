@@ -1067,8 +1067,8 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         qglUseProgramObjectARB(shader->program);
         for(uint32_t i = 0; i < room->content->static_mesh_count; i++)
         {
-            if(Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)) &&
-               (!room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)))
+            if((!room->content->static_mesh[i].hide || (r_flags & R_DRAW_DUMMY_STATICS)) &&
+               Frustum_IsOBBVisibleInFrustumList(room->content->static_mesh[i].obb, (room->frustum) ? (room->frustum) : (m_camera->frustum)))
             {
                 Mat4_Mat4_mul(transform, modelViewProjectionMatrix, room->content->static_mesh[i].transform);
                 qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, transform);
