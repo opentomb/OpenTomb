@@ -46,7 +46,7 @@ char *SC_ParseToken(char *data, char *token, size_t token_size)
         return NULL;
     }
     token[0] = 0;
-    
+
 // skip whitespace
     skipwhite:
     while((c = *data) <= ' ')
@@ -692,7 +692,7 @@ int lua_AddFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 3)
     {
-        Con_Warning("addFont: expecting arguments (font index, font path, font size)");
+        Con_Warning("addFont: expecting arguments (font_index, font_path, font_size)");
         return 0;
     }
 
@@ -742,7 +742,7 @@ int lua_RemoveFont(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning("removeFont: expecting arguments (font index)");
+        Con_Warning("removeFont: expecting arguments (font_index)");
         return 0;
     }
 
@@ -759,7 +759,7 @@ int lua_RemoveFontStyle(lua_State *lua)
 {
     if(lua_gettop(lua) != 1)
     {
-        Con_Warning("removeFontStyle: expecting arguments (style index)");
+        Con_Warning("removeFontStyle: expecting arguments (style_index)");
         return 0;
     }
 
@@ -846,7 +846,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ITEM_TYPE_SYSTEM);
         LUA_EXPOSE(lua, ITEM_TYPE_SUPPLY);
         LUA_EXPOSE(lua, ITEM_TYPE_QUEST);
-        
+
         LUA_EXPOSE(lua, ITEM_COMPASS);
         LUA_EXPOSE(lua, ITEM_PASSPORT);
         LUA_EXPOSE(lua, ITEM_LARAHOME);
@@ -856,7 +856,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ITEM_LOAD);
         LUA_EXPOSE(lua, ITEM_SAVE);
         LUA_EXPOSE(lua, ITEM_MAP);
-        
+
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_TRIGGER);
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_PAD);
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_SWITCH);

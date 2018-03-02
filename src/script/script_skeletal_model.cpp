@@ -184,7 +184,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
     }
     else
     {
-        Con_Warning("wrong arguments number, shoul be (model_id, map_index, value)");
+        Con_Warning("setModelCollisionMap: expecting arguments (model_id, map_index, value)");
     }
 
     return 0;
@@ -380,7 +380,7 @@ int lua_SetEntityMeshes(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityMeshes: expecting arguments (id_dest, id_src)");
+        Con_Warning("setEntityMeshes: expecting arguments (dest_id, src_id)");
     }
 
     return 0;
@@ -409,7 +409,7 @@ int lua_SetEntitySkinMeshes(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntitySkinMeshes: expecting arguments (id_dest, id_src)");
+        Con_Warning("setEntitySkinMeshes: expecting arguments (dest_id, src_id)");
     }
 
     return 0;
@@ -436,7 +436,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
     }
     else
     {
-        Con_Printf("setModelMeshReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
+        Con_Printf("setModelMeshReplaceFlag: expecting arguments (model_id, bone_num, flag)");
     }
 
     return 0;
@@ -496,7 +496,7 @@ int lua_SetModelAnimReplaceFlag(lua_State *lua)
     }
     else
     {
-        Con_Printf("setModelAnimReplaceFlag: Wrong arguments count. Must be (id_model, bone_num, flag)");
+        Con_Printf("setModelAnimReplaceFlag: expecting arguments (model_id, bone_num, flag)");
     }
 
     return 0;
@@ -522,7 +522,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
     }
     else
     {
-        Con_Printf("copyMeshFromModelToModel: expecting arguments (id_model1, id_model2, bone_num1, bone_num2)");
+        Con_Printf("copyMeshFromModelToModel: expecting arguments (model_id1, model_id2, bone_num1, bone_num2)");
     }
 
     return 0;
@@ -551,7 +551,7 @@ int lua_SetEntityBoneVisibility(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityBoneVisibility: expecting arguments (entity_id, bone_id, value");
+        Con_Warning("setEntityBoneVisibility: expecting arguments (entity_id, bone_id, value)");
     }
 
     return 0;
@@ -648,7 +648,7 @@ int lua_EntitySSAnimCopy(lua_State * lua)
     }
     else
     {
-        Con_Warning("entitySSAnimCopy: expecting arguments (id_dest, id_src)");
+        Con_Warning("entitySSAnimCopy: expecting arguments (dest_id, src_id)");
     }
 
     return 0;

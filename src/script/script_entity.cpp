@@ -287,7 +287,7 @@ int lua_NoFixEntityCollision(lua_State *lua)
     }
     else
     {
-        Con_Warning("noFixEntityCollision: Expecting arguments (entity_id, value)");
+        Con_Warning("noFixEntityCollision: expecting arguments (entity_id, value)");
     }
 
     return 0;
@@ -306,7 +306,7 @@ int lua_NoEntityMove(lua_State *lua)
     }
     else
     {
-        Con_Warning("noEntityMove: Expecting arguments (entity_id, value)");
+        Con_Warning("noEntityMove: expecting arguments (entity_id, value)");
     }
 
     return 0;
@@ -325,7 +325,7 @@ int lua_EnableEntity(lua_State * lua)
     }
     else
     {
-        Con_Warning("enableEntity: Expecting arguments (entity_id)");
+        Con_Warning("enableEntity: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -344,7 +344,7 @@ int lua_DisableEntity(lua_State * lua)
     }
     else
     {
-        Con_Warning("disableEntity: Expecting arguments (entity_id)");
+        Con_Warning("disableEntity: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -478,7 +478,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityActivationOffset: Expecting arguments (entity_id)");
+        Con_Warning("setEntityActivationOffset: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -533,7 +533,7 @@ int lua_SetEntityActivationDirection(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityActivationDirection: Expecting arguments (entity_id, x, y, z, (w))");
+        Con_Warning("setEntityActivationDirection: expecting arguments (entity_id, x, y, z, (w))");
     }
 
     return 0;
@@ -969,7 +969,7 @@ int lua_RotateEntity(lua_State *lua)
     }
     else
     {
-        Con_Warning("rotateEntity: expecting arguments (ent_id, rot_x, (rot_y, rot_z))");
+        Con_Warning("rotateEntity: expecting arguments (entity_id, rot_x, (rot_y, rot_z))");
     }
 
     return 0;
@@ -1044,7 +1044,7 @@ int lua_SetEntitySpeed(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntitySpeed: expecting arguments (id, speed_x, speed_y, speed_z)");
+        Con_Warning("setEntitySpeed: expecting arguments (entity_id, speed_x, speed_y, speed_z)");
     }
 
     return 0;
@@ -1067,7 +1067,7 @@ int lua_SetEntityLinearSpeed(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityLinearSpeed: expecting arguments (id, speed");
+        Con_Warning("setEntityLinearSpeed: expecting arguments (entity_id, speed)");
     }
 
     return 0;
@@ -2078,7 +2078,7 @@ int lua_SetEntityCollision(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityCollision: Expecting arguments (entity_id, val)");
+        Con_Warning("setEntityCollision: expecting arguments (entity_id, val)");
     }
 
     return 0;
@@ -2099,7 +2099,7 @@ int lua_SetEntityBoneCollision(lua_State * lua)
     }
     else
     {
-        Con_Warning("setEntityBoneCollision: Expecting arguments (entity_id, bone_id, val)");
+        Con_Warning("setEntityBoneCollision: expecting arguments (entity_id, bone_id, val)");
     }
 
     return 0;

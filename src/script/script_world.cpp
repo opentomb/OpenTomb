@@ -109,7 +109,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
     }
     else
     {
-        Con_AddLine("Wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("setSectorFloorConfig: expecting arguments (room_id, index_x, index_y, penetration_config, diagonal_type, floor, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -141,7 +141,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
     }
     else
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("setSectorCeilingConfig: expecting arguments (room_id, index_x, index_y, penetration_config, diagonal_type, ceiling, z0, z1, z2, z3)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -167,7 +167,7 @@ int lua_SetSectorPortal(lua_State * lua)
     }
     else
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("setSectorPortal: expecting arguments (room_id, index_x, index_y, portal_room_id)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -196,7 +196,7 @@ int lua_SetSectorFlags(lua_State * lua)
     }
     else
     {
-        Con_AddLine("wrong arguments number, must be (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("setSectorFlags: expecting arguments (room_id, index_x, index_y, fp_flag, ft_flag, cp_flag, ct_flag)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -214,7 +214,7 @@ int lua_SameRoom(lua_State *lua)
     }
     else
     {
-        Con_Warning("sameRoom: expecting arguments (ent_id1, ent_id2)");
+        Con_Warning("sameRoom: expecting arguments (entity_id1, entity_id2)");
     }
 
     return 0;
@@ -342,7 +342,7 @@ int lua_SectorTriggerClear(lua_State * lua)
     }
     else
     {
-        Con_AddLine("sectorTriggerClear: wrong arguments number, must be (room_id, index_x, index_y)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("sectorTriggerClear: expecting arguments (room_id, index_x, index_y)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -375,7 +375,7 @@ int lua_SectorAddTrigger(lua_State * lua)
     }
     else
     {
-        Con_AddLine("sectorAddTrigger: wrong arguments number, must be (room_id, index_x, index_y, function, sub_function, mask, once, timer)", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("sectorAddTrigger: expecting arguments (room_id, index_x, index_y, function, sub_function, mask, once, timer)", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -424,7 +424,7 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
     }
     else
     {
-        Con_AddLine("sectorAddTriggerCommand: wrong arguments number, must be (room_id, index_x, index_y, function, operands, once, (cam_index, cam_move, cam_timer))", FONTSTYLE_CONSOLE_WARNING);
+        Con_AddLine("sectorAddTriggerCommand: expecting arguments (room_id, index_x, index_y, function, operands, once, (cam_index, cam_move, cam_timer))", FONTSTYLE_CONSOLE_WARNING);
     }
 
     return 0;
@@ -752,6 +752,21 @@ int lua_LoadMap(lua_State *lua)
 }
 
 
+int lua_SetPlayer(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        World_SetPlayer(World_GetEntityByID(lua_tointeger(lua, 1)));
+    }
+    else
+    {
+        Con_Warning("setPlayer: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 /*
  * Flipped (alternate) room functions
  */
@@ -781,21 +796,6 @@ int lua_SetFlipState(lua_State *lua)
     else
     {
         Con_Warning("setFlipState: expecting arguments (flip_index, flip_state)");
-    }
-
-    return 0;
-}
-
-
-int lua_SetPlayer(lua_State *lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        World_SetPlayer(World_GetEntityByID(lua_tointeger(lua, 1)));
-    }
-    else
-    {
-        Con_Warning("setPlayer: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -885,7 +885,7 @@ int lua_SetRoomActiveContent(lua_State *lua)
     }
     else
     {
-        Con_Warning("setRoomActiveContent: expecting arguments (room1_id, room2_id)");
+        Con_Warning("setRoomActiveContent: expecting arguments (room_id1, room_id2)");
     }
 
     return 0;
@@ -896,7 +896,7 @@ int lua_SetRoomStaticEnability(lua_State *lua)
 {
     if(lua_gettop(lua) == 3)
     {
-        room_p r = World_GetRoomByID(lua_tointeger(lua, 1));        
+        room_p r = World_GetRoomByID(lua_tointeger(lua, 1));
         if(r)
         {
             uint32_t id = lua_tointeger(lua, 2);

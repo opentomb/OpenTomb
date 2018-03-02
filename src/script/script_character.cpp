@@ -41,7 +41,7 @@ int lua_CharacterCreate(lua_State * lua)
     }
     else
     {
-        Con_Warning("characterCreate: expecting arguments (entity_id, (hp))");
+        Con_Warning("characterCreate: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -373,7 +373,7 @@ int lua_ChangeCharacterParam(lua_State * lua)
     }
     else
     {
-        Con_Warning("changeCharacterParam: expecting arguments (entity_id, param, value)");
+        Con_Warning("changeCharacterParam: expecting arguments (entity_id, param_id, delta)");
     }
 
     return 0;
@@ -555,7 +555,7 @@ int lua_SetCharacterState(lua_State * lua)
     }
     else
     {
-        Con_Warning("setCharacterState: expecting arguments (entity_id, response_id, value)");
+        Con_Warning("setCharacterState: expecting arguments (entity_id, state_id, value)");
     }
 
     return 0;
@@ -613,7 +613,7 @@ int lua_SetCharacterClimbPoint(lua_State *lua)
     }
     else
     {
-        Con_Printf("setCharacterClimbPoint: expecting arguments (id_entity, x, y, z)");
+        Con_Printf("setCharacterClimbPoint: expecting arguments (entity_id, x, y, z)");
     }
 
     return 0;
@@ -639,7 +639,7 @@ int lua_GetCharacterClimbPoint(lua_State *lua)
     }
     else
     {
-        Con_Printf("getCharacterClimbPoint: expecting arguments (id_entity)");
+        Con_Printf("getCharacterClimbPoint: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -663,7 +663,7 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
     }
     else
     {
-        Con_Printf("setCharacterWeaponModel: expecting arguments (id_entity, id_weapon_model, armed_state, (id_weapon_model_req))");
+        Con_Printf("setCharacterWeaponModel: expecting arguments (entity_id, weapon_model_id, armed_state, (weapon_model_req_id))");
     }
 
     return 0;
@@ -710,7 +710,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Printf("setCharacterCurrentWeapon: expecting arguments (id_entity, id_weapon)");
+        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
     }
 
     return 0;
