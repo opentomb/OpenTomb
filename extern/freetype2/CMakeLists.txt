@@ -54,4 +54,4 @@ set(FREETYPE_SRCS
 find_package(ZLIB REQUIRED)
 
 add_library(${PROJECT_NAME} STATIC ${FREETYPE_SRCS})
-target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_include_directories(${PROJECT_NAME} PUBLIC include ${ZLIB_INCLUDE_DIRS})
