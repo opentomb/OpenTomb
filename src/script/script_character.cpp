@@ -261,38 +261,6 @@ int lua_GetCharacterTarget(lua_State * lua)
 }
 
 
-int lua_GetCharacterParam(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int parameter = lua_tointeger(lua, 2);
-            if(parameter < PARAM_LASTINDEX)
-            {
-                lua_pushnumber(lua, Character_GetParam(ent, parameter));
-                return 1;
-            }
-            else
-            {
-                Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
-            }
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getCharacterParam: expecting arguments (entity_id, param)");
-    }
-
-    return 0;
-}
-
-
 int lua_SetCharacterParam(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -327,6 +295,38 @@ int lua_SetCharacterParam(lua_State * lua)
     else
     {
         Con_Warning("setCharacterParam: expecting arguments (entity_id, param, value, (max_value))");
+    }
+
+    return 0;
+}
+
+
+int lua_GetCharacterParam(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            int parameter = lua_tointeger(lua, 2);
+            if(parameter < PARAM_LASTINDEX)
+            {
+                lua_pushnumber(lua, Character_GetParam(ent, parameter));
+                return 1;
+            }
+            else
+            {
+                Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
+            }
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getCharacterParam: expecting arguments (entity_id, param)");
     }
 
     return 0;
@@ -670,6 +670,29 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
 }
 
 
+int lua_SetCharacterCurrentWeapon(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -688,29 +711,6 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
     else
     {
         Con_Warning("getCharacterCurrentWeapon: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_SetCharacterCurrentWeapon(lua_State *lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
     }
 
     return 0;
@@ -740,8 +740,8 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterClimbPoint", lua_SetCharacterClimbPoint);
     lua_register(lua, "getCharacterClimbPoint", lua_GetCharacterClimbPoint);
 
-    lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
+    lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
     lua_register(lua, "addCharacterHair", lua_AddCharacterHair);

@@ -431,18 +431,6 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
 }
 
 
-int lua_GetGravity(lua_State * lua)
-{
-    float g[3];
-    Physics_GetGravity(g);
-    lua_pushnumber(lua, g[0]);
-    lua_pushnumber(lua, g[1]);
-    lua_pushnumber(lua, g[2]);
-
-    return 3;
-}
-
-
 int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
 {
     float g[3];
@@ -479,18 +467,15 @@ int lua_SetGravity(lua_State * lua)                                             
 }
 
 
-int lua_GetSecretStatus(lua_State *lua)
+int lua_GetGravity(lua_State * lua)
 {
-    if(lua_gettop(lua) >= 1)
-    {
-        int secret_number = lua_tointeger(lua, 1);
-        if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
-        {
-            lua_pushinteger(lua, Gameflow_GetSecretStateAtIndex(secret_number));
-            return 1;
-        }
-    }
-    return 0;   // No parameter specified - return
+    float g[3];
+    Physics_GetGravity(g);
+    lua_pushnumber(lua, g[0]);
+    lua_pushnumber(lua, g[1]);
+    lua_pushnumber(lua, g[2]);
+
+    return 3;
 }
 
 
@@ -505,6 +490,21 @@ int lua_SetSecretStatus(lua_State *lua)
         }
     }
     return 0;
+}
+
+
+int lua_GetSecretStatus(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        int secret_number = lua_tointeger(lua, 1);
+        if((secret_number <= GF_MAX_SECRETS) && (secret_number >= 0))
+        {
+            lua_pushinteger(lua, Gameflow_GetSecretStateAtIndex(secret_number));
+            return 1;
+        }
+    }
+    return 0;   // No parameter specified - return
 }
 
 
