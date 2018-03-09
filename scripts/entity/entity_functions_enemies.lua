@@ -67,6 +67,25 @@ function Lara_init(id)
     setEntityGhostCollisionShape(id, 8,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
     setHumanoidBodyParts(id);
+    local m_id = getEntityModelID(id);
+    setModelBodyPartFlag(m_id,  0, BODY_PART_BODY_LOW);
+    setModelBodyPartFlag(m_id,  7, BODY_PART_BODY_UPPER);
+    setModelBodyPartFlag(m_id, 14, BODY_PART_HEAD);
+
+    setModelBodyPartFlag(m_id, 11, BODY_PART_LEFT_HAND_1);
+    setModelBodyPartFlag(m_id, 12, BODY_PART_LEFT_HAND_2);
+    setModelBodyPartFlag(m_id, 13, BODY_PART_LEFT_HAND_3);
+    setModelBodyPartFlag(m_id,  8, BODY_PART_RIGHT_HAND_1);
+    setModelBodyPartFlag(m_id,  9, BODY_PART_RIGHT_HAND_2);
+    setModelBodyPartFlag(m_id, 10, BODY_PART_RIGHT_HAND_3);
+
+    setModelBodyPartFlag(m_id,  1, BODY_PART_LEFT_LEG_1);
+    setModelBodyPartFlag(m_id,  2, BODY_PART_LEFT_LEG_2);
+    setModelBodyPartFlag(m_id,  3, BODY_PART_LEFT_LEG_3);
+    setModelBodyPartFlag(m_id,  4, BODY_PART_RIGHT_LEG_1);
+    setModelBodyPartFlag(m_id,  5, BODY_PART_RIGHT_LEG_2);
+    setModelBodyPartFlag(m_id,  6, BODY_PART_RIGHT_LEG_3);
+
     setCharacterRagdollSetup(id, getRagdollSetup(RD_TYPE_LARA));
 
     setPlayer(id);
@@ -286,6 +305,29 @@ function wolf_init(id)
     setEntityGhostCollisionShape(id,  2,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  3,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
 
+    local m_id = getEntityModelID(id);
+    setModelBodyPartFlag(m_id, 3, BODY_PART_HEAD);
+    setModelBodyPartFlag(m_id, 0, BODY_PART_BODY_LOW);
+    setModelBodyPartFlag(m_id, 1, BODY_PART_BODY_UPPER);
+    setModelBodyPartFlag(m_id, 23, BODY_PART_TAIL);
+    setModelBodyPartFlag(m_id, 7, BODY_PART_LEFT_LEG_1);
+    setModelBodyPartFlag(m_id, 15, BODY_PART_LEFT_LEG_1);
+    setModelBodyPartFlag(m_id, 8, BODY_PART_LEFT_LEG_2);
+    setModelBodyPartFlag(m_id, 16, BODY_PART_LEFT_LEG_2);
+    setModelBodyPartFlag(m_id, 9, BODY_PART_LEFT_LEG_3);
+    setModelBodyPartFlag(m_id, 17, BODY_PART_LEFT_LEG_3);
+    setModelBodyPartFlag(m_id, 10, BODY_PART_LEFT_LEG_3);
+    setModelBodyPartFlag(m_id, 18, BODY_PART_LEFT_LEG_3);
+    setModelBodyPartFlag(m_id, 11, BODY_PART_RIGHT_LEG_1);
+    setModelBodyPartFlag(m_id, 19, BODY_PART_RIGHT_LEG_1);
+    setModelBodyPartFlag(m_id, 12, BODY_PART_RIGHT_LEG_2);
+    setModelBodyPartFlag(m_id, 20, BODY_PART_RIGHT_LEG_2);
+    setModelBodyPartFlag(m_id, 13, BODY_PART_RIGHT_LEG_3);
+    setModelBodyPartFlag(m_id, 21, BODY_PART_RIGHT_LEG_3);
+    setModelBodyPartFlag(m_id, 14, BODY_PART_RIGHT_LEG_3);
+    setModelBodyPartFlag(m_id, 22, BODY_PART_RIGHT_LEG_3);
+    --setCharacterDefaultRagdoll(id, 8, 0);
+
     if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "wolf_init(" .. id .. ");\n";
@@ -306,9 +348,11 @@ function wolf_init(id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-            setEntityCollision(object_id, false);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
+
+    entity_funcs[id].onLoop = nil;
 end;
 
 

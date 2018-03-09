@@ -171,6 +171,22 @@ parameters inside brackets are optional;
     `ANIM_TYPE_MISK_3`
     `ANIM_TYPE_MISK_4`
 
+    `BODY_PART_BODY_LOW`
+    `BODY_PART_BODY_UPPER`
+    `BODY_PART_HEAD`
+    `BODY_PART_LEFT_HAND_1`
+    `BODY_PART_LEFT_HAND_2`
+    `BODY_PART_LEFT_HAND_3`
+    `BODY_PART_RIGHT_HAND_1`
+    `BODY_PART_RIGHT_HAND_2`
+    `BODY_PART_RIGHT_HAND_3`
+    `BODY_PART_LEFT_LEG_1`
+    `BODY_PART_LEFT_LEG_2`
+    `BODY_PART_LEFT_LEG_3`
+    `BODY_PART_RIGHT_LEG_1`
+    `BODY_PART_RIGHT_LEG_2`
+    `BODY_PART_RIGHT_LEG_3`
+	
     `ZONE_TYPE_ALL`
     `ZONE_TYPE_1`
     `ZONE_TYPE_2`
@@ -261,6 +277,7 @@ parameters inside brackets are optional;
     - `addCharacterHair(entity_id, hair_setup_table)` - .
     - `resetCharacterHair(entity_id)` - .
     - `setCharacterRagdollSetup(entity_id, ragdoll_setup_table)` - .
+    - `setCharacterDefaultRagdoll(entity_id, anim, frame)` - .
     - `setCharacterRagdollActivity(entity_id, value)` - .
     - `setCharacterState(entity_id, state_id, value)` - .
     - `getCharacterState(entity_id, state_id)` - .

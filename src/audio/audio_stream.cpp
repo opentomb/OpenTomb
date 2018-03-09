@@ -185,9 +185,7 @@ int StreamTrack_Pause(stream_track_p s)
     {
         alSourcePause(s->internal->source);
         s->state = TR_AUDIO_STREAM_PAUSED;
-        return 1;
     }
-    return 0;
 }
 
 

@@ -64,6 +64,7 @@ typedef struct rd_setup_s
 
 
 struct rd_setup_s *Ragdoll_GetSetup(struct lua_State *lua, int stack_pos);
+struct rd_setup_s *Ragdoll_AutoCreateSetup(struct skeletal_model_s *model, uint16_t anim, uint16_t frame);
 void Ragdoll_DeleteSetup(struct rd_setup_s *setup);
 
 #endif	/* PHYSICS_RAGDOLL_H */

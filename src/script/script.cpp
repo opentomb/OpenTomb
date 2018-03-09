@@ -965,6 +965,25 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ANIM_TYPE_MISK_3);
         LUA_EXPOSE(lua, ANIM_TYPE_MISK_4);
 
+        LUA_EXPOSE(lua, BODY_PART_BODY_LOW);
+        LUA_EXPOSE(lua, BODY_PART_BODY_UPPER);
+        LUA_EXPOSE(lua, BODY_PART_HEAD);
+
+        LUA_EXPOSE(lua, BODY_PART_LEFT_HAND_1);
+        LUA_EXPOSE(lua, BODY_PART_LEFT_HAND_2);
+        LUA_EXPOSE(lua, BODY_PART_LEFT_HAND_3);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_HAND_1);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_HAND_2);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_HAND_3);
+
+        LUA_EXPOSE(lua, BODY_PART_LEFT_LEG_1);
+        LUA_EXPOSE(lua, BODY_PART_LEFT_LEG_2);
+        LUA_EXPOSE(lua, BODY_PART_LEFT_LEG_3);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_LEG_1);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_LEG_2);
+        LUA_EXPOSE(lua, BODY_PART_RIGHT_LEG_3);
+        LUA_EXPOSE(lua, BODY_PART_TAIL);    
+
         LUA_EXPOSE(lua, ZONE_TYPE_ALL);
         LUA_EXPOSE(lua, ZONE_TYPE_1);
         LUA_EXPOSE(lua, ZONE_TYPE_2);

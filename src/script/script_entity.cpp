@@ -427,6 +427,25 @@ int lua_GetEntityBoxID(lua_State *lua)
 }
 
 
+int lua_GetEntityActivationOffset(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->activation_point)
+        {
+            lua_pushnumber(lua, ent->activation_point->offset[0]);
+            lua_pushnumber(lua, ent->activation_point->offset[1]);
+            lua_pushnumber(lua, ent->activation_point->offset[2]);
+            lua_pushnumber(lua, ent->activation_point->offset[3]);
+            return 4;
+        }
+    }
+
+    return 0;
+}
+
+
 int lua_SetEntityActivationOffset(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -466,17 +485,17 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 }
 
 
-int lua_GetEntityActivationOffset(lua_State * lua)
+int lua_GetEntityActivationDirection(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->activation_point)
+        if(ent)
         {
-            lua_pushnumber(lua, ent->activation_point->offset[0]);
-            lua_pushnumber(lua, ent->activation_point->offset[1]);
-            lua_pushnumber(lua, ent->activation_point->offset[2]);
-            lua_pushnumber(lua, ent->activation_point->offset[3]);
+            lua_pushnumber(lua, ent->activation_point->direction[0]);
+            lua_pushnumber(lua, ent->activation_point->direction[1]);
+            lua_pushnumber(lua, ent->activation_point->direction[2]);
+            lua_pushnumber(lua, ent->activation_point->direction[3]);
             return 4;
         }
     }
@@ -515,25 +534,6 @@ int lua_SetEntityActivationDirection(lua_State * lua)
     else
     {
         Con_Warning("setEntityActivationDirection: expecting arguments (entity_id, x, y, z, (w))");
-    }
-
-    return 0;
-}
-
-
-int lua_GetEntityActivationDirection(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushnumber(lua, ent->activation_point->direction[0]);
-            lua_pushnumber(lua, ent->activation_point->direction[1]);
-            lua_pushnumber(lua, ent->activation_point->direction[2]);
-            lua_pushnumber(lua, ent->activation_point->direction[3]);
-            return 4;
-        }
     }
 
     return 0;
@@ -639,6 +639,115 @@ int lua_GetEntityRoom(lua_State * lua)
 }
 
 
+int lua_GetEntityPosition(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 0]);
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 1]);
+            lua_pushnumber(lua, ent->transform.M4x4[12 + 2]);
+            lua_pushnumber(lua, ent->transform.angles[0]);
+            lua_pushnumber(lua, ent->transform.angles[1]);
+            lua_pushnumber(lua, ent->transform.angles[2]);
+            return 6;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityPosition: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetEntityAngles(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushnumber(lua, ent->transform.angles[0]);
+            lua_pushnumber(lua, ent->transform.angles[1]);
+            lua_pushnumber(lua, ent->transform.angles[2]);
+            return 3;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityAngles: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetEntityScaling(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushnumber(lua, ent->transform.scaling[0]);
+            lua_pushnumber(lua, ent->transform.scaling[1]);
+            lua_pushnumber(lua, ent->transform.scaling[2]);
+            return 3;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityScaling: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityScaling(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->transform.scaling[0] = lua_tonumber(lua, 2);
+            ent->transform.scaling[1] = lua_tonumber(lua, 3);
+            ent->transform.scaling[2] = lua_tonumber(lua, 4);
+
+            Physics_SetCollisionScale(ent->physics, ent->transform.scaling);
+            Entity_UpdateRigidBody(ent, 1);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityScaling: expecting arguments (entity_id, x_scaling, y_scaling, z_scaling)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetEntityPosition(lua_State * lua)
 {
     switch(lua_gettop(lua))
@@ -690,35 +799,6 @@ int lua_SetEntityPosition(lua_State * lua)
 }
 
 
-int lua_GetEntityPosition(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushnumber(lua, ent->transform.M4x4[12 + 0]);
-            lua_pushnumber(lua, ent->transform.M4x4[12 + 1]);
-            lua_pushnumber(lua, ent->transform.M4x4[12 + 2]);
-            lua_pushnumber(lua, ent->transform.angles[0]);
-            lua_pushnumber(lua, ent->transform.angles[1]);
-            lua_pushnumber(lua, ent->transform.angles[2]);
-            return 6;
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityPosition: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
 int lua_SetEntityAngles(lua_State * lua)
 {
     if(lua_gettop(lua) >= 4)
@@ -739,86 +819,6 @@ int lua_SetEntityAngles(lua_State * lua)
     else
     {
         Con_Warning("setEntityAngles: expecting arguments (entity_id, fi_x, (fi_y, fi_z))");
-    }
-
-    return 0;
-}
-
-
-int lua_GetEntityAngles(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushnumber(lua, ent->transform.angles[0]);
-            lua_pushnumber(lua, ent->transform.angles[1]);
-            lua_pushnumber(lua, ent->transform.angles[2]);
-            return 3;
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityAngles: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
-int lua_SetEntityScaling(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 4)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            ent->transform.scaling[0] = lua_tonumber(lua, 2);
-            ent->transform.scaling[1] = lua_tonumber(lua, 3);
-            ent->transform.scaling[2] = lua_tonumber(lua, 4);
-
-            Physics_SetCollisionScale(ent->physics, ent->transform.scaling);
-            Entity_UpdateRigidBody(ent, 1);
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("setEntityScaling: expecting arguments (entity_id, x_scaling, y_scaling, z_scaling)");
-    }
-
-    return 0;
-}
-
-
-int lua_GetEntityScaling(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushnumber(lua, ent->transform.scaling[0]);
-            lua_pushnumber(lua, ent->transform.scaling[1]);
-            lua_pushnumber(lua, ent->transform.scaling[2]);
-            return 3;
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityScaling: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -976,31 +976,6 @@ int lua_RotateEntity(lua_State *lua)
 }
 
 
-int lua_SetEntitySpeed(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 4)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            ent->speed[0] = lua_tonumber(lua, 2);
-            ent->speed[1] = lua_tonumber(lua, 3);
-            ent->speed[2] = lua_tonumber(lua, 4);
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("setEntitySpeed: expecting arguments (entity_id, speed_x, speed_y, speed_z)");
-    }
-
-    return 0;
-}
-
-
 int lua_GetEntitySpeed(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -1027,29 +1002,6 @@ int lua_GetEntitySpeed(lua_State * lua)
 }
 
 
-int lua_SetEntityLinearSpeed(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            ent->linear_speed = lua_tonumber(lua, 2);
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("setEntityLinearSpeed: expecting arguments (entity_id, speed)");
-    }
-
-    return 0;
-}
-
-
 int lua_GetEntitySpeedLinear(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -1068,6 +1020,54 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
     else
     {
         Con_Warning("getEntitySpeedLinear: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntitySpeed(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 4)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->speed[0] = lua_tonumber(lua, 2);
+            ent->speed[1] = lua_tonumber(lua, 3);
+            ent->speed[2] = lua_tonumber(lua, 4);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntitySpeed: expecting arguments (entity_id, speed_x, speed_y, speed_z)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityLinearSpeed(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->linear_speed = lua_tonumber(lua, 2);
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityLinearSpeed: expecting arguments (entity_id, speed)");
     }
 
     return 0;
@@ -1297,6 +1297,30 @@ int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
 }
 
 
+int lua_GetEntityVisibility(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_VISIBLE) != 0);
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityVisibility: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetEntityVisibility(lua_State * lua)
 {
     if(lua_gettop(lua) >= 2)
@@ -1327,30 +1351,6 @@ int lua_SetEntityVisibility(lua_State * lua)
 }
 
 
-int lua_GetEntityVisibility(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushinteger(lua, (ent->state_flags & ENTITY_STATE_VISIBLE) != 0);
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityVisibility: expecting arguments (entity_id)");
-    }
-
-    return 0;
-}
-
-
 int lua_GetEntityEnability(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -1369,6 +1369,30 @@ int lua_GetEntityEnability(lua_State * lua)
     else
     {
         Con_Warning("getEntityEnability: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_GetEntityActivity(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushboolean(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
+            return 1;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getEntityActivity: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -1405,24 +1429,18 @@ int lua_SetEntityActivity(lua_State * lua)
 }
 
 
-int lua_GetEntityActivity(lua_State * lua)
+int lua_GetEntityTriggerLayout(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushboolean(lua, (ent->state_flags & ENTITY_STATE_ACTIVE) != 0);
-            return 1;
+            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
+            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5);    // event
+            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);     // lock
+            return 3;
         }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityActivity: expecting arguments (entity_id)");
     }
 
     return 0;
@@ -1462,24 +1480,6 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
     else
     {
         Con_Warning("setEntityTriggerLayout: expecting arguments (entity_id, layout) or (entity_id, mask, event, once)");
-    }
-
-    return 0;
-}
-
-
-int lua_GetEntityTriggerLayout(lua_State *lua)
-{
-    if(lua_gettop(lua) >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));          // mask
-            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_EVENT) >> 5);    // event
-            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_LOCK) >> 6);     // lock
-            return 3;
-        }
     }
 
     return 0;
@@ -1554,6 +1554,22 @@ int lua_GetEntityEvent(lua_State *lua)
 }
 
 
+int lua_GetEntityMask(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 1)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));      // mask
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+
 int lua_SetEntityMask(lua_State * lua)
 {
     if(lua_gettop(lua) >= 2)
@@ -1572,14 +1588,14 @@ int lua_SetEntityMask(lua_State * lua)
 }
 
 
-int lua_GetEntityMask(lua_State * lua)
+int lua_GetEntitySectorStatus(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushinteger(lua, (ent->trigger_layout & ENTITY_TLAYOUT_MASK));      // mask
+            lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7));
             return 1;
         }
     }
@@ -1606,19 +1622,19 @@ int lua_SetEntitySectorStatus(lua_State *lua)
 }
 
 
-int lua_GetEntitySectorStatus(lua_State *lua)
+int lua_GetEntityOCB(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushinteger(lua, ((ent->trigger_layout & ENTITY_TLAYOUT_SSTATUS) >> 7));
+            lua_pushinteger(lua, ent->OCB);
             return 1;
         }
     }
 
-    return 0;
+    return 0;   // No entity found - return.
 }
 
 
@@ -1637,19 +1653,29 @@ int lua_SetEntityOCB(lua_State * lua)
 }
 
 
-int lua_GetEntityOCB(lua_State * lua)
+int lua_GetEntityFlags(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushinteger(lua, ent->OCB);
-            return 1;
+            lua_pushinteger(lua, ent->state_flags);
+            lua_pushinteger(lua, ent->type_flags);
+            lua_pushinteger(lua, ent->callback_flags);
+            return 3;
+        }
+        else
+        {
+            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
         }
     }
+    else
+    {
+        Con_Warning("getEntityFlags: expecting arguments (entity_id)");
+    }
 
-    return 0;   // No entity found - return.
+    return 0;
 }
 
 
@@ -1695,17 +1721,24 @@ int lua_SetEntityFlags(lua_State * lua)
 }
 
 
-int lua_GetEntityFlags(lua_State * lua)
+int lua_GetEntityTypeFlag(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 1)
+    int top = lua_gettop(lua);
+
+    if(top >= 1)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            lua_pushinteger(lua, ent->state_flags);
-            lua_pushinteger(lua, ent->type_flags);
-            lua_pushinteger(lua, ent->callback_flags);
-            return 3;
+            if(top == 1)
+            {
+                lua_pushinteger(lua, ent->type_flags);
+            }
+            else
+            {
+                lua_pushinteger(lua, (ent->type_flags & (uint16_t)(lua_tointeger(lua, 2))));
+            }
+            return 1;
         }
         else
         {
@@ -1714,7 +1747,7 @@ int lua_GetEntityFlags(lua_State * lua)
     }
     else
     {
-        Con_Warning("getEntityFlags: expecting arguments (entity_id)");
+        Con_Warning("getEntityTypeFlag: expecting arguments (entity_id, (type_flag))");
     }
 
     return 0;
@@ -1760,7 +1793,7 @@ int lua_SetEntityTypeFlag(lua_State *lua)
 }
 
 
-int lua_GetEntityTypeFlag(lua_State *lua)
+int lua_GetEntityStateFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -1771,11 +1804,11 @@ int lua_GetEntityTypeFlag(lua_State *lua)
         {
             if(top == 1)
             {
-                lua_pushinteger(lua, ent->type_flags);
+                lua_pushinteger(lua, ent->state_flags);
             }
             else
             {
-                lua_pushinteger(lua, (ent->type_flags & (uint16_t)(lua_tointeger(lua, 2))));
+                lua_pushinteger(lua, (ent->state_flags & (uint16_t)(lua_tointeger(lua, 2))));
             }
             return 1;
         }
@@ -1786,7 +1819,7 @@ int lua_GetEntityTypeFlag(lua_State *lua)
     }
     else
     {
-        Con_Warning("getEntityTypeFlag: expecting arguments (entity_id, (type_flag))");
+        Con_Warning("getEntityStateFlag: expecting arguments (entity_id, (state_flag))");
     }
 
     return 0;
@@ -1832,7 +1865,7 @@ int lua_SetEntityStateFlag(lua_State *lua)
 }
 
 
-int lua_GetEntityStateFlag(lua_State *lua)
+int lua_GetEntityCallbackFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -1843,11 +1876,11 @@ int lua_GetEntityStateFlag(lua_State *lua)
         {
             if(top == 1)
             {
-                lua_pushinteger(lua, ent->state_flags);
+                lua_pushinteger(lua, ent->callback_flags);
             }
             else
             {
-                lua_pushinteger(lua, (ent->state_flags & (uint16_t)(lua_tointeger(lua, 2))));
+                lua_pushinteger(lua, (ent->callback_flags & (uint32_t)(lua_tointeger(lua, 2))));
             }
             return 1;
         }
@@ -1858,7 +1891,7 @@ int lua_GetEntityStateFlag(lua_State *lua)
     }
     else
     {
-        Con_Warning("getEntityStateFlag: expecting arguments (entity_id, (state_flag))");
+        Con_Warning("getEntityCallbackFlag: expecting arguments (entity_id, (callback_flag))");
     }
 
     return 0;
@@ -1904,54 +1937,6 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 }
 
 
-int lua_GetEntityCallbackFlag(lua_State *lua)
-{
-    int top = lua_gettop(lua);
-
-    if(top >= 1)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            if(top == 1)
-            {
-                lua_pushinteger(lua, ent->callback_flags);
-            }
-            else
-            {
-                lua_pushinteger(lua, (ent->callback_flags & (uint32_t)(lua_tointeger(lua, 2))));
-            }
-            return 1;
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getEntityCallbackFlag: expecting arguments (entity_id, (callback_flag))");
-    }
-
-    return 0;
-}
-
-
-int lua_SetEntityTimer(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            ent->timer = lua_tonumber(lua, 2);
-        }
-    }
-
-    return 0;
-}
-
-
 int lua_GetEntityTimer(lua_State * lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -1968,19 +1953,15 @@ int lua_GetEntityTimer(lua_State * lua)
 }
 
 
-int lua_SetEntityMoveType(lua_State * lua)
+int lua_SetEntityTimer(lua_State * lua)
 {
     if(lua_gettop(lua) >= 2)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
-            ent->move_type = lua_tointeger(lua, 2);
+            ent->timer = lua_tonumber(lua, 2);
         }
-    }
-    else
-    {
-        Con_Warning("setEntityMoveType: expecting arguments (entity_id, move_type)");
     }
 
     return 0;
@@ -2005,6 +1986,25 @@ int lua_GetEntityMoveType(lua_State * lua)
     else
     {
         Con_Warning("getEntityMoveType: expecting arguments (entity_id)");
+    }
+
+    return 0;
+}
+
+
+int lua_SetEntityMoveType(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent)
+        {
+            ent->move_type = lua_tointeger(lua, 2);
+        }
+    }
+    else
+    {
+        Con_Warning("setEntityMoveType: expecting arguments (entity_id, move_type)");
     }
 
     return 0;

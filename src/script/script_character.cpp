@@ -261,6 +261,38 @@ int lua_GetCharacterTarget(lua_State * lua)
 }
 
 
+int lua_GetCharacterParam(lua_State * lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            int parameter = lua_tointeger(lua, 2);
+            if(parameter < PARAM_LASTINDEX)
+            {
+                lua_pushnumber(lua, Character_GetParam(ent, parameter));
+                return 1;
+            }
+            else
+            {
+                Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
+            }
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("getCharacterParam: expecting arguments (entity_id, param)");
+    }
+
+    return 0;
+}
+
+
 int lua_SetCharacterParam(lua_State * lua)
 {
     int top = lua_gettop(lua);
@@ -295,38 +327,6 @@ int lua_SetCharacterParam(lua_State * lua)
     else
     {
         Con_Warning("setCharacterParam: expecting arguments (entity_id, param, value, (max_value))");
-    }
-
-    return 0;
-}
-
-
-int lua_GetCharacterParam(lua_State * lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            int parameter = lua_tointeger(lua, 2);
-            if(parameter < PARAM_LASTINDEX)
-            {
-                lua_pushnumber(lua, Character_GetParam(ent, parameter));
-                return 1;
-            }
-            else
-            {
-                Con_Warning("wrong option index, expecting id < %d", PARAM_LASTINDEX);
-            }
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("getCharacterParam: expecting arguments (entity_id, param)");
     }
 
     return 0;
@@ -480,6 +480,37 @@ int lua_SetCharacterRagdollSetup(lua_State *lua)
     else
     {
         Con_Warning("setCharacterRagdollSetup: expecting arguments (entity_id, ragdoll_setup_table)");
+    }
+    return 0;
+}
+
+
+int lua_SetCharacterDefaultRagdoll(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 3)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            struct rd_setup_s *ragdoll_setup = Ragdoll_AutoCreateSetup(ent->bf->animations.model, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
+            if(ragdoll_setup)
+            {
+                Ragdoll_DeleteSetup(ent->character->ragdoll);
+                ent->character->ragdoll = ragdoll_setup;
+            }
+            else
+            {
+                Con_Warning("bad ragdoll setup");
+            }
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Warning("setCharacterDefaultRagdoll: expecting arguments (entity_id, anim, frame)");
     }
     return 0;
 }
@@ -670,29 +701,6 @@ int lua_SetCharacterWeaponModel(lua_State *lua)
 }
 
 
-int lua_SetCharacterCurrentWeapon(lua_State *lua)
-{
-    if(lua_gettop(lua) >= 2)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character)
-        {
-            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
-        }
-        else
-        {
-            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
-    }
-
-    return 0;
-}
-
-
 int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -717,9 +725,33 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 }
 
 
+int lua_SetCharacterCurrentWeapon(lua_State *lua)
+{
+    if(lua_gettop(lua) >= 2)
+    {
+        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
+        if(ent && ent->character)
+        {
+            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
+        }
+        else
+        {
+            Con_Warning("no character with id = %d", lua_tointeger(lua, 1));
+        }
+    }
+    else
+    {
+        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
+    }
+
+    return 0;
+}
+
+
 void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 {
     lua_register(lua, "setCharacterRagdollSetup", lua_SetCharacterRagdollSetup);
+    lua_register(lua, "setCharacterDefaultRagdoll", lua_SetCharacterDefaultRagdoll);
     lua_register(lua, "setCharacterRagdollActivity", lua_SetCharacterRagdollActivity);
 
     lua_register(lua, "characterCreate", lua_CharacterCreate);
@@ -740,8 +772,8 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
     lua_register(lua, "setCharacterClimbPoint", lua_SetCharacterClimbPoint);
     lua_register(lua, "getCharacterClimbPoint", lua_GetCharacterClimbPoint);
 
-    lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
+    lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
     lua_register(lua, "addCharacterHair", lua_AddCharacterHair);

@@ -255,7 +255,12 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             break;
 
         case TR_STATE_WOLF_DEAD:// 11
-            state->dead = 0x02;
+            state->dead = 0x01;
+            if(ss_anim->model->animations[ss_anim->current_animation].max_frame <= ss_anim->current_frame + 1)
+            {
+                state->dead = 0x02;
+                state->ragdoll = 0x01;
+            }
             break;
 
         default:

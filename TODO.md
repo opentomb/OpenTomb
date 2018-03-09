@@ -97,8 +97,7 @@ First we need to implement TR1 gameplay, so TR1/2/3 functions tasks have higher 
 10. Audio
 ---------
 * Current situation:
-	* Sound tracks playing was disabled
 	* AL build-in library works on Windows, Linux and MacOS, but some people prefer to use only native AL library
 * Todo:
 	* Implement own audio routine thread (APIs like `Audio_Send(...)` allow that)
-	* Use something else instead of Vorbis (it can't read _OGG_ from memory, and uses default functions for files opening, so engine can't precache tracks in memory or use `SDL_rwops`)
+	* Use something else instead of Vorbis (it can't read _OGG_ from memory)
