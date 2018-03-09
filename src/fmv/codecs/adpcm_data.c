@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+#include "adpcm_data.h"
+
 /* ff_adpcm_step_table[] and ff_adpcm_index_table[] are from the ADPCM
    reference source */
 static const int8_t adpcm_index_table2[4] = {
@@ -106,9 +108,9 @@ const int8_t ff_adpcm_yamaha_difflookup[] = {
     -1, -3, -5, -7, -9, -11, -13, -15
 };
 
-const uint16_t ff_adpcm_afc_coeffs[2][16] = {
-    { 0, 2048, 0, 1024, 4096, 3584, 3072, 4608, 4200, 4800, 5120, 2048, 1024, 64512, 64512, 63488 },
-    { 0, 0, 2048, 1024, 63488, 64000, 64512, 62976, 63288, 63236, 62464, 63488, 64512, 1024, 0, 0 }
+const int16_t ff_adpcm_afc_coeffs[2][16] = {
+    { 0, 2048, 0, 1024, 4096, 3584, 3072, 4608, 4200, 4800, 5120, 2048, 1024, -1024, -1024, -2048, },
+    { 0, 0, 2048, 1024, -2048, -1536, -1024, -2560, -2248, -2300, -3072, -2048, -1024, 1024, 0, 0 }
 };
 
 const int16_t ff_adpcm_mtaf_stepsize[32][16] = {

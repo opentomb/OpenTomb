@@ -1253,7 +1253,7 @@ static int32_t adpcm_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
             int coeff1, coeff2;
             int shift;
             unsigned int channel;
-            uint16_t *samplesC;
+            int16_t *samplesC;
             int count = 0;
             int offsets[6];
 

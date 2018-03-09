@@ -186,6 +186,7 @@ parameters inside brackets are optional;
     `BODY_PART_RIGHT_LEG_1`
     `BODY_PART_RIGHT_LEG_2`
     `BODY_PART_RIGHT_LEG_3`
+    `BODY_PART_TAIL`
 	
     `ZONE_TYPE_ALL`
     `ZONE_TYPE_1`
