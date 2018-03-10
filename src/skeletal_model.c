@@ -172,7 +172,7 @@ void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src)
         dst_a->speed_y = src_a->speed_y;
         dst_a->accel_y = src_a->accel_y;
 
-        dst_a->next_anim = dst->animations + src_a->next_anim->id;
+        dst_a->next_anim = new_anims + src_a->next_anim->id;
         dst_a->next_frame = src_a->next_frame;
     }
     
