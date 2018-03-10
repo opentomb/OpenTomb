@@ -765,15 +765,15 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
     if(ss_anim->model)
     {
         L_START:
-        animation_frame_p next_af = ss_anim->model->animations + ss_anim->current_animation;
-        animation_frame_p current_af = ss_anim->model->animations + ss_anim->prev_animation;
+        animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
+        animation_frame_p prev_af = ss_anim->model->animations + ss_anim->prev_animation;
         ///@DO COMMANDS
-        for(animation_command_p command = current_af->commands; command; command = command->next)
+        for(animation_command_p command = prev_af->commands; command; command = command->next)
         {
             switch(command->id)
             {
                 case TR_ANIMCOMMAND_SETPOSITION:
-                    if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->prev_frame >= current_af->max_frame - 1))   // This command executes ONLY at the end of animation.
+                    if((ss_anim->frame_changing_state >= 0x02) && (ss_anim->prev_frame >= prev_af->max_frame - 1))   // This command executes ONLY at the end of animation.
                     {
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform.M4x4, command->data);
@@ -793,7 +793,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
         }
 
         ///@DO EFFECTS
-        for(animation_effect_p effect = next_af->effects; effect; effect = effect->next)
+        for(animation_effect_p effect = current_af->effects; effect; effect = effect->next)
         {
             if(ss_anim->current_frame == effect->frame)
             {

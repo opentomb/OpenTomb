@@ -1010,6 +1010,7 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, TRIGGER_OP_AND_INV);
 
         LUA_EXPOSE(lua, CHARACTER_STATE_DEAD);
+        LUA_EXPOSE(lua, CHARACTER_STATE_WEAPON);
 
         LUA_EXPOSE(lua, TICK_IDLE);
         LUA_EXPOSE(lua, TICK_STOPPED);

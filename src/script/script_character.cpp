@@ -574,7 +574,9 @@ int lua_SetCharacterState(lua_State * lua)
                 case CHARACTER_STATE_DEAD:
                     ent->character->state.dead = value;
                     break;
-
+                case CHARACTER_STATE_WEAPON:
+                    ent->character->state.weapon_ready = value;
+                    break;
                 default:
                     break;
             }
@@ -604,6 +606,10 @@ int lua_GetCharacterState(lua_State * lua)
             {
                 case CHARACTER_STATE_DEAD:
                     lua_pushinteger(lua, ent->character->state.dead);
+                    break;
+
+                case CHARACTER_STATE_WEAPON:
+                    lua_pushinteger(lua, ent->character->state.weapon_ready);
                     break;
 
                 default:
@@ -677,30 +683,6 @@ int lua_GetCharacterClimbPoint(lua_State *lua)
 }
 
 
-int lua_SetCharacterWeaponModel(lua_State *lua)
-{
-    int top = lua_gettop(lua);
-    if(top >= 3)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent && ent->character && ent->character->set_weapon_model_func)
-        {
-            ent->character->set_weapon_model_func(ent, lua_tointeger(lua, 2), lua_tointeger(lua, 3));
-            if(top >= 4)
-            {
-                ent->character->weapon_id_req = lua_tointeger(lua, 4);
-            }
-        }
-    }
-    else
-    {
-        Con_Printf("setCharacterWeaponModel: expecting arguments (entity_id, weapon_model_id, armed_state, (weapon_model_req_id))");
-    }
-
-    return 0;
-}
-
-
 int lua_GetCharacterCurrentWeapon(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
@@ -727,12 +709,18 @@ int lua_GetCharacterCurrentWeapon(lua_State *lua)
 
 int lua_SetCharacterCurrentWeapon(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 2)
+    int top = lua_gettop(lua);
+    if(top >= 2)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent && ent->character)
         {
-            Character_ChangeWeapon(ent, lua_tointeger(lua, 2));
+            ent->character->weapon_id_req = lua_tointeger(lua, 2);
+            if(ent->character->set_weapon_model_func && (top >= 3))
+            {
+                ent->character->weapon_id = lua_tointeger(lua, 3);
+                ent->character->set_weapon_model_func(ent, 0, -1); // set special anim handlers
+            }
         }
         else
         {
@@ -741,7 +729,7 @@ int lua_SetCharacterCurrentWeapon(lua_State *lua)
     }
     else
     {
-        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, weapon_id)");
+        Con_Printf("setCharacterCurrentWeapon: expecting arguments (entity_id, req_weapon_id, (curr_weapon_id))");
     }
 
     return 0;
@@ -774,7 +762,6 @@ void Script_LuaRegisterCharacterFuncs(lua_State *lua)
 
     lua_register(lua, "getCharacterCurrentWeapon", lua_GetCharacterCurrentWeapon);
     lua_register(lua, "setCharacterCurrentWeapon", lua_SetCharacterCurrentWeapon);
-    lua_register(lua, "setCharacterWeaponModel", lua_SetCharacterWeaponModel);
     lua_register(lua, "getCharacterCombatMode", lua_GetCharacterCombatMode);
     lua_register(lua, "addCharacterHair", lua_AddCharacterHair);
     lua_register(lua, "resetCharacterHair", lua_ResetCharacterHair);

@@ -3571,6 +3571,24 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
 
+    if(weapon_state < 0)
+    {
+        for(ss_animation_p it = ent->bf->animations.next; it; it = it->next)
+        {
+            switch(it->type)
+            {
+            case ANIM_TYPE_WEAPON_RH:
+            case ANIM_TYPE_WEAPON_LH:
+                it->onFrame = StateControl_LaraDoOneHandWeponFrame;
+                break;
+            case ANIM_TYPE_WEAPON_TH:
+                it->onFrame = StateControl_LaraDoTwoHandWeponFrame;
+                break;
+            }
+        }
+        return;
+    }
+    
     if((weapon_state == 1) && !StateControl_LaraCanUseWeapon(ent, weapon_model))
     {
         return;

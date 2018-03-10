@@ -8,8 +8,9 @@ struct lua_State;
 
 #define CVAR_LUA_TABLE_NAME "cvars"
 
-// Response constants
+// character state flags constants
 #define CHARACTER_STATE_DEAD           (0)
+#define CHARACTER_STATE_WEAPON         (1)
 
 // Entity timer constants
 #define TICK_IDLE           (0)

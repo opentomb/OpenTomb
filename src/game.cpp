@@ -212,6 +212,24 @@ int Save_Entity(entity_p ent, void *data)
             fprintf(*f, "\nsetEntityActivationDirection(%d, %.4f, %.4f, %.4f, %.4f);", ent->id, ap->direction[0], ap->direction[1], ap->direction[2], ap->direction[3]);
         }
 
+        ss_animation_p ss_anim = &ent->bf->animations;
+        for(; ss_anim->next; ss_anim = ss_anim->next);
+
+        for(; ss_anim; ss_anim = ss_anim->prev)
+        {
+            if(ss_anim->type != ANIM_TYPE_BASE)
+            {
+                if(ss_anim->model)
+                {
+                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
+                }
+                else
+                {
+                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
+                }
+            }
+        }
+        
         if(ent->character)
         {
             fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
@@ -225,7 +243,9 @@ int Save_Entity(entity_p ent, void *data)
                 fprintf(*f, "\nsetCharacterTarget(%d);", ent->id);
             }
 
-            fprintf(*f, "\nsetCharacterWeaponModel(%d, %d, %d, %d);", ent->id, ent->character->weapon_id, ent->character->state.weapon_ready ? 2 : 0, ent->character->weapon_id_req);
+            fprintf(*f, "\nsetCharacterState(%d, CHARACTER_STATE_DEAD, %d);", ent->id, ent->character->state.dead);
+            fprintf(*f, "\nsetCharacterState(%d, CHARACTER_STATE_WEAPON, %d);", ent->id, ent->character->state.weapon_ready);
+            fprintf(*f, "\nsetCharacterCurrentWeapon(%d, %d, %d);", ent->id, ent->character->weapon_id_req, ent->character->weapon_id);
             for(int i = 0; i < PARAM_LASTINDEX; i++)
             {
                 fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
@@ -266,24 +286,6 @@ int Save_Entity(entity_p ent, void *data)
         if(Script_GetEntitySaveData(engine_lua, ent->id, save_buff, sizeof(save_buff)) > 0)
         {
             fprintf(*f, "\n%s", save_buff);
-        }
-
-        ss_animation_p ss_anim = &ent->bf->animations;
-        for(; ss_anim->next; ss_anim = ss_anim->next);
-
-        for(; ss_anim; ss_anim = ss_anim->prev)
-        {
-            if(ss_anim->type != ANIM_TYPE_BASE)
-            {
-                if(ss_anim->model)
-                {
-                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->model->id);
-                }
-                else
-                {
-                    fprintf(*f, "\nentitySSAnimEnsureExists(%d, %d, nil);", ent->id, ss_anim->type);
-                }
-            }
         }
 
         fprintf(*f, "\nremoveAllItems(%d);", ent->id);

@@ -214,6 +214,7 @@ parameters inside brackets are optional;
     `TRIGGER_OP_AND_INV`
 
     `CHARACTER_STATE_DEAD`
+    `CHARACTER_STATE_WEAPON`
 
     `TICK_IDLE`
     `TICK_STOPPED`
@@ -284,7 +285,6 @@ parameters inside brackets are optional;
     - `getCharacterState(entity_id, state_id)` - .
     - `setCharacterClimbPoint(entity_id, x, y, z)` - for game saving.
     - `getCharacterClimbPoint(entity_id)` - .
-    - `setCharacterWeaponModel(entity_id, weapon_model_id, armed_state, (weapon_model_req_id))` - heavy, for save / load.
     - `getCharacterCurrentWeapon(entity_id)` - .
     - `setCharacterCurrentWeapon(entity_id, weapon_id)` - .
 
