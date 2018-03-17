@@ -1,23 +1,36 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-#include <sys/time.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_rwops.h>
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <time.h>
+#include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <lua.h>
 #include <lualib.h>
 #include <lauxlib.h>
 
 #include "system.h"
+#include "utf8_32.h"
 #include "console.h"
 #include "gl_util.h"
 
 #define INIT_TEMP_MEM_SIZE          (4096 * 1024)
+
+// stupid broken defines checking in internal stat.h
+#ifndef S_IFMT
+#define S_IFMT __S_IFMT
+#endif
+
+#ifndef S_IFDIR
+#define S_IFDIR __S_IFDIR
+#endif
 
 screen_info_t           screen_info;
 
@@ -97,6 +110,146 @@ void Sys_ReturnTempMem(size_t size)
 void Sys_ResetTempMem()
 {
     engine_mem_buffer_size_left = engine_mem_buffer_size;
+}
+
+static int file_info_cmp(file_info_p f1, file_info_p f2)
+{
+    if(f1->is_dir && !f2->is_dir)
+    {
+        return -1;
+    }
+    else if(!f1->is_dir && f2->is_dir)
+    {
+        return 1;
+    }
+    else
+    {
+        uint32_t c1, c2;
+        uint8_t *s1 = (uint8_t*)f1->name;
+        uint8_t *s2 = (uint8_t*)f2->name;
+        while(*s1 && *s2)
+        {
+            s1 = utf8_to_utf32(s1, &c1);
+            s2 = utf8_to_utf32(s2, &c2);
+            if(c1 != c2)
+            {
+                return (c1 < c2) ? (-1) : (1);
+            }
+        }
+    }
+    return 0;
+}
+
+#define WILD_COMPARE_SYM(strCh, wildCh) ((strCh == wildCh) || ('?' == wildCh))
+
+/*
+ * '*' (asterisk):          Matches zero or more characters.
+ * '?' (question mark):     Matches a single character.
+ */
+static int wildcmp(uint8_t *wild, uint8_t *string)
+{
+    // Written by Jack Handy - <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
+    // Taken from http://www.codeproject.com/KB/string/wildcmp.aspx
+    uint8_t *cp = NULL, *mp = NULL;
+    uint8_t *string_next, *wild_next;
+    uint32_t wild_ch, string_ch;
+    
+    // check pattern until first star or end
+    while((*string) && (*wild != '*'))
+    {
+        wild = utf8_to_utf32(wild, &wild_ch);
+        string = utf8_to_utf32(string, &string_ch);
+        if(!WILD_COMPARE_SYM(string_ch, wild_ch))
+        {
+            return 0;
+        }
+    }
+    
+    while(*string)
+    {
+        if(*wild == '*')
+        {
+            if(!*++wild)
+            {
+                return 1;
+            }
+            // save entrance for star
+            mp = wild;
+            cp = utf8_next_symbol(string);
+        }
+        else if((string_next = utf8_to_utf32(string, &string_ch)), (wild_next = utf8_to_utf32(wild, &wild_ch)), WILD_COMPARE_SYM(string_ch, wild_ch))
+        {
+            wild = wild_next;
+            string = string_next;
+        }
+        else
+        {
+            // increase star pattern part
+            wild = mp;
+            string = cp;
+            cp = utf8_next_symbol(cp);
+        }
+    }
+
+    while(*wild == '*')
+    {
+        wild++;
+    }
+
+    return !*wild;
+}
+
+#undef WILD_COMPARE_SYM
+
+file_info_p Sys_ListDir(const char *path, const char *wild)
+{
+    file_info_p ret = NULL;
+    DIR *dir = opendir(path);
+    if(dir)
+    {
+        struct stat st;
+        struct dirent *d;
+        file_info_p *ins;
+        int base_len = strlen(path);
+        char *buff = (char*)malloc(base_len + sizeof(((struct dirent*)0)->d_name) + 1);
+        strncpy(buff, path, sizeof(((struct dirent*)0)->d_name));
+        buff[base_len++] = '/';
+        while((d = readdir(dir)))
+        {
+            if(!wild || wildcmp((uint8_t*)wild, (uint8_t*)d->d_name))
+            {
+                strncpy(buff + base_len, d->d_name, sizeof(((struct dirent*)0)->d_name));
+                if(d->d_name[0] && (d->d_name[0] != '.') && !stat(buff, &st))
+                {
+                    int local_len = strnlen(d->d_name, sizeof(((struct dirent*)0)->d_name));
+                    file_info_p p = (file_info_p)malloc(sizeof(file_info_t));
+                    p->next = NULL;
+                    p->full_name = (char*)malloc(base_len + local_len + 1);
+                    p->name = p->full_name + base_len;
+                    strncpy(p->full_name, buff, base_len + local_len + 1);
+                    p->is_dir = ((st.st_mode & S_IFMT) == S_IFDIR) ? (0x01) : (0x00);
+                    for(ins = &ret; *ins && (0 < file_info_cmp(p, *ins)); ins = &((*ins)->next));
+                    p->next = *ins;
+                    *ins = p;
+                }
+            }
+        }
+        free(buff);
+        closedir(dir);
+    }
+    return ret;
+}
+
+
+void Sys_ListDirFree(file_info_p list)
+{
+    while(list)
+    {
+        file_info_p p = list->next;
+        free(list->full_name);
+        free(list);
+        list = p;
+    }
 }
 
 

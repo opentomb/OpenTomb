@@ -28,6 +28,15 @@ typedef struct screen_info_s
     uint32_t    crosshair : 1;
 } screen_info_t, *screen_info_p;
 
+typedef struct file_info_s
+{
+    char                   *full_name;
+    char                   *name;
+    uint32_t                is_dir : 1;
+    struct file_info_s     *next;
+} file_info_t, *file_info_p;
+
+
 extern screen_info_t screen_info;
 
 void Sys_Init();
@@ -37,6 +46,9 @@ void Sys_Destroy();
 void *Sys_GetTempMem(size_t size);
 void Sys_ReturnTempMem(size_t size);
 void Sys_ResetTempMem();
+
+file_info_p Sys_ListDir(const char *path, const char *wild);
+void Sys_ListDirFree(file_info_p list);
 
 float Sys_FloatTime(void);
 void Sys_Strtime(char *buf, size_t buf_size);

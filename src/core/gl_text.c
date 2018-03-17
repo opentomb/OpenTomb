@@ -5,8 +5,6 @@
  * Created on October 24, 2015, 11:34 AM
  */
 
-#include <SDL2/SDL_platform.h>
-#include <SDL2/SDL_opengl.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -39,6 +37,7 @@ void GLText_Init()
 {
     int i;
 
+    font_data.gl_base_lines = NULL;
     font_data.max_styles = GLTEXT_MAX_FONTSTYLES;
     font_data.styles     = (gl_fontstyle_p)malloc(font_data.max_styles * sizeof(gl_fontstyle_t));
     for(i = 0; i < font_data.max_styles; i++)
@@ -86,7 +85,8 @@ void GLText_Init()
 void GLText_Destroy()
 {
     int i;
-
+    
+    font_data.gl_base_lines = NULL;
     for(i = 0; i < GLTEXT_MAX_TEMP_LINES ; i++)
     {
         font_data.gl_temp_lines[i].show = 0;
@@ -294,38 +294,48 @@ void GLText_RenderStrings()
 
 void GLText_AddLine(gl_text_line_p line)
 {
-    if(font_data.gl_base_lines == NULL)
+    if(!line->next && !line->prev && (line != font_data.gl_base_lines))
     {
-        font_data.gl_base_lines = line;
-        line->next = NULL;
-        line->prev = NULL;
-        return;
-    }
+        if(font_data.gl_base_lines == NULL)
+        {
+            font_data.gl_base_lines = line;
+            line->next = NULL;
+            line->prev = NULL;
+            return;
+        }
 
-    line->prev = NULL;
-    line->next = font_data.gl_base_lines;
-    font_data.gl_base_lines->prev = line;
-    font_data.gl_base_lines = line;
+        line->prev = NULL;
+        line->next = font_data.gl_base_lines;
+        font_data.gl_base_lines->prev = line;
+        font_data.gl_base_lines = line;
+    }
 }
 
 
 // line must be in the list, otherway You crash engine!
 void GLText_DeleteLine(gl_text_line_p line)
 {
-    if(line == font_data.gl_base_lines)
+    if(font_data.gl_base_lines)
     {
-        font_data.gl_base_lines = line->next;
-        if(font_data.gl_base_lines != NULL)
+        if(line == font_data.gl_base_lines)
         {
-            font_data.gl_base_lines->prev = NULL;
+            font_data.gl_base_lines = line->next;
         }
-        return;
-    }
+        else if(line->prev)
+        {
+            line->prev->next = line->next;
+        }
+        else
+        {
+            return;
+        }
 
-    line->prev->next = line->next;
-    if(line->next)
-    {
-        line->next->prev = line->prev;
+        if(line->next)
+        {
+            line->next->prev = line->prev;
+        }
+        line->next = NULL;
+        line->prev = NULL;
     }
 }
 

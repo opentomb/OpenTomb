@@ -129,6 +129,9 @@ private:
     int                         mCurrentItemsCount;
     int                         mSelectedItem;
 
+    //struct gl_text_line_s      *saves_shown_str;
+    //struct file_info_s         *saves_names;
+    
     float                       mRingRotatePeriod;
     float                       mRingTime;
     float                       mRingAngle;

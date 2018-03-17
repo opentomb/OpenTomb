@@ -26,6 +26,9 @@
 #include "gui.h"
 #include "gui_inventory.h"
 
+#define MAX_SHOWN_SAVES         (10)
+#define MAX_SAVES_NAME_LEN      (32)
+
 extern GLuint backgroundBuffer;
 extern GLfloat guiProjectionMatrix[16];
 gui_ItemNotifier       Notifier;
@@ -42,7 +45,7 @@ int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t acto
 {
     inventory_node_p i = *root;
     base_item_p bi = NULL;
-    
+
     for(; i; i = i->next)
     {
         if(i->id == item_id)
@@ -58,10 +61,10 @@ int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t acto
         {
             case ITEM_LARAHOME:
                 return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 0);
-                
+
             case ITEM_PASSPORT:
                 return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 1);
-                
+
             case ITEM_COMPASS:
             case ITEM_VIDEO:
             case ITEM_AUDIO:
@@ -70,12 +73,12 @@ int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t acto
             case ITEM_SAVE:
             case ITEM_MAP:
                 break;
-                
+
             default:
                 return Script_UseItem(engine_lua, i->id, actor_id);
         }
     }
-    
+
     return 0;
 }
 
@@ -146,6 +149,26 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  */
 gui_InventoryManager::gui_InventoryManager()
 {
+    /*saves_names = NULL;
+    
+    saves_shown_str = (gl_text_line_p)calloc(MAX_SHOWN_SAVES, sizeof(gl_text_line_t));
+    for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
+    {
+        gl_text_line_p l = saves_shown_str + i;
+        l->text = (char*)calloc(MAX_SAVES_NAME_LEN, sizeof(char));
+        l->font_id = FONT_PRIMARY;
+        l->style_id = FONTSTYLE_SAVEGAMELIST;
+        l->line_width = -1.0f;
+        l->line_height = 1.75f;
+        l->next = NULL;
+        l->prev = NULL;
+        l->x = 0.0f;
+        l->y = 0.0f;
+        l->x_align = GLTEXT_ALIGN_CENTER;
+        l->y_align = GLTEXT_ALIGN_CENTER;
+        l->show = 1;
+    }*/
+    
     mCurrentState               = INVENTORY_DISABLED;
     mNextState                  = INVENTORY_DISABLED;
     mCurrentItemsType           = GUI_MENU_ITEMTYPE_SYSTEM;
@@ -173,6 +196,8 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_Title.line_width     = -1.0f;
     mLabel_Title.x_align        = GLTEXT_ALIGN_CENTER;
     mLabel_Title.y_align        = GLTEXT_ALIGN_TOP;
+    mLabel_Title.next           = NULL;
+    mLabel_Title.prev           = NULL;
 
     mLabel_Title.font_id        = FONT_PRIMARY;
     mLabel_Title.style_id       = FONTSTYLE_MENU_TITLE;
@@ -185,6 +210,8 @@ gui_InventoryManager::gui_InventoryManager()
     mLabel_ItemName.line_width  = -1.0f;
     mLabel_ItemName.x_align     = GLTEXT_ALIGN_CENTER;
     mLabel_ItemName.y_align     = GLTEXT_ALIGN_BOTTOM;
+    mLabel_ItemName.next        = NULL;
+    mLabel_ItemName.prev        = NULL;
 
     mLabel_ItemName.font_id     = FONT_PRIMARY;
     mLabel_ItemName.style_id    = FONTSTYLE_MENU_CONTENT;
@@ -207,6 +234,19 @@ gui_InventoryManager::~gui_InventoryManager()
 
     mLabel_Title.show = 0;
     GLText_DeleteLine(&mLabel_Title);
+    
+    /*for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
+    {
+        gl_text_line_p l = saves_shown_str + i;
+        GLText_DeleteLine(l);
+        free(l->text);
+        l->text = NULL;
+        l->show = 0;
+    }
+    free(saves_shown_str);
+    saves_shown_str = NULL;
+    Sys_ListDirFree(saves_names);
+    saves_names = NULL;*/
 }
 
 int gui_InventoryManager::getItemElementsCountByType(int type)
@@ -578,7 +618,40 @@ void gui_InventoryManager::frameItems(float time)
                 Item_Frame(bi->bf, time);
                 if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
                 {
-                    if(0 < Item_Use(mInventory, bi->id, mOwnerId))
+                    /*if(bi->id == ITEM_PASSPORT)
+                    {
+                        if(saves_names)
+                        {
+                            for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
+                            {
+                                saves_shown_str[i].text = NULL;
+                                saves_shown_str[i].show = 0x00;
+                                GLText_RenderStringLine(saves_shown_str + i);
+                            }
+                            Sys_ListDirFree(saves_names);
+                            saves_names = NULL;
+                        }
+                        else
+                        {
+                            saves_names = Sys_ListDir("save", NULL);
+                            file_info_p fi = saves_names;
+                            for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
+                            {
+                                saves_shown_str[i].text = NULL;
+                                saves_shown_str[i].show = 0x00;
+                                if(fi)
+                                {
+                                    saves_shown_str[i].text = fi->name;
+                                    saves_shown_str[i].show = 0x01;
+                                    saves_shown_str[i].x = screen_info.w / 2;
+                                    saves_shown_str[i].y = 0.8f * screen_info.h - 32 * i;
+                                    GLText_AddLine(saves_shown_str + i);
+                                    fi = fi->next;
+                                }
+                            }
+                        }
+                    }
+                    else */if(0 < Item_Use(mInventory, bi->id, mOwnerId))
                     {
                         mLabel_ItemName.show = 0;
                         mLabel_Title.show = 0;
@@ -615,7 +688,7 @@ void gui_InventoryManager::render()
             strncpy(mLabel_ItemName_text, "No items", GUI_LINE_DEFAULTSIZE);
             return;
         }
-        
+
         for(inventory_node_p i = *mInventory; i; i = i->next)
         {
             base_item_p bi = World_GetBaseItemByID(i->id);
@@ -818,15 +891,15 @@ void gui_ItemNotifier::Draw()
             float ang = (mCurrRotX + mRotX) * M_PI / 180.0f;
             float matrix[16];
             Mat4_E_macro(matrix);
-           
+
             matrix[12 + 0] = mCurrPosX;
             matrix[12 + 1] = mPosY;
             matrix[12 + 2] = -2048.0f;
-            
+
             Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
             ang = (mCurrRotY + mRotY) * M_PI / 180.0f;
             Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
-            
+
             Anim_SetAnimation(&item->bf->animations, 0, 0);
             SSBoneFrame_Update(item->bf, 0.0f);
             Gui_RenderItem(item->bf, mSize, matrix);

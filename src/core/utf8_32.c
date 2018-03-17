@@ -10,7 +10,7 @@
 #include "utf8_32.h"
 
 
-static uint8_t *utf8_next_symbol(uint8_t *utf8)
+uint8_t *utf8_next_symbol(uint8_t *utf8)
 {
     uint8_t b = *utf8;
 
