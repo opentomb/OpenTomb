@@ -12,9 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include "../core/lua.h"
 
 #include "system.h"
 #include "utf8_32.h"

@@ -8,12 +8,8 @@
 #include <ctype.h>
 #include <time.h>
 
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
+#include "core/lua.h"
 #include "core/system.h"
 #include "core/gl_util.h"
 #include "core/gl_font.h"

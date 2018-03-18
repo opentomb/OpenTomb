@@ -1,12 +1,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
+#include "../core/lua.h"
 #include "../core/vmath.h"
 #include "ragdoll.h"
 #include "../mesh.h"

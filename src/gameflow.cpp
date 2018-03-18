@@ -1,9 +1,4 @@
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
+#include "core/lua.h"
 #include "core/gl_text.h"
 #include "core/console.h"
 #include "script/script.h"
