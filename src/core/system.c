@@ -258,20 +258,16 @@ void Sys_ListDirFree(file_info_p list)
 SYS TIME
 ===============================================================================
 */
-float Sys_FloatTime (void)
+
+int64_t Sys_MicroSecTime(int64_t sec_offset)
 {
-    struct              timeval tp;
-    static long int     secbase = 0;
-
+    int64_t ret;
+    struct timeval tp;
     gettimeofday(&tp, NULL);
-
-    if (!secbase)
-    {
-        secbase = tp.tv_sec;
-        return tp.tv_usec * 1.0e-6;
-    }
-
-    return (float)(tp.tv_sec - secbase) + (float)tp.tv_usec * 1.0e-6;
+    ret = tp.tv_sec - sec_offset;
+    ret *= 1e6;
+    ret += tp.tv_usec;
+    return ret;
 }
 
 
@@ -281,9 +277,9 @@ void Sys_Strtime(char *buf, size_t buf_size)
     static time_t t_;
 
     time(&t_);
-    tm_=gmtime(&t_);
+    tm_ = gmtime(&t_);
 
-    snprintf(buf, buf_size, "%02d:%02d:%02d",tm_->tm_hour,tm_->tm_min,tm_->tm_sec);
+    snprintf(buf, buf_size, "%02d:%02d:%02d", tm_->tm_hour, tm_->tm_min, tm_->tm_sec);
 }
 
 /*
@@ -296,9 +292,9 @@ void Sys_Error(const char *error, ...)
     va_list     argptr;
     char        string[4096];
 
-    va_start (argptr,error);
-    vsnprintf (string, 4096, error, argptr);
-    va_end (argptr);
+    va_start(argptr,error);
+    vsnprintf(string, 4096, error, argptr);
+    va_end(argptr);
 
     Sys_DebugLog(SYS_LOG_FILENAME, "System error: %s", string);
     //Engine_Shutdown(1);

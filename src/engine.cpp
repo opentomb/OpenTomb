@@ -779,9 +779,10 @@ void Engine_JoyRumble(float power, int time)
 
 void Engine_MainLoop()
 {
+    int64_t newtime = 0;
+    int64_t sec_base_offset = Sys_MicroSecTime(0) / 1E6;
+    int64_t oldtime = Sys_MicroSecTime(sec_base_offset);
     float time = 0.0f;
-    float newtime = 0.0f;
-    float oldtime = Sys_FloatTime();
     float time_cycl = 0.0f;
 
     const int max_cycles = 64;
@@ -790,8 +791,8 @@ void Engine_MainLoop()
 
     while(!engine_done)
     {
-        newtime = Sys_FloatTime();
-        time = newtime - oldtime;
+        newtime = Sys_MicroSecTime(sec_base_offset);
+        time = (newtime - oldtime) / 1E6;
         oldtime = newtime;
         time *= time_scale;
 

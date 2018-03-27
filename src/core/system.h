@@ -50,7 +50,7 @@ void Sys_ResetTempMem();
 file_info_p Sys_ListDir(const char *path, const char *wild);
 void Sys_ListDirFree(file_info_p list);
 
-float Sys_FloatTime(void);
+int64_t Sys_MicroSecTime(int64_t sec_offset);
 void Sys_Strtime(char *buf, size_t buf_size);
 
 void Sys_Init(void);
