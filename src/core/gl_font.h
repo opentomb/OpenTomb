@@ -48,11 +48,7 @@ typedef struct gl_font_cont_s
 typedef struct gl_fontstyle_s
 {
     GLfloat                     font_color[4];
-    GLfloat                     rect_color[4];
-    GLfloat                     rect_border;
-
-    uint8_t                     shadowed;
-    uint8_t                     rect;
+    uint32_t                    shadowed : 1;
 } gl_fontstyle_t, *gl_fontstyle_p;
 
 #define GUI_FONT_FADE_SPEED             1.0                 // Global fading style speed.
@@ -74,6 +70,7 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size);
 int32_t  glf_get_string_len(gl_tex_font_p glf, const char *text, int n);  // size in 1 / 64 px
 char    *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int *n_sym);
 int32_t  glf_get_ascender(gl_tex_font_p glf);  // size in 1 / 64 px
+int32_t  glf_get_descender(gl_tex_font_p glf);  // size in 1 / 64 px
 uint16_t glf_get_font_size(gl_tex_font_p glf);
 void     glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, int32_t *x0, int32_t *y0, int32_t *x1, int32_t *y1);  // size in 1 / 64 px
 

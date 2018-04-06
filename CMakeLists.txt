@@ -59,6 +59,8 @@ set(OPENTOMB_SRCS
     src/core/vmath.h
     src/gui/gui.cpp
     src/gui/gui.h
+    src/gui/gui_obj.cpp
+    src/gui/gui_obj.h
     src/gui/gui_inventory.cpp
     src/gui/gui_inventory.h
     src/fmv/tiny_codec.h

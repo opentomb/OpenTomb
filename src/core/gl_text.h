@@ -116,8 +116,7 @@ int  GLText_AddFont(uint16_t index, uint16_t size, const char* path);
 int  GLText_RemoveFont(uint16_t index);
 int  GLText_AddFontStyle(uint16_t index,
                       GLfloat R, GLfloat G, GLfloat B, GLfloat A,
-                      uint8_t shadow, uint8_t rect, uint8_t rect_border,
-                      GLfloat rect_R, GLfloat rect_G, GLfloat rect_B, GLfloat rect_A);
+                      uint8_t shadow);
 int  GLText_RemoveFontStyle(uint16_t index);
 gl_tex_font_p  GLText_GetFont(uint16_t index);
 gl_fontstyle_p GLText_GetFontStyle(uint16_t index);

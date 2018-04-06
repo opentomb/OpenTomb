@@ -369,12 +369,13 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
 
 int32_t glf_get_ascender(gl_tex_font_p glf)
 {
-    if((glf->font_size == 0) || (glf->ft_face == NULL))
-    {
-        return 0.0;
-    }
-
     return ((FT_Face)glf->ft_face)->ascender;
+}
+
+
+int32_t glf_get_descender(gl_tex_font_p glf)
+{
+    return ((FT_Face)glf->ft_face)->descender;
 }
 
 

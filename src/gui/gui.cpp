@@ -22,12 +22,15 @@
 #include "../entity.h"
 #include "../character_controller.h"
 #include "../engine.h"
+//#include "../controls.h"
 #include "../engine_string.h"
 #include "../world.h"
 #include "gui.h"
+#include "gui_obj.h"
 #include "gui_inventory.h"
 
 gui_ProgressBar     Bar[BAR_LASTINDEX];
+static gui_object_p g_current_menu = NULL;
 static GLuint       crosshairBuffer = 0;
 static GLuint       rectBuffer = 0;
 static GLuint       load_screen_tex = 0;
@@ -36,6 +39,7 @@ GLfloat     guiProjectionMatrix[16];
 
 static GLfloat screenSize[2];
 
+static gui_object_p Gui_BuildSavesList();
 static void Gui_FillCrosshairBuffer();
 static void Gui_FillBackgroundBuffer();
 
@@ -50,6 +54,9 @@ void Gui_Init()
     qglGenTextures(1, &load_screen_tex);
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
+
+    ///@TEST
+    g_current_menu = Gui_BuildSavesList();
 
     main_inventory_manager = new gui_InventoryManager();
 }
@@ -176,6 +183,12 @@ void Gui_InitBars()
 
 void Gui_Destroy()
 {
+    if(g_current_menu)
+    {
+        Gui_DeleteObjects(g_current_menu);
+        g_current_menu = NULL;
+    }
+
     if(main_inventory_manager)
     {
         delete main_inventory_manager;
@@ -200,6 +213,125 @@ void Gui_UpdateResize()
     Gui_FillBackgroundBuffer();
 }
 
+static void Gui_SetupMenuObj(gui_object_p root)
+{
+    root->w = screen_info.w * 0.5;
+    root->h = screen_info.h * 0.6;
+    root->x = screen_info.w * 0.25;
+    root->y = screen_info.h * 0.2;
+    root->color_border[0] = 65;
+    root->color_border[1] = 21;
+    root->color_border[2] = 22;
+    root->color_border[3] = 255;
+    root->color_background[0] = 32;
+    root->color_background[1] = 21;
+    root->color_background[2] = 22;
+    root->color_background[3] = 126;
+    root->flags.border_width = 4;
+    root->flags.draw_border = 0x01;
+    root->flags.draw_background = 0x01;
+    root->flags.clip_children = 0x00;
+}
+
+static gui_object_p Gui_AdddMenuObj(gui_object_p root)
+{
+    gui_object_p obj = Gui_CreateChildObject(root);
+    obj->w = root->w - 2 * root->flags.border_width - 4;
+    obj->h = 40;
+    vec4_copy(obj->color_border, root->color_border);
+    vec4_copy(obj->color_border, root->color_border);
+    obj->flags.border_width = 4;
+    return obj;
+}
+
+static gui_object_p Gui_BuildSavesList()
+{
+    gui_object_p root = Gui_CreateObject();
+    Gui_SetupMenuObj(root);
+
+    gui_object_p obj = Gui_AdddMenuObj(root);
+    obj->x = root->flags.border_width + 2;
+    obj->y = root->h - (obj->h + root->flags.border_width + 2);
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "Load game:", 1, 1);
+    obj->label->x_align = GLTEXT_ALIGN_CENTER;
+    obj->label->y_align = GLTEXT_ALIGN_CENTER;
+    obj->label->show = 0x01;
+    obj->label->line_height = 0.8;
+
+    gui_object_p cont = Gui_AdddMenuObj(root);
+    cont->w = root->w - 2 * root->flags.border_width;
+    cont->h = root->h - obj->h - 2 * root->flags.border_width;
+    cont->x = root->flags.border_width;
+    cont->y = root->flags.border_width;
+
+    cont->flags.border_width = 4;
+    cont->flags.clip_children = 0x01;
+    cont->flags.draw_background = 0x00;
+    cont->flags.draw_border = 0x00;
+
+    file_info_p list = Sys_ListDir("save", NULL);
+    for(file_info_p it = list; it; it = it->next)
+    {
+        if(!it->is_dir)
+        {
+            obj = Gui_AdddMenuObj(cont);
+            obj->w = cont->w - 2 * cont->flags.border_width;
+            obj->h = 32;
+            obj->x = cont->flags.border_width;
+            obj->y = ((obj->prev) ? (obj->prev->y) : (cont->h - cont->flags.border_width)) - obj->h;
+            obj->flags.draw_border = (obj->prev) ? (0x00) : (0x01);
+            obj->flags.border_width = 3;
+            obj->color_border[0] = 220;
+            obj->color_border[1] = 211;
+            obj->color_border[2] = 242;
+            obj->color_border[3] = 255;
+
+            Gui_SetObjectLabel(obj, it->name, 2, 2);
+            obj->label->x_align = GLTEXT_ALIGN_CENTER;
+            obj->label->y_align = GLTEXT_ALIGN_CENTER;
+            obj->label->show = 0x01;
+            obj->label->line_height = 0.8;
+        }
+    }
+    Sys_ListDirFree(list);
+
+    return root;
+}
+
+static gui_object_p Gui_ListSaves(gui_object_p cont, int dy)
+{
+    gui_object_p ret = NULL;
+    for(gui_object_p obj = cont->childs; obj; obj = obj->next)
+    {
+        if(obj->flags.draw_border)
+        {
+            ret = obj;
+            if((dy > 0) && obj->prev)
+            {
+                ret = obj->prev;
+                obj->flags.draw_border = 0x00;
+                ret->flags.draw_border = 0x01;
+                if(ret->y + obj->h + cont->content_dy + cont->flags.border_width > cont->h)
+                {
+                    cont->content_dy = cont->h - ret->h - ret->y - cont->flags.border_width;
+                }
+            }
+            else if((dy < 0) && obj->next)
+            {
+                ret = obj->next;
+                obj->flags.draw_border = 0x00;
+                ret->flags.draw_border = 0x01;
+                if(ret->y + cont->content_dy < cont->flags.border_width)
+                {
+                    cont->content_dy = cont->flags.border_width - ret->y;
+                }
+            }
+            break;
+        }
+    }
+    return ret;
+}
 
 void Gui_Render()
 {
@@ -239,8 +371,21 @@ void Gui_Render()
     }
     Gui_DrawBars();
 
+    /*if(g_current_menu)
+    {
+        if(control_states.look_up)
+        {
+            Gui_ListSaves(g_current_menu->childs->next, 1);
+        }
+        else if(control_states.look_down)
+        {
+            Gui_ListSaves(g_current_menu->childs->next, -1);
+        }
+    }*/
+
     qglUniform1fARB(shader->colorReplace, 1.0f);
     GLText_RenderStrings();
+    //Gui_DrawObjects(g_current_menu);
     Con_Draw(engine_frame_time);
 
     qglUniform1fARB(shader->colorReplace, 0.0f);

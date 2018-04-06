@@ -824,7 +824,7 @@ void Engine_MainLoop()
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
 
-        gl_text_line_p fps = GLText_OutTextXY(10.0f, 10.0f, fps_str);
+        gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
         if(fps)
         {
             fps->x_align    = GLTEXT_ALIGN_RIGHT;

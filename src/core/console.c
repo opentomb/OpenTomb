@@ -633,6 +633,7 @@ void Con_Draw(float time)
         
         con_base.lines_scroll = (con_base.lines_scroll + 1 > con_base.lines_count) ? (con_base.lines_count - 1) : (con_base.lines_scroll);
         con_base.lines_scroll = (con_base.lines_scroll < 0) ? (0) : (con_base.lines_scroll);
+        y = con_bottom + (n_lines - 1) * con_base.line_height;
         for(uint16_t i = con_base.lines_scroll; i < con_base.lines_count; i++)
         {
             char *str = con_base.lines_buff[con_base.lines_count - i - 1];

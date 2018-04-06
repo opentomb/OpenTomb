@@ -48,29 +48,27 @@ addFont(FONT_SECONDARY, base_path .. "resource/fonts/Roboto-Regular.ttf",       
 
 -- If you want to modify font style, change it here.
 -- Syntax is:
--- addFontStyle(STYLE, R, G, B, A, SHD, FAD, RCT, RBD, RR, RG, RB, RA, HIDDEN)
+-- addFontStyle(STYLE, R, G, B, A, SHD)
 -- where STYLE is unique style index,
 --       R, G, B are font colours, A is font transparency,
---       SHD is shadowed flag, FAD is TR4-5 style fading flag,
---       RCT is auto-rect flag, RBD is rect border flag, RR, RG and RB are rect colours, RA is rect transparency.
---       HIDE is hide flag. Only text is hidden, rect is left as is.
+--       SHD is shadowed flag, FAD is TR4-5 style fading flag
 
-------------------------------------------------------------------------------------------------------
---------- STYLE ---------------------------- R -- G -- B -- A -- SHD -- RCT - RBD - RR - RG - RB - RA 
-------------------------------------------------------------------------------------------------------
-addFontStyle(FONTSTYLE_CONSOLE_INFO,        0.9, 0.9, 0.9, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_CONSOLE_WARNING,     1.0, 0.7, 0.7, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_CONSOLE_EVENT,       0.7, 0.7, 1.0, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_CONSOLE_NOTIFY,      0.9, 0.9, 0.4, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_TITLE,          1.0, 0.9, 0.7, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_HEADING1,       0.9, 0.9, 0.9, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_HEADING2,       0.8, 0.8, 0.8, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_ITEM_ACTIVE,    1.0, 0.9, 0.8, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_ITEM_INACTIVE,  0.9, 0.9, 0.9, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_MENU_CONTENT,        0.8, 0.8, 0.8, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_STATS_TITLE,         0.7, 0.7, 0.7, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_STATS_CONTENT,       0.8, 0.8, 0.8, 1.0, false, false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_NOTIFIER,            1.0, 1.0, 1.0, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_SAVEGAMELIST,        0.9, 0.9, 0.9, 1.0, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
-addFontStyle(FONTSTYLE_GENERIC,             1.0, 1.0, 1.0, 0.9, true , false, 0.0, 0.0, 0.0, 0.0, 0.0);
--------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------
+--------- STYLE ---------------------------- R -- G -- B -- A -- SHD 
+-----------------------------------------------------------------------
+addFontStyle(FONTSTYLE_CONSOLE_INFO,        0.9, 0.9, 0.9, 1.0, false);
+addFontStyle(FONTSTYLE_CONSOLE_WARNING,     1.0, 0.7, 0.7, 1.0, false);
+addFontStyle(FONTSTYLE_CONSOLE_EVENT,       0.7, 0.7, 1.0, 1.0, false);
+addFontStyle(FONTSTYLE_CONSOLE_NOTIFY,      0.9, 0.9, 0.4, 1.0, false);
+addFontStyle(FONTSTYLE_MENU_TITLE,          1.0, 0.9, 0.7, 1.0, true );
+addFontStyle(FONTSTYLE_MENU_HEADING1,       0.9, 0.9, 0.9, 1.0, true );
+addFontStyle(FONTSTYLE_MENU_HEADING2,       0.8, 0.8, 0.8, 1.0, true );
+addFontStyle(FONTSTYLE_MENU_ITEM_ACTIVE,    1.0, 0.9, 0.8, 1.0, true );
+addFontStyle(FONTSTYLE_MENU_ITEM_INACTIVE,  0.9, 0.9, 0.9, 1.0, true );
+addFontStyle(FONTSTYLE_MENU_CONTENT,        0.8, 0.8, 0.8, 1.0, false);
+addFontStyle(FONTSTYLE_STATS_TITLE,         0.7, 0.7, 0.7, 1.0, false);
+addFontStyle(FONTSTYLE_STATS_CONTENT,       0.8, 0.8, 0.8, 1.0, false);
+addFontStyle(FONTSTYLE_NOTIFIER,            1.0, 1.0, 1.0, 1.0, true );
+addFontStyle(FONTSTYLE_SAVEGAMELIST,        0.9, 0.9, 0.9, 1.0, true );
+addFontStyle(FONTSTYLE_GENERIC,             1.0, 1.0, 1.0, 0.9, true );
+-----------------------------------------------------------------------

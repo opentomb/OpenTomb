@@ -250,7 +250,7 @@ parameters inside brackets are optional;
     - `ls(dir_path, filter)` - shows files and [dir's] in dir_path where item name corresponds to filter (chars, *, ?).
     - `addFont(font_index, font_path, font_size)` - creates font with given access index.
     - `removeFont(font_index)` - deletes font by given access index.
-    - `addFontStyle(index, R, G, B, A, shadow, fade, rect, border, bR, bG, bB, bA, hide)` - creates font style with given access index.
+    - `addFontStyle(index, R, G, B, A, shadow)` - creates font style with given access index.
     - `removeFontStyle(index)` - deletes font style by given access index.
     - `bindKey(action_id, key_id1, (key_id2))` - bind action and keyboard, joystick, mouse key.
     - `getActionState(action_id)` - .
