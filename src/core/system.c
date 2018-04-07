@@ -295,7 +295,7 @@ void Sys_Error(const char *error, ...)
     char        string[4096];
 
     va_start(argptr,error);
-    vsnprintf(string, 4096, error, argptr);
+    vsnprintf(string, sizeof(string), error, argptr);
     va_end(argptr);
 
     Sys_DebugLog(SYS_LOG_FILENAME, "System error: %s", string);
@@ -310,7 +310,7 @@ void Sys_Warn(const char *warning, ...)
     char        string[4096];
 
     va_start (argptr, warning);
-    vsnprintf (string, 4096, warning, argptr);
+    vsnprintf (string, sizeof(string), warning, argptr);
     va_end (argptr);
     Sys_DebugLog(SYS_LOG_FILENAME, "Warning: %s", string);
     Con_Warning("Warning: %s", string);
@@ -430,7 +430,7 @@ void Sys_TakeScreenShot()
     uint32_t str_size;
 
     qglGetIntegerv(GL_VIEWPORT, ViewPort);
-    snprintf(fname, 128, "screen_%.5d.tga", screenshot_cnt);
+    snprintf(fname, sizeof(fname), "screen_%.5d.tga", screenshot_cnt);
     str_size = ViewPort[2] * 4;
     pixels = (GLubyte*)malloc(str_size * ViewPort[3]);
     qglReadPixels(0, 0, ViewPort[2], ViewPort[3], GL_BGRA, GL_UNSIGNED_BYTE, pixels);
