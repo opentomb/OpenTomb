@@ -29,6 +29,7 @@ typedef struct gui_object_s
     int16_t         content_dx;
     int16_t         content_dy;
     
+    ///@TODO: use here direct font usage (like console)!
     struct gl_text_line_s      *label;    
     struct gui_object_flags_s   flags;
     void                       *data;

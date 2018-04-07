@@ -243,6 +243,37 @@ static void Gui_DrawBorderInternal(gui_object_p root)
     qglDrawArrays(GL_TRIANGLE_STRIP, 0, 10);
 }
 
+static void Gui_DrawLabelInternal(gui_object_p root)
+{
+    if(root->label->x_align == GLTEXT_ALIGN_LEFT)
+    {
+        root->label->x = root->x + root->flags.border_width;
+    }
+    else if(root->label->x_align == GLTEXT_ALIGN_RIGHT)
+    {
+        root->label->x = root->x + root->w - root->flags.border_width;
+    }
+    else
+    {
+        root->label->x = root->x + root->w / 2;
+    }
+
+    if(root->label->y_align == GLTEXT_ALIGN_BOTTOM)
+    {
+        root->label->y = root->y + root->flags.border_width;
+    }
+    else if(root->label->y_align == GLTEXT_ALIGN_TOP)
+    {
+        root->label->y = root->y + root->h - root->flags.border_width;
+    }
+    else
+    {
+        root->label->y = root->y + root->h / 2;
+    }
+
+    GLText_RenderStringLine(root->label);
+}
+
 static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
 {
     if(!root->flags.hide)
@@ -259,33 +290,7 @@ static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
 
         if(root->label && root->label->show)
         {
-            if(root->label->x_align == GLTEXT_ALIGN_LEFT)
-            {
-                root->label->x = root->x + root->flags.border_width;
-            }
-            else if(root->label->x_align == GLTEXT_ALIGN_RIGHT)
-            {
-                root->label->x = root->x + root->w - root->flags.border_width;
-            }
-            else
-            {
-                root->label->x = root->x + root->w / 2;
-            }
-
-            if(root->label->y_align == GLTEXT_ALIGN_BOTTOM)
-            {
-                root->label->y = root->y + root->flags.border_width;
-            }
-            else if(root->label->y_align == GLTEXT_ALIGN_TOP)
-            {
-                root->label->y = root->y + root->h - root->flags.border_width;
-            }
-            else
-            {
-                root->label->y = root->y + root->h / 2;
-            }
-
-            GLText_RenderStringLine(root->label);
+            Gui_DrawLabelInternal(root);
         }
 
         if(root->flags.clip_children && root->childs)

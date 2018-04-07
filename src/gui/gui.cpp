@@ -22,7 +22,7 @@
 #include "../entity.h"
 #include "../character_controller.h"
 #include "../engine.h"
-//#include "../controls.h"
+#include "../controls.h"
 #include "../engine_string.h"
 #include "../world.h"
 #include "gui.h"
