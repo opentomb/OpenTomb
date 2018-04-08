@@ -176,6 +176,9 @@ void Gui_DrawRect(const GLfloat &x, const GLfloat &y,
 /**
  * General GUI drawing routines.
  */
+void Gui_SetCurrentMenu(struct gui_object_s *menu);
+struct gui_object_s *Gui_GetCurrentMenu();
+
 void Gui_DrawCrosshair();
 void Gui_DrawBars();
 void Gui_DrawLoadScreen(int value);

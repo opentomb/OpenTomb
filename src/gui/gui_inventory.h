@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include "../core/gl_text.h"
+#include "gui_obj.h"
 
 struct inventory_node_s;
 
@@ -98,10 +99,7 @@ public:
         return mNextState;
     }
 
-    void send(inventoryState state)
-    {
-        mNextState = state;
-    }
+    void send(inventoryState state);
 
     int getItemsType()
     {
@@ -119,6 +117,7 @@ public:
     char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
 private:
+    gui_object_p                mLoadGameMenu;
     struct inventory_node_s   **mInventory;
     uint32_t                    mOwnerId;
     int                         mCurrentState;

@@ -19,15 +19,16 @@
 #include "../skeletal_model.h"
 #include "../script/script.h"
 #include "../audio/audio.h"
+#include "../engine.h"
+#include "../game.h"
 #include "../inventory.h"
 #include "../entity.h"
 #include "../gameflow.h"
 #include "../world.h"
 #include "gui.h"
+#include "gui_menu.h"
 #include "gui_inventory.h"
 
-#define MAX_SHOWN_SAVES         (10)
-#define MAX_SAVES_NAME_LEN      (32)
 
 extern GLuint backgroundBuffer;
 extern GLfloat guiProjectionMatrix[16];
@@ -148,27 +149,7 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  * GUI RENDEDR CLASS
  */
 gui_InventoryManager::gui_InventoryManager()
-{
-    /*saves_names = NULL;
-    
-    saves_shown_str = (gl_text_line_p)calloc(MAX_SHOWN_SAVES, sizeof(gl_text_line_t));
-    for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
-    {
-        gl_text_line_p l = saves_shown_str + i;
-        l->text = (char*)calloc(MAX_SAVES_NAME_LEN, sizeof(char));
-        l->font_id = FONT_PRIMARY;
-        l->style_id = FONTSTYLE_SAVEGAMELIST;
-        l->line_width = -1.0f;
-        l->line_height = 1.75f;
-        l->next = NULL;
-        l->prev = NULL;
-        l->x = 0.0f;
-        l->y = 0.0f;
-        l->x_align = GLTEXT_ALIGN_CENTER;
-        l->y_align = GLTEXT_ALIGN_CENTER;
-        l->show = 1;
-    }*/
-    
+{ 
     mCurrentState               = INVENTORY_DISABLED;
     mNextState                  = INVENTORY_DISABLED;
     mCurrentItemsType           = GUI_MENU_ITEMTYPE_SYSTEM;
@@ -188,6 +169,7 @@ gui_InventoryManager::gui_InventoryManager()
     mItemRotatePeriod           = 4.0f;
     mItemAngle                  = 0.0f;
 
+    mLoadGameMenu               = NULL;
     mInventory                  = NULL;
     mOwnerId                    = ENTITY_ID_NONE;
 
@@ -235,18 +217,12 @@ gui_InventoryManager::~gui_InventoryManager()
     mLabel_Title.show = 0;
     GLText_DeleteLine(&mLabel_Title);
     
-    /*for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
+    if(mLoadGameMenu)
     {
-        gl_text_line_p l = saves_shown_str + i;
-        GLText_DeleteLine(l);
-        free(l->text);
-        l->text = NULL;
-        l->show = 0;
+        Gui_SetCurrentMenu(NULL);
+        Gui_DeleteObjects(mLoadGameMenu);
+        mLoadGameMenu = NULL;
     }
-    free(saves_shown_str);
-    saves_shown_str = NULL;
-    Sys_ListDirFree(saves_names);
-    saves_names = NULL;*/
 }
 
 int gui_InventoryManager::getItemElementsCountByType(int type)
@@ -283,6 +259,47 @@ void gui_InventoryManager::restoreItemAngle(float time)
                 mItemAngle = 0.0f;
             }
         }
+    }
+}
+
+void gui_InventoryManager::send(inventoryState state)
+{
+    if(mLoadGameMenu && (Gui_GetCurrentMenu() == mLoadGameMenu))
+    {
+        if(mCurrentState == INVENTORY_ACTIVATE)
+        {
+            if(state == INVENTORY_UP)
+            {
+                Gui_ListSaves(mLoadGameMenu, 1);
+            }
+            else if(state == INVENTORY_DOWN)
+            {
+                Gui_ListSaves(mLoadGameMenu, -1);
+            }
+            else if(state == INVENTORY_ACTIVATE)
+            {
+                gui_object_p obj = Gui_ListSaves(mLoadGameMenu, 0);
+                if(obj && obj->label && obj->label->text)
+                {
+                    mInventory = NULL;
+                    Gui_SetCurrentMenu(NULL);
+                    Game_Load(obj->label->text);
+                }
+            }
+            else if(state == INVENTORY_CLOSE)
+            {
+                Gui_SetCurrentMenu(NULL);
+                mNextState = INVENTORY_ACTIVATE;
+            }
+        }
+        else
+        {
+            Gui_SetCurrentMenu(NULL);
+        }
+    }
+    else
+    {
+        mNextState = state;
     }
 }
 
@@ -587,6 +604,7 @@ void gui_InventoryManager::frameStates(float time)
             break;
 
         case INVENTORY_CLOSE:
+            Gui_SetCurrentMenu(NULL);
             mRingTime += time;
             mRingRadius = mBaseRingRadius * (mRingRotatePeriod - mRingTime) / mRingRotatePeriod;
             mRingAngle += 180.0f * time / mRingRotatePeriod;
@@ -608,7 +626,7 @@ void gui_InventoryManager::frameStates(float time)
 void gui_InventoryManager::frameItems(float time)
 {
     int ring_item_index = 0;
-    for(inventory_node_p i = *mInventory; i; i = i->next)
+    for(inventory_node_p i = (mInventory) ? (*mInventory) : (NULL); i; i = i->next)
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
         if(bi && (bi->type == mCurrentItemsType))
@@ -618,40 +636,15 @@ void gui_InventoryManager::frameItems(float time)
                 Item_Frame(bi->bf, time);
                 if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
                 {
-                    /*if(bi->id == ITEM_PASSPORT)
+                    if(bi->id == ITEM_PASSPORT)
                     {
-                        if(saves_names)
+                        if(!mLoadGameMenu)
                         {
-                            for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
-                            {
-                                saves_shown_str[i].text = NULL;
-                                saves_shown_str[i].show = 0x00;
-                                GLText_RenderStringLine(saves_shown_str + i);
-                            }
-                            Sys_ListDirFree(saves_names);
-                            saves_names = NULL;
+                            mLoadGameMenu = Gui_BuildSavesList();
                         }
-                        else
-                        {
-                            saves_names = Sys_ListDir("save", NULL);
-                            file_info_p fi = saves_names;
-                            for(int i = 0; i < MAX_SHOWN_SAVES; ++i)
-                            {
-                                saves_shown_str[i].text = NULL;
-                                saves_shown_str[i].show = 0x00;
-                                if(fi)
-                                {
-                                    saves_shown_str[i].text = fi->name;
-                                    saves_shown_str[i].show = 0x01;
-                                    saves_shown_str[i].x = screen_info.w / 2;
-                                    saves_shown_str[i].y = 0.8f * screen_info.h - 32 * i;
-                                    GLText_AddLine(saves_shown_str + i);
-                                    fi = fi->next;
-                                }
-                            }
-                        }
+                        Gui_SetCurrentMenu(mLoadGameMenu);
                     }
-                    else */if(0 < Item_Use(mInventory, bi->id, mOwnerId))
+                    else if(0 < Item_Use(mInventory, bi->id, mOwnerId))
                     {
                         mLabel_ItemName.show = 0;
                         mLabel_Title.show = 0;

@@ -16,6 +16,7 @@ extern "C" {
 #include "render/camera.h"
 #include "render/frustum.h"
 #include "render/render.h"
+#include "gui/gui.h"
 #include "gui/gui_inventory.h"
 #include "script/script.h"
 #include "vt/tr_versions.h"
@@ -597,7 +598,8 @@ void Game_Frame(float time)
             main_inventory_manager->setInventory(&player->inventory, player->id);
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
         }
-        if(main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE)
+        if((main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE) ||
+           Gui_GetCurrentMenu())
         {
             main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
         }
