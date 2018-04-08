@@ -279,11 +279,11 @@ void gui_InventoryManager::send(inventoryState state)
             else if(state == INVENTORY_ACTIVATE)
             {
                 gui_object_p obj = Gui_ListSaves(mLoadGameMenu, 0);
-                if(obj && obj->label && obj->label->text)
+                if(obj && obj->text)
                 {
                     mInventory = NULL;
                     Gui_SetCurrentMenu(NULL);
-                    Game_Load(obj->label->text);
+                    Game_Load(obj->text);
                 }
             }
             else if(state == INVENTORY_CLOSE)

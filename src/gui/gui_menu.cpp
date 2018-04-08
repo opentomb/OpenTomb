@@ -24,7 +24,7 @@ static void Gui_SetupMenuObj(gui_object_p root)
     root->color_background[1] = 21;
     root->color_background[2] = 22;
     root->color_background[3] = 126;
-    root->flags.border_width = 4;
+    root->border_width = 4;
     root->flags.draw_border = 0x01;
     root->flags.draw_background = 0x01;
     root->flags.clip_children = 0x00;
@@ -33,11 +33,11 @@ static void Gui_SetupMenuObj(gui_object_p root)
 static gui_object_p Gui_AdddMenuObj(gui_object_p root)
 {
     gui_object_p obj = Gui_CreateChildObject(root);
-    obj->w = root->w - 2 * root->flags.border_width - 4;
+    obj->w = root->w - 2 * root->border_width - 4;
     obj->h = 40;
     vec4_copy(obj->color_border, root->color_border);
     vec4_copy(obj->color_border, root->color_border);
-    obj->flags.border_width = 4;
+    obj->border_width = 4;
     return obj;
 }
 
@@ -47,22 +47,22 @@ gui_object_p Gui_BuildSavesList()
     Gui_SetupMenuObj(root);
 
     gui_object_p obj = Gui_AdddMenuObj(root);
-    obj->x = root->flags.border_width + 2;
-    obj->y = root->h - (obj->h + root->flags.border_width + 2);
+    obj->x = root->border_width + 2;
+    obj->y = root->h - (obj->h + root->border_width + 2);
     obj->flags.draw_border = 0x01;
     Gui_SetObjectLabel(obj, "Load game:", 1, 1);
-    obj->label->x_align = GLTEXT_ALIGN_CENTER;
-    obj->label->y_align = GLTEXT_ALIGN_CENTER;
-    obj->label->show = 0x01;
-    obj->label->line_height = 0.8;
+    obj->h_align = GLTEXT_ALIGN_CENTER;
+    obj->v_align = GLTEXT_ALIGN_CENTER;
+    obj->flags.draw_label = 0x01;
+    obj->line_height = 0.8;
 
     gui_object_p cont = Gui_AdddMenuObj(root);
-    cont->w = root->w - 2 * root->flags.border_width;
-    cont->h = root->h - obj->h - 2 * root->flags.border_width;
-    cont->x = root->flags.border_width;
-    cont->y = root->flags.border_width;
+    cont->w = root->w - 2 * root->border_width;
+    cont->h = root->h - obj->h - 2 * root->border_width;
+    cont->x = root->border_width;
+    cont->y = root->border_width;
 
-    cont->flags.border_width = 4;
+    cont->border_width = 4;
     cont->flags.clip_children = 0x01;
     cont->flags.draw_background = 0x00;
     cont->flags.draw_border = 0x00;
@@ -73,22 +73,22 @@ gui_object_p Gui_BuildSavesList()
         if(!it->is_dir)
         {
             obj = Gui_AdddMenuObj(cont);
-            obj->w = cont->w - 2 * cont->flags.border_width;
+            obj->w = cont->w - 2 * cont->border_width;
             obj->h = 32;
-            obj->x = cont->flags.border_width;
-            obj->y = ((obj->prev) ? (obj->prev->y) : (cont->h - cont->flags.border_width)) - obj->h;
+            obj->x = cont->border_width;
+            obj->y = ((obj->prev) ? (obj->prev->y) : (cont->h - cont->border_width)) - obj->h;
             obj->flags.draw_border = (obj->prev) ? (0x00) : (0x01);
-            obj->flags.border_width = 3;
+            obj->border_width = 3;
             obj->color_border[0] = 220;
             obj->color_border[1] = 211;
             obj->color_border[2] = 242;
             obj->color_border[3] = 255;
 
             Gui_SetObjectLabel(obj, it->name, 2, 2);
-            obj->label->x_align = GLTEXT_ALIGN_CENTER;
-            obj->label->y_align = GLTEXT_ALIGN_CENTER;
-            obj->label->show = 0x01;
-            obj->label->line_height = 0.8;
+            obj->h_align = GLTEXT_ALIGN_CENTER;
+            obj->v_align = GLTEXT_ALIGN_CENTER;
+            obj->flags.draw_label = 0x01;
+            obj->line_height = 0.8;
         }
     }
     Sys_ListDirFree(list);
@@ -112,9 +112,9 @@ gui_object_p Gui_ListSaves(gui_object_p root, int dy)
                     ret = obj->prev;
                     obj->flags.draw_border = 0x00;
                     ret->flags.draw_border = 0x01;
-                    if(ret->y + obj->h + cont->content_dy + cont->flags.border_width > cont->h)
+                    if(ret->y + obj->h + cont->content_dy + cont->border_width > cont->h)
                     {
-                        cont->content_dy = cont->h - ret->h - ret->y - cont->flags.border_width;
+                        cont->content_dy = cont->h - ret->h - ret->y - cont->border_width;
                     }
                 }
                 else if((dy < 0) && obj->next)
@@ -122,9 +122,9 @@ gui_object_p Gui_ListSaves(gui_object_p root, int dy)
                     ret = obj->next;
                     obj->flags.draw_border = 0x00;
                     ret->flags.draw_border = 0x01;
-                    if(ret->y + cont->content_dy < cont->flags.border_width)
+                    if(ret->y + cont->content_dy < cont->border_width)
                     {
-                        cont->content_dy = cont->flags.border_width - ret->y;
+                        cont->content_dy = cont->border_width - ret->y;
                     }
                 }
                 break;

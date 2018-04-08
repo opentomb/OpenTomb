@@ -6,7 +6,6 @@
 
 #include "../core/gl_util.h"
 #include "../core/gl_font.h"
-#include "../core/gl_text.h"
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
@@ -34,7 +33,8 @@ static int Gui_CheckObjectsRects(gui_object_p parent, gui_object_p obj)
 gui_object_p Gui_CreateObject()
 {
     gui_object_p ret = (gui_object_p)calloc(1, sizeof(gui_object_t));
-    ret->label = NULL;
+    ret->text = NULL;
+    ret->line_height = 1.0f;
     return ret;
 }
 
@@ -42,17 +42,12 @@ void Gui_DeleteObject(gui_object_p obj)
 {
     if(obj)
     {
-        if(obj->label)
+        if(obj->text)
         {
-            obj->label->show = 0x00;
-            obj->label->text_size = 0;
-            if(obj->label->text)
-            {
-                free(obj->label->text);
-                obj->label->text = NULL;
-            }
-            free(obj->label);
-            obj->label = NULL;
+            obj->flags.draw_label = 0x00;
+            obj->text_size = 0;
+            free(obj->text);
+            obj->text = NULL;
         }
         free(obj);
     }
@@ -110,30 +105,26 @@ void Gui_DeleteChildObject(gui_object_p obj)
 
 void Gui_SetObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, uint16_t style_id)
 {
-    if(!obj->label)
-    {
-        obj->label = (gl_text_line_p)calloc(1, sizeof(gl_text_line_t));
-    }
-    obj->label->font_id = font_id;
-    obj->label->style_id = style_id;
+    obj->font_id = font_id;
+    obj->style_id = style_id;
 
-    if(!text && obj->label->text)
+    if(!text && obj->text)
     {
-        obj->label->text[0] = 0;
+        obj->text[0] = 0;
         return;
     }
 
     if(text)
     {
         size_t len = strlen(text) + 1;
-        if(obj->label->text_size < len)
+        if(obj->text_size < len)
         {
-            char *old_ptr = obj->label->text;
-            obj->label->text_size = len + 8 - (len % 8);
-            obj->label->text = (char*)malloc(obj->label->text_size * sizeof(char));
+            char *old_ptr = obj->text;
+            obj->text_size = len + 8 - (len % 8);
+            obj->text = (char*)malloc(obj->text_size * sizeof(char));
             free(old_ptr);
         }
-        strncpy(obj->label->text, text, len);
+        strncpy(obj->text, text, len);
     }
 }
 
@@ -145,10 +136,10 @@ void Gui_SetObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, ui
 
 static void Gui_DrawBackgroundInternal(gui_object_p root)
 {
-    GLfloat x0 = root->x + root->flags.border_width;
-    GLfloat y0 = root->y + root->flags.border_width;
-    GLfloat x1 = root->x + root->w - root->flags.border_width;
-    GLfloat y1 = root->y + root->h - root->flags.border_width;
+    GLfloat x0 = root->x + root->border_width;
+    GLfloat y0 = root->y + root->border_width;
+    GLfloat x1 = root->x + root->w - root->border_width;
+    GLfloat y1 = root->y + root->h - root->border_width;
     GLfloat *v, backgroundArray[32];
 
     v = backgroundArray;
@@ -181,10 +172,10 @@ static void Gui_DrawBackgroundInternal(gui_object_p root)
 static void Gui_DrawBorderInternal(gui_object_p root)
 {
     GLfloat *v, borderArray[80];
-    GLfloat x0 = root->x + root->flags.border_width;
-    GLfloat y0 = root->y + root->flags.border_width;
-    GLfloat x1 = root->x + root->w - root->flags.border_width;
-    GLfloat y1 = root->y + root->h - root->flags.border_width;
+    GLfloat x0 = root->x + root->border_width;
+    GLfloat y0 = root->y + root->border_width;
+    GLfloat x1 = root->x + root->w - root->border_width;
+    GLfloat y1 = root->y + root->h - root->border_width;
 
     v = borderArray;
    *v++ = x0; *v++ = y1;
@@ -245,33 +236,86 @@ static void Gui_DrawBorderInternal(gui_object_p root)
 
 static void Gui_DrawLabelInternal(gui_object_p root)
 {
-    if(root->label->x_align == GLTEXT_ALIGN_LEFT)
+    gl_tex_font_p gl_font = NULL;
+    gl_fontstyle_p style = NULL;
+    
+    if((gl_font = GLText_GetFont(root->font_id)) && (style = GLText_GetFontStyle(root->style_id)))
     {
-        root->label->x = root->x + root->flags.border_width;
-    }
-    else if(root->label->x_align == GLTEXT_ALIGN_RIGHT)
-    {
-        root->label->x = root->x + root->w - root->flags.border_width;
-    }
-    else
-    {
-        root->label->x = root->x + root->w / 2;
-    }
+        GLfloat real_x = 0.0f, real_y = 0.0f;
+        int32_t x0, y0, x1, y1;
+        GLfloat shadow_color[4];
+        int32_t w_pt = ((root->w - 2 * root->border_width) * 64.0f + 0.5f);
+        GLfloat ascender = glf_get_ascender(gl_font) / 64.0f;
+        GLfloat descender = glf_get_descender(gl_font) / 64.0f;
+        GLfloat dy = root->line_height * (ascender - descender);
+        int n_lines = 1;
+        char *begin = root->text;
+        char *end = begin;
+        
+        shadow_color[0] = 0.0f;
+        shadow_color[1] = 0.0f;
+        shadow_color[2] = 0.0f;
+        shadow_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;
 
-    if(root->label->y_align == GLTEXT_ALIGN_BOTTOM)
-    {
-        root->label->y = root->y + root->flags.border_width;
-    }
-    else if(root->label->y_align == GLTEXT_ALIGN_TOP)
-    {
-        root->label->y = root->y + root->h - root->flags.border_width;
-    }
-    else
-    {
-        root->label->y = root->y + root->h / 2;
-    }
+        if(root->flags.word_wrap)
+        {
+            int n_sym = 0;
+            n_lines = 0;
+            for(char *ch = glf_get_string_for_width(gl_font, root->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            {
+                ++n_lines;
+                begin = ch;
+            }
+            begin = root->text;
+            x1 = x0 + w_pt;
+            y1 = y0 + n_lines * dy * 64.0f;
+        }
+        
+        real_y = root->y - root->border_width - descender;
+        switch(root->v_align)
+        {
+            case GLTEXT_ALIGN_TOP:
+                real_y = root->y - root->border_width - ascender - dy * (n_lines - 1);
+                break;
+            case GLTEXT_ALIGN_CENTER:
+                real_y = root->y - descender + (root->h - dy * n_lines) / 2;
+                break;
+        }
 
-    GLText_RenderStringLine(root->label);
+        for(int line = n_lines - 1; line >= 0; --line)
+        {
+            int n_sym = -1;
+            if(n_lines > 1)
+            {
+                end = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym);
+            }
+            
+            glf_get_string_bb(gl_font, begin, n_sym, &x0, &y0, &x1, &y1);
+            
+            real_x = root->x + root->border_width - x0 / 64.0f;
+            switch(root->h_align)
+            {
+                case GLTEXT_ALIGN_RIGHT:
+                    real_x = root->x + root->w - root->border_width - x1 / 64.0f;
+                    break;
+                case GLTEXT_ALIGN_CENTER:
+                    real_x = root->x + root->w / 2 - (x1 + x0) / 128.0f;
+                    break;
+            }
+        
+            if(style->shadowed)
+            {
+                vec4_copy(gl_font->gl_font_color, shadow_color);
+                glf_render_str(gl_font,
+                               (real_x + GUI_FONT_SHADOW_HORIZONTAL_SHIFT),
+                               (real_y + line * dy + GUI_FONT_SHADOW_VERTICAL_SHIFT),
+                               begin, n_sym);
+            }
+            vec4_copy(gl_font->gl_font_color, style->font_color);
+            glf_render_str(gl_font, real_x, real_y + line * dy, begin, n_sym);
+            begin = end;
+        }
+    }
 }
 
 static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
@@ -283,12 +327,12 @@ static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
             Gui_DrawBackgroundInternal(root);
         }
 
-        if(root->flags.draw_border && root->flags.border_width)
+        if(root->flags.draw_border && root->border_width)
         {
             Gui_DrawBorderInternal(root);
         }
 
-        if(root->label && root->label->show)
+        if(root->text && root->flags.draw_label)
         {
             Gui_DrawLabelInternal(root);
         }
@@ -360,7 +404,7 @@ void Gui_LayoutVertical(gui_object_p root, int16_t spacing, int16_t margin)
         if(!obj->flags.hide)
         {
             obj->y = (prev) ? (prev->y - obj->h - spacing)
-                            : (root->h - root->flags.border_width - obj->h - margin);
+                            : (root->h - root->border_width - obj->h - margin);
             prev = obj;
             if(obj->w + obj->x > root->content_w)
             {
@@ -385,7 +429,7 @@ void Gui_LayoutHorizontal(gui_object_p root, int16_t spacing, int16_t margin)
         if(!obj->flags.hide)
         {
             obj->x = (prev) ? (prev->x + prev->w + spacing)
-                            : (root->flags.border_width + margin);
+                            : (root->border_width + margin);
             prev = obj;
             if(obj->w + obj->x > root->content_w)
             {

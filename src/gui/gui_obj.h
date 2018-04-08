@@ -10,10 +10,11 @@
 
 typedef struct gui_object_flags_s
 {
-    uint32_t    border_width : 8;
     uint32_t    hide : 1;
     uint32_t    draw_background : 1;
     uint32_t    draw_border : 1;
+    uint32_t    draw_label : 1;
+    uint32_t    word_wrap : 1;
     uint32_t    clip_children : 1;
     uint32_t    layout : 2;
 }gui_object_flags_t, *gui_object_flags_p;
@@ -29,10 +30,17 @@ typedef struct gui_object_s
     int16_t         content_dx;
     int16_t         content_dy;
     
-    ///@TODO: use here direct font usage (like console)!
-    struct gl_text_line_s      *label;    
-    struct gui_object_flags_s   flags;
     void                       *data;
+    char                       *text;
+    float                       line_height;
+    uint16_t                    font_id;
+    uint16_t                    style_id;
+    uint16_t                    text_size;
+    uint8_t                     border_width;
+    uint8_t                     v_align : 4;
+    uint8_t                     h_align : 4;
+    
+    struct gui_object_flags_s   flags;
 
     uint8_t                     color_border[4];
     uint8_t                     color_background[4];    
