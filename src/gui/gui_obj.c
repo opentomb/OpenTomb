@@ -6,8 +6,7 @@
 
 #include "../core/gl_util.h"
 #include "../core/gl_font.h"
-#include "../core/system.h"
-#include "../core/console.h"
+#include "../core/gl_text.h"
 #include "../core/vmath.h"
 #include "gui_obj.h"
 
@@ -77,6 +76,11 @@ gui_object_p Gui_CreateChildObject(gui_object_p root)
             ret->prev = *ins;
         }
         *ins = ret;
+        
+        vec4_copy(ret->color_border, root->color_border);
+        vec4_copy(ret->color_border, root->color_border);
+        ret->flags.v_self_align = root->flags.v_content_align;
+        ret->flags.h_self_align = root->flags.h_content_align;
     }
 
     return ret;
@@ -238,7 +242,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
 {
     gl_tex_font_p gl_font = NULL;
     gl_fontstyle_p style = NULL;
-    
+
     if((gl_font = GLText_GetFont(root->font_id)) && (style = GLText_GetFontStyle(root->style_id)))
     {
         GLfloat real_x = 0.0f, real_y = 0.0f;
@@ -251,7 +255,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
         int n_lines = 1;
         char *begin = root->text;
         char *end = begin;
-        
+
         shadow_color[0] = 0.0f;
         shadow_color[1] = 0.0f;
         shadow_color[2] = 0.0f;
@@ -270,14 +274,14 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             x1 = x0 + w_pt;
             y1 = y0 + n_lines * dy * 64.0f;
         }
-        
+
         real_y = root->y - root->border_width - descender;
-        switch(root->v_align)
+        switch(root->flags.v_content_align)
         {
-            case GLTEXT_ALIGN_TOP:
+            case GUI_ALIGN_TOP:
                 real_y = root->y - root->border_width - ascender - dy * (n_lines - 1);
                 break;
-            case GLTEXT_ALIGN_CENTER:
+            case GUI_ALIGN_CENTER:
                 real_y = root->y - descender + (root->h - dy * n_lines) / 2;
                 break;
         }
@@ -289,20 +293,20 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             {
                 end = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym);
             }
-            
+
             glf_get_string_bb(gl_font, begin, n_sym, &x0, &y0, &x1, &y1);
-            
+
             real_x = root->x + root->border_width - x0 / 64.0f;
-            switch(root->h_align)
+            switch(root->flags.h_content_align)
             {
-                case GLTEXT_ALIGN_RIGHT:
+                case GUI_ALIGN_RIGHT:
                     real_x = root->x + root->w - root->border_width - x1 / 64.0f;
                     break;
-                case GLTEXT_ALIGN_CENTER:
+                case GUI_ALIGN_CENTER:
                     real_x = root->x + root->w / 2 - (x1 + x0) / 128.0f;
                     break;
             }
-        
+
             if(style->shadowed)
             {
                 vec4_copy(gl_font->gl_font_color, shadow_color);
@@ -320,7 +324,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
 
 static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
 {
-    if(!root->flags.hide)
+    if(!root->flags.hide && (root->w > 0) && (root->h > 0))
     {
         if(root->flags.draw_background)
         {
@@ -394,50 +398,179 @@ void Gui_DrawObjects(gui_object_p root)
     }
 }
 
-void Gui_LayoutVertical(gui_object_p root, int16_t spacing, int16_t margin)
+void Gui_LayoutVertical(gui_object_p root)
 {
     gui_object_p prev = NULL;
-    root->content_w = 0;
-    root->content_h = 0;
+    int16_t free_h = root->h - root->margin_top - root->margin_bottom;
+    int16_t weights_used = 0;
+    int16_t weights_total = 0;
+    int16_t height_used = 0;
+    
+    if(root->flags.fit_inside)
+    {
+        int total_spacings = 0;
+        for(gui_object_p obj = root->childs; obj; obj = obj->next)
+        {
+            if(!obj->flags.hide)
+            {
+                ++total_spacings;
+                free_h -= (obj->flags.fixed_h) ? (obj->h) : (0);
+                weights_total += (obj->flags.fixed_h) ? (0) : (obj->weight_y);
+            }
+        }
+        if(total_spacings)
+        {
+            --total_spacings;
+            free_h -= total_spacings * root->spacing;
+        }
+        weights_total = (weights_total) ? (weights_total) : (1);
+    }
+    
     for(gui_object_p obj = root->childs; obj; obj = obj->next)
     {
         if(!obj->flags.hide)
         {
-            obj->y = (prev) ? (prev->y - obj->h - spacing)
-                            : (root->h - root->border_width - obj->h - margin);
-            prev = obj;
-            if(obj->w + obj->x > root->content_w)
+            if(!obj->flags.fixed_w)
             {
-                root->content_w = obj->w + obj->x;
+                obj->x = root->margin_left;
+                obj->w = root->w - root->margin_left - root->margin_right;
             }
+            else if(obj->flags.h_self_align == GUI_ALIGN_RIGHT)
+            {
+                obj->x = root->w - root->margin_right - obj->w;
+            }
+            else if(obj->flags.h_self_align == GUI_ALIGN_CENTER)
+            {
+                obj->x = (root->margin_left + root->w - root->margin_right - obj->w) / 2;
+            }
+            else
+            {
+                obj->x = root->margin_left;
+            }
+            
+            if(!obj->flags.fixed_h && root->flags.fit_inside)
+            {
+                weights_used += obj->weight_y;
+                obj->h = height_used;
+                height_used = (int32_t)weights_used * (int32_t)free_h / (int32_t)weights_total;
+                obj->h = height_used - obj->h;
+            }
+            
+            obj->y = (prev) ? (prev->y - obj->h - root->spacing)
+                            : (root->h - obj->h - root->margin_top);
+            prev = obj;
         }
-    }
-    
-    if(prev)
-    {
-        root->content_h = root->h - prev->y;
     }
 }
 
-void Gui_LayoutHorizontal(gui_object_p root, int16_t spacing, int16_t margin)
+void Gui_LayoutHorizontal(gui_object_p root)
 {
     gui_object_p prev = NULL;
-    root->content_w = 0;
-    root->content_h = 0;
+    int16_t weights_used = 0;
+    int16_t weights_total = 0;
+    int16_t width_used = 0;
+    int16_t free_w = root->w - root->margin_left - root->margin_right;
+    
+    if(root->flags.fit_inside)
+    {
+        int total_spacings = 0;
+        for(gui_object_p obj = root->childs; obj; obj = obj->next)
+        {
+            if(!obj->flags.hide)
+            {
+                ++total_spacings;
+                free_w -= (obj->flags.fixed_w) ? (obj->w) : (0);
+                weights_total += (obj->flags.fixed_w) ? (0) : (obj->weight_x);
+            }
+        }
+        if(total_spacings)
+        {
+            --total_spacings;
+            free_w -= total_spacings * root->spacing;
+        }
+    }
+    
     for(gui_object_p obj = root->childs; obj; obj = obj->next)
     {
         if(!obj->flags.hide)
         {
-            obj->x = (prev) ? (prev->x + prev->w + spacing)
-                            : (root->border_width + margin);
-            prev = obj;
-            if(obj->w + obj->x > root->content_w)
+            if(!obj->flags.fixed_h)
             {
-                root->content_w = obj->w + obj->x;
+                obj->y = root->y + root->margin_bottom;
+                obj->h = root->h - root->margin_bottom - root->margin_top;
             }
-            if(root->h - obj->y > root->content_h)
+            else if(obj->flags.v_self_align == GUI_ALIGN_BOTTOM)
             {
-                root->content_h = root->h - obj->y;
+                obj->y = root->margin_bottom;
+            }
+            else if(obj->flags.v_self_align == GUI_ALIGN_CENTER)
+            {
+                obj->y = (root->margin_bottom + root->h - root->margin_top - obj->h) / 2;
+            }
+            else
+            {
+                obj->y = root->h - root->margin_top - obj->h;
+            }
+            
+            if(!obj->flags.fixed_w && root->flags.fit_inside)
+            {
+                weights_used += obj->weight_x;
+                obj->w = width_used;
+                width_used = (int32_t)weights_used * (int32_t)free_w / (int32_t)weights_total;
+                obj->h = width_used - obj->w;
+            }
+            
+            obj->x = (prev) ? (prev->x + prev->w + root->spacing)
+                            : (root->margin_left);
+            prev = obj;
+        }
+    }
+}
+
+void Gui_LayoutObjects(gui_object_p root)
+{
+    if(root)
+    {
+        if(root->flags.layout == GUI_LAYOUT_VERTICAL)
+        {
+            Gui_LayoutVertical(root);
+        }
+        else if(root->flags.layout == GUI_LAYOUT_HORIZONTAL)
+        {
+            Gui_LayoutHorizontal(root);
+        }
+        for(gui_object_p obj = root->childs; obj; obj = obj->next)
+        {
+            Gui_LayoutObjects(obj);
+        }
+    }
+}
+
+void Gui_EnsureVisible(gui_object_p obj)
+{
+    if(obj && obj->parent)
+    {
+        gui_object_p cont = obj->parent;
+        if(cont->flags.layout == GUI_LAYOUT_VERTICAL)
+        {
+            if(obj->y + obj->h + cont->content_dy > cont->h - cont->margin_top)
+            {
+                cont->content_dy = cont->h - obj->h - obj->y - cont->margin_top;
+            }
+            else if(obj->y + cont->content_dy < cont->margin_bottom)
+            {
+                cont->content_dy = cont->margin_bottom - obj->y;
+            }
+        }
+        else if(cont->flags.layout == GUI_LAYOUT_HORIZONTAL)
+        {
+            if(obj->x + cont->content_dx < cont->margin_left)
+            {
+                cont->content_dx = cont->margin_left - obj->x;
+            }
+            else if(obj->x + cont->content_dx + obj->w > cont->w - cont->margin_right)
+            {
+                cont->content_dx = cont->w - obj->w - obj->x - cont->margin_right;
             }
         }
     }
