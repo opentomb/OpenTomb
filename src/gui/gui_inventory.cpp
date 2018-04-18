@@ -831,7 +831,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
                 else if(m_menu_mode == 3)
                 {
                     m_inventory = NULL;
-                    Gameflow_SetGame((int)obj->data, 1);
+                    Gameflow_SetGame((int)((uint64_t)(obj->data) & 0xFFFF), 1);
                 }
                 Gui_DeleteObjects(m_current_menu);
                 m_current_menu = NULL;
