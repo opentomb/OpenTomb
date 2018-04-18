@@ -40,24 +40,24 @@ public:
     void    SetRotateTime(float time);
 
 private:
-    bool    mActive;
-    int     mItem;
+    bool    m_active;
+    int     m_item;
 
-    float   mPosY;
-    float   mStartPosX;
-    float   mEndPosX;
-    float   mCurrPosX;
+    float   m_pos_y;
+    float   m_start_pos_x;
+    float   m_end_pos_x;
+    float   m_curr_pos_x;
 
-    float   mRotX;
-    float   mRotY;
-    float   mCurrRotX;
-    float   mCurrRotY;
+    float   m_rot_x;
+    float   m_rot_y;
+    float   m_curr_rot_x;
+    float   m_curr_rot_y;
 
-    float   mSize;
+    float   m_size;
 
-    float   mShowTime;
-    float   mCurrTime;
-    float   mRotateTime;
+    float   m_show_time;
+    float   m_curr_time;
+    float   m_rotate_time;
 };
 
 void Gui_InitNotifier();
@@ -106,19 +106,19 @@ enum Command
 
    bool isEnabled()
    {
-       return mCurrentState != INVENTORY_DISABLED;
+       return m_current_state != INVENTORY_DISABLED;
    }
 
    bool isIdle()
    {
-       return (mCurrentState == INVENTORY_IDLE) || (mCurrentState == INVENTORY_ACTIVATED);
+       return (m_current_state == INVENTORY_IDLE) || (m_current_state == INVENTORY_ACTIVATED);
    }
    
     void send(Command cmd);
 
     int getItemsType()
     {
-        return mCurrentItemsType;
+        return m_current_items_type;
     }
 
     void setInventory(struct inventory_node_s **i, uint32_t owner_id);
@@ -126,35 +126,35 @@ enum Command
     void frame(float time);
     void render();
 
-    gl_text_line_t              mLabel_Title;
-    char                        mLabel_Title_text[GUI_LINE_DEFAULTSIZE];
-    gl_text_line_t              mLabel_ItemName;
-    char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
+    gl_text_line_t              m_label_title;
+    char                        m_label_title_text[GUI_LINE_DEFAULTSIZE];
+    gl_text_line_t              m_label_item_name;
+    char                        m_label_item_name_text[GUI_LINE_DEFAULTSIZE];
 
 private:
     int                         m_menu_mode;
     gui_object_p                m_current_menu;
-    struct inventory_node_s   **mInventory;
-    uint32_t                    mOwnerId;
-    int                         mCurrentState;
+    struct inventory_node_s   **m_inventory;
+    uint32_t                    m_owner_id;
+    int                         m_current_state;
     int                         m_command;
 
-    int                         mCurrentItemsType;
-    int                         mNextItemsType;
-    int                         mCurrentItemsCount;
-    int                         mSelectedItem;
+    int                         m_current_items_type;
+    int                         m_next_items_type;
+    int                         m_current_items_count;
+    int                         m_selected_item;
     
-    float                       mRingRotatePeriod;
-    float                       mRingTime;
-    float                       mRingAngle;
-    float                       mRingVerticalAngle;
-    float                       mRingAngleStep;
-    float                       mBaseRingRadius;
-    float                       mRingRadius;
-    float                       mVerticalOffset;
+    float                       m_ring_rotate_period;
+    float                       m_ring_time;
+    float                       m_ring_angle;
+    float                       m_ring_vertical_angle;
+    float                       m_ring_angle_step;
+    float                       m_base_ring_radius;
+    float                       m_ring_radius;
+    float                       m_vertical_offset;
 
-    float                       mItemRotatePeriod;
-    float                       mItemTime;
+    float                       m_item_rotate_period;
+    float                       m_item_time;
     float                       m_item_angle_z;
     float                       m_item_angle_x;
     float                       m_item_offset_z;
