@@ -841,7 +841,7 @@ void Engine_MainLoop()
 
         if(codec_end_state >= 0)
         {
-            if(screen_info.debug_view_state != debug_view_state_e::model_view)
+            if(!Con_IsShown() && (screen_info.debug_view_state != debug_view_state_e::model_view))
             {
                 Game_Frame(time);
                 Gameflow_ProcessCommands();

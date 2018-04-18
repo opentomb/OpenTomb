@@ -551,7 +551,7 @@ void Gui_EnsureVisible(gui_object_p obj)
     if(obj && obj->parent)
     {
         gui_object_p cont = obj->parent;
-        if(cont->flags.layout == GUI_LAYOUT_VERTICAL)
+        if((cont->flags.layout == GUI_LAYOUT_VERTICAL) || (cont->flags.layout == GUI_LAYOUT_NONE))
         {
             if(obj->y + obj->h + cont->content_dy > cont->h - cont->margin_top)
             {
@@ -562,7 +562,7 @@ void Gui_EnsureVisible(gui_object_p obj)
                 cont->content_dy = cont->margin_bottom - obj->y;
             }
         }
-        else if(cont->flags.layout == GUI_LAYOUT_HORIZONTAL)
+        if((cont->flags.layout == GUI_LAYOUT_HORIZONTAL) || (cont->flags.layout == GUI_LAYOUT_NONE))
         {
             if(obj->x + cont->content_dx < cont->margin_left)
             {

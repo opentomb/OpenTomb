@@ -38,7 +38,7 @@ GLfloat     guiProjectionMatrix[16];
 
 static GLfloat screenSize[2];
 
-static gui_object_p Gui_BuildSavesList();
+static gui_object_p Gui_BuildLoadGameMenu();
 static void Gui_FillCrosshairBuffer();
 static void Gui_FillBackgroundBuffer();
 

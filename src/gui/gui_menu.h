@@ -4,7 +4,9 @@
 
 #include "gui_obj.h"
 
-gui_object_p Gui_BuildSavesList();
+gui_object_p Gui_BuildLoadGameMenu();
+gui_object_p Gui_BuildSaveGameMenu();
+gui_object_p Gui_BuildNewGameMenu();
 gui_object_p Gui_ListSaves(gui_object_p root, int dy);
 
 #endif

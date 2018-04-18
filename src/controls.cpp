@@ -465,35 +465,35 @@ void Controls_DebugKeys(int button, int state)
             case SDL_SCANCODE_RETURN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_ACTIVATE);
+                    main_inventory_manager->send(gui_InventoryManager::ACTIVATE);
                 }
                 break;
 
             case SDL_SCANCODE_UP:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_UP);
+                    main_inventory_manager->send(gui_InventoryManager::UP);
                 }
                 break;
 
             case SDL_SCANCODE_DOWN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_DOWN);
+                    main_inventory_manager->send(gui_InventoryManager::DOWN);
                 }
                 break;
 
             case SDL_SCANCODE_LEFT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_LEFT);
+                    main_inventory_manager->send(gui_InventoryManager::LEFT);
                 }
                 break;
 
             case SDL_SCANCODE_RIGHT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::INVENTORY_R_RIGHT);
+                    main_inventory_manager->send(gui_InventoryManager::RIGHT);
                 }
                 break;
 

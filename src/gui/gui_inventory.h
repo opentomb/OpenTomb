@@ -72,34 +72,49 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  */
 class gui_InventoryManager
 {
+enum inventoryState
+{
+    INVENTORY_DISABLED = 0,
+    INVENTORY_IDLE,
+    INVENTORY_OPENING,
+    INVENTORY_CLOSING,
+    INVENTORY_R_LEFT,
+    INVENTORY_R_RIGHT,
+    INVENTORY_UP,
+    INVENTORY_DOWN,
+    INVENTORY_ACTIVATING,
+    INVENTORY_DEACTIVATING,
+    INVENTORY_ACTIVATED
+};
+    
 public:
-    enum inventoryState
-    {
-        INVENTORY_DISABLED = 0,
-        INVENTORY_IDLE,
-        INVENTORY_OPEN,
-        INVENTORY_CLOSE,
-        INVENTORY_R_LEFT,
-        INVENTORY_R_RIGHT,
-        INVENTORY_UP,
-        INVENTORY_DOWN,
-        INVENTORY_ACTIVATE
-    };
-
+enum Command
+{
+    NONE = 0,
+    OPEN,
+    CLOSE,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    ACTIVATE,
+    DEACTIVATE
+};
+    
     gui_InventoryManager();
    ~gui_InventoryManager();
 
-    int getCurrentState()
-    {
-        return mCurrentState;
-    }
+   bool isEnabled()
+   {
+       return mCurrentState != INVENTORY_DISABLED;
+   }
 
-    int getNextState()
-    {
-        return mNextState;
-    }
-
-    void send(inventoryState state);
+   bool isIdle()
+   {
+       return (mCurrentState == INVENTORY_IDLE) || (mCurrentState == INVENTORY_ACTIVATED);
+   }
+   
+    void send(Command cmd);
 
     int getItemsType()
     {
@@ -117,11 +132,12 @@ public:
     char                        mLabel_ItemName_text[GUI_LINE_DEFAULTSIZE];
 
 private:
-    gui_object_p                mLoadGameMenu;
+    int                         m_menu_mode;
+    gui_object_p                m_current_menu;
     struct inventory_node_s   **mInventory;
     uint32_t                    mOwnerId;
     int                         mCurrentState;
-    int                         mNextState;
+    int                         m_command;
 
     int                         mCurrentItemsType;
     int                         mNextItemsType;
@@ -139,12 +155,16 @@ private:
 
     float                       mItemRotatePeriod;
     float                       mItemTime;
-    float                       mItemAngle;
+    float                       m_item_angle_z;
+    float                       m_item_angle_x;
+    float                       m_item_offset_z;
+    float                       m_current_scale;
 
     int getItemElementsCountByType(int type);
     void updateCurrentRing();
     void frameStates(float time);
     void frameItems(float time);
+    void handlePassport(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
 };
 

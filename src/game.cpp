@@ -36,6 +36,7 @@ extern "C" {
 
 extern lua_State *engine_lua;
 
+int Game_ProcessMenu(entity_p player);
 int Save_Entity(entity_p ent, void *data);
 
 int lua_mlook(lua_State * lua)
@@ -585,28 +586,30 @@ int Game_UpdateEntity(entity_p ent, void *data)
 }
 
 
+int Game_ProcessMenu(entity_p player)
+{   
+    // GUI and controls should be updated at all times!
+    if(control_states.gui_inventory && main_inventory_manager)
+    {
+        if(player && !main_inventory_manager->isEnabled())
+        {
+            main_inventory_manager->setInventory(&player->inventory, player->id);
+            main_inventory_manager->send(gui_InventoryManager::OPEN);
+        }
+        if(main_inventory_manager->isIdle() || Gui_GetCurrentMenu())
+        {
+            main_inventory_manager->send(gui_InventoryManager::CLOSE);
+        }
+    }
+
+    return main_inventory_manager->isEnabled() ? 1 : 0;
+}
+
 void Game_Frame(float time)
 {
     entity_p player = World_GetPlayer();
 
-    // GUI and controls should be updated at all times!
-    if(!Con_IsShown() && control_states.gui_inventory && main_inventory_manager)
-    {
-        if(player &&
-          (main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_DISABLED))
-        {
-            main_inventory_manager->setInventory(&player->inventory, player->id);
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_OPEN);
-        }
-        if((main_inventory_manager->getCurrentState() == gui_InventoryManager::INVENTORY_IDLE) ||
-           Gui_GetCurrentMenu())
-        {
-            main_inventory_manager->send(gui_InventoryManager::INVENTORY_CLOSE);
-        }
-    }
-
-    // If console or inventory is active, only thing to update is audio.
-    if(Con_IsShown() || main_inventory_manager->getCurrentState() != gui_InventoryManager::INVENTORY_DISABLED)
+    if(Game_ProcessMenu(player))
     {
         return;
     }
