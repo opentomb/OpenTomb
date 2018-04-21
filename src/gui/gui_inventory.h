@@ -87,20 +87,7 @@ enum inventoryState
     INVENTORY_ACTIVATED
 };
     
-public:
-enum Command
-{
-    NONE = 0,
-    OPEN,
-    CLOSE,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-    ACTIVATE,
-    DEACTIVATE
-};
-    
+public:   
     gui_InventoryManager();
    ~gui_InventoryManager();
 
@@ -114,7 +101,7 @@ enum Command
        return (m_current_state == INVENTORY_IDLE) || (m_current_state == INVENTORY_ACTIVATED);
    }
    
-    void send(Command cmd);
+    void send(enum gui_command_e cmd);
 
     int getItemsType()
     {
@@ -137,7 +124,7 @@ private:
     struct inventory_node_s   **m_inventory;
     uint32_t                    m_owner_id;
     int                         m_current_state;
-    int                         m_command;
+    gui_command_e               m_command;
 
     int                         m_current_items_type;
     int                         m_next_items_type;

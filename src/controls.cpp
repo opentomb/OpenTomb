@@ -19,6 +19,7 @@ extern "C" {
 #include "script/script.h"
 #include "render/camera.h"
 #include "physics/physics.h"
+#include "gui/gui_obj.h"
 #include "gui/gui_inventory.h"
 #include "audio/audio.h"
 #include "engine.h"
@@ -465,35 +466,35 @@ void Controls_DebugKeys(int button, int state)
             case SDL_SCANCODE_RETURN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::ACTIVATE);
+                    main_inventory_manager->send(gui_command_e::ACTIVATE);
                 }
                 break;
 
             case SDL_SCANCODE_UP:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::UP);
+                    main_inventory_manager->send(gui_command_e::UP);
                 }
                 break;
 
             case SDL_SCANCODE_DOWN:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::DOWN);
+                    main_inventory_manager->send(gui_command_e::DOWN);
                 }
                 break;
 
             case SDL_SCANCODE_LEFT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::LEFT);
+                    main_inventory_manager->send(gui_command_e::LEFT);
                 }
                 break;
 
             case SDL_SCANCODE_RIGHT:
                 if(main_inventory_manager)
                 {
-                    main_inventory_manager->send(gui_InventoryManager::RIGHT);
+                    main_inventory_manager->send(gui_command_e::RIGHT);
                 }
                 break;
 

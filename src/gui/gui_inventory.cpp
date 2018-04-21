@@ -267,7 +267,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::send(Command cmd)
+void gui_InventoryManager::send(enum gui_command_e cmd)
 {
     m_command = cmd;
 }
@@ -339,13 +339,13 @@ void gui_InventoryManager::frameStates(float time)
     switch(m_current_state)
     {
         case INVENTORY_R_LEFT:
+            m_command = NONE;
             m_ring_time += time;
             m_ring_angle = m_ring_angle_step * m_ring_time / m_ring_rotate_period;
             if(m_ring_time >= m_ring_rotate_period)
             {
                 m_ring_time = 0.0f;
                 m_ring_angle = 0.0f;
-                m_command = NONE;
                 m_current_state = INVENTORY_IDLE;
                 m_selected_item--;
                 if(m_selected_item < 0)
@@ -357,14 +357,13 @@ void gui_InventoryManager::frameStates(float time)
             break;
 
         case INVENTORY_R_RIGHT:
+            m_command = NONE;
             m_ring_time += time;
             m_ring_angle = -m_ring_angle_step * m_ring_time / m_ring_rotate_period;
-            m_command = INVENTORY_R_RIGHT;
             if(m_ring_time >= m_ring_rotate_period)
             {
                 m_ring_time = 0.0f;
                 m_ring_angle = 0.0f;
-                m_command = NONE;
                 m_current_state = INVENTORY_IDLE;
                 m_selected_item++;
                 if(m_selected_item >= m_current_items_count)
@@ -719,7 +718,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         {
             m_current_menu = Gui_BuildSaveGameMenu();
         }
-        
+
         if(m_command == CLOSE)
         {
             m_menu_mode = 4;
@@ -764,7 +763,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         {
             m_current_menu = Gui_BuildNewGameMenu();
         }
-        
+
         if(m_command == CLOSE)
         {
             m_menu_mode = 4;
@@ -802,45 +801,22 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
 
     SSBoneFrame_Update(bi->bf, 0);
     Gui_SetCurrentMenu(m_current_menu);
-    if(m_current_menu)
+    if(m_command == CLOSE)
     {
-        if(m_command == UP)
-        {
-            Gui_ListSaves(m_current_menu, 1);
-        }
-        else if(m_command == DOWN)
-        {
-            Gui_ListSaves(m_current_menu, -1);
-        }
-        else if(m_command == ACTIVATE)
-        {
-            gui_object_p obj = Gui_ListSaves(m_current_menu, 0);
-            if(obj && obj->text)
-            {
-                Gui_SetCurrentMenu(NULL);
-                if(m_menu_mode == 1)
-                {
-                    m_inventory = NULL;
-                    Game_Load(obj->text);
-                }
-                else if(m_menu_mode == 2)
-                {
-                    m_menu_mode = 4;
-                    Game_Save(obj->text);
-                }
-                else if(m_menu_mode == 3)
-                {
-                    m_inventory = NULL;
-                    Gameflow_SetGame((int)((uint64_t)(obj->data) & 0xFFFF), 1);
-                }
-                Gui_DeleteObjects(m_current_menu);
-                m_current_menu = NULL;
-            }
-        }
-        else if(m_command == CLOSE)
+        m_menu_mode = 4;
+        Gui_SetCurrentMenu(NULL);
+        Gui_DeleteObjects(m_current_menu);
+        m_current_menu = NULL;
+    }
+    else if(m_current_menu && m_current_menu->handlers.do_command)
+    {
+        if(m_current_menu->handlers.do_command(m_current_menu, m_command))
         {
             Gui_SetCurrentMenu(NULL);
-            m_menu_mode = 4;
+            Gui_DeleteObjects(m_current_menu);
+            m_current_menu = NULL;
+            m_inventory = NULL;
+            m_menu_mode = 0;
         }
         m_command = NONE;
     }

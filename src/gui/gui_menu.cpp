@@ -6,6 +6,7 @@
 
 #include "../core/system.h"
 #include "../core/vmath.h"
+#include "../game.h"
 #include "../gameflow.h"
 #include "gui.h"
 #include "gui_menu.h"
@@ -13,7 +14,11 @@
 
 static gui_object_p Gui_CreateMenuRoot();
 static gui_object_p Gui_AddListItem(gui_object_p cont);
+static gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy);
 
+extern "C" int handle_load_game(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_save_game(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_new_game(struct gui_object_s *obj, enum gui_command_e cmd);
 
 static gui_object_p Gui_CreateMenuRoot()
 {
@@ -68,8 +73,9 @@ static gui_object_p Gui_AddListItem(gui_object_p cont)
 gui_object_p Gui_BuildLoadGameMenu()
 {
     gui_object_p root = Gui_CreateMenuRoot();
-
     gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.do_command = handle_load_game;
     obj->h = 40;
     obj->flags.draw_border = 0x01;
     Gui_SetObjectLabel(obj, "Load game:", 1, 1);
@@ -114,8 +120,9 @@ gui_object_p Gui_BuildLoadGameMenu()
 gui_object_p Gui_BuildSaveGameMenu()
 {
     gui_object_p root = Gui_CreateMenuRoot();
-
     gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.do_command = handle_save_game;
     obj->h = 40;
     obj->flags.draw_border = 0x01;
     Gui_SetObjectLabel(obj, "Save game:", 1, 1);
@@ -143,7 +150,7 @@ gui_object_p Gui_BuildSaveGameMenu()
     obj->flags.draw_border = (obj->prev) ? (0x00) : (0x01);
     Gui_SetObjectLabel(obj, "NEW SAVE", 2, 2);
     obj->flags.draw_label = 0x01;
-    
+
     file_info_p list = Sys_ListDir("save", NULL);
     for(file_info_p it = list; it; it = it->next)
     {
@@ -165,8 +172,9 @@ gui_object_p Gui_BuildSaveGameMenu()
 gui_object_p Gui_BuildNewGameMenu()
 {
     gui_object_p root = Gui_CreateMenuRoot();
-
     gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.do_command = handle_new_game;
     obj->h = 40;
     obj->flags.draw_border = 0x01;
     Gui_SetObjectLabel(obj, "New game", 1, 1);
@@ -201,49 +209,49 @@ gui_object_p Gui_BuildNewGameMenu()
     Gui_SetObjectLabel(obj, "Tomb Raider I UB", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_1_5;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider II", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_2;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider II Gold", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_2_5;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider III", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_3;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider III Gold", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_3_5;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider IV", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_4;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider V", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_5;
-    
+
     Gui_LayoutObjects(root);
 
     return root;
 }
 
-gui_object_p Gui_ListSaves(gui_object_p root, int dy)
+gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy)
 {
     gui_object_p ret = NULL;
     if(root && root->childs && root->childs->next)
@@ -272,4 +280,93 @@ gui_object_p Gui_ListSaves(gui_object_p root, int dy)
         Gui_EnsureVisible(ret);
     }
     return ret;
+}
+
+// HANDLERS
+extern "C" int handle_load_game(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    if(cmd == UP)
+    {
+        Gui_ListInventoryMenu(obj, 1);
+    }
+    else if(cmd == DOWN)
+    {
+        Gui_ListInventoryMenu(obj, -1);
+    }
+    else if(cmd == ACTIVATE)
+    {
+        gui_object_p item = Gui_ListInventoryMenu(obj, 0);
+        if(item && item->text)
+        {
+            return Game_Load(item->text);
+        }
+    }
+    return 0;
+}
+
+extern "C" int handle_save_game(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    if(cmd == UP)
+    {
+        Gui_ListInventoryMenu(obj, 1);
+    }
+    else if(cmd == DOWN)
+    {
+        Gui_ListInventoryMenu(obj, -1);
+    }
+    else if(cmd == ACTIVATE)
+    {
+        gui_object_p item = Gui_ListInventoryMenu(obj, 0);
+        if(item && item->text)
+        {
+            return Game_Save(item->text);
+        }
+    }
+    return 0;
+}
+
+extern "C" int handle_new_game(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    if(cmd == UP)
+    {
+        Gui_ListInventoryMenu(obj, 1);
+    }
+    else if(cmd == DOWN)
+    {
+        Gui_ListInventoryMenu(obj, -1);
+    }
+    else if(cmd == ACTIVATE)
+    {
+        gui_object_p item = Gui_ListInventoryMenu(obj, 0);
+        if(item && item->text)
+        {
+            int game_id = 0x7FFF & (uint64_t)item->data;
+            Gameflow_SetGame(game_id, 1);
+            switch(game_id)
+            {
+                case GAME_1:
+                case GAME_1_1:
+                case GAME_1_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 0);
+                    Gameflow_Send(GF_OP_STARTFMV, 2);
+                    Gameflow_Send(GF_OP_STARTFMV, 3);
+                    break;
+
+                case GAME_2:
+                case GAME_2_1:
+                case GAME_2_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 0);
+                    Gameflow_Send(GF_OP_STARTFMV, 2);
+                    break;
+
+                case GAME_3:
+                case GAME_3_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 0);
+                    Gameflow_Send(GF_OP_STARTFMV, 2);
+                    break;
+            }
+            return 1;
+        }
+    }
+    return 0;
 }

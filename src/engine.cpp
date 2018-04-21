@@ -788,6 +788,7 @@ void Engine_MainLoop()
     const int max_cycles = 64;
     int cycles = 0;
     char fps_str[32] = "0.0";
+    int inv_prev = control_states.gui_inventory;
 
     while(!engine_done)
     {
@@ -874,11 +875,12 @@ void Engine_MainLoop()
             stream_codec_video_unlock(&engine_video);
             Gui_DrawLoadScreen(-1);
 
-            if(control_states.gui_inventory)
+            if(inv_prev && !control_states.gui_inventory)
             {
                 stream_codec_stop(&engine_video, 0);
             }
         }
+        inv_prev = control_states.gui_inventory;
     }
 }
 

@@ -21,7 +21,22 @@ extern "C" {
 #define GUI_LAYOUT_NONE         (0)
 #define GUI_LAYOUT_VERTICAL     (1)
 #define GUI_LAYOUT_HORIZONTAL   (2)
+
+struct gui_object_s;
     
+enum gui_command_e
+{
+    NONE = 0,
+    OPEN,
+    CLOSE,
+    LEFT,
+    RIGHT,
+    UP,
+    DOWN,
+    ACTIVATE,
+    DEACTIVATE
+};
+
 typedef struct gui_object_flags_s
 {
     uint32_t    hide : 1;
@@ -40,6 +55,12 @@ typedef struct gui_object_flags_s
     uint32_t    clip_children : 1;
 }gui_object_flags_t, *gui_object_flags_p;
 
+typedef struct gui_handlers_s
+{
+    int  (*do_command)(struct gui_object_s *obj, enum gui_command_e cmd);
+    void (*delete_user_data)(void *data);
+}gui_handlers_t, *gui_handlers_p;
+
 typedef struct gui_object_s
 {
     int16_t         x;
@@ -55,6 +76,7 @@ typedef struct gui_object_s
     int16_t         margin_top;
     int16_t         margin_bottom;
 
+    struct gui_handlers_s       handlers;
     void                       *data;
     char                       *text;
     float                       line_height;

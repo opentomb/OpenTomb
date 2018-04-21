@@ -41,6 +41,11 @@ void Gui_DeleteObject(gui_object_p obj)
 {
     if(obj)
     {
+        if(obj->handlers.delete_user_data)
+        {
+            obj->handlers.delete_user_data(obj->data);
+            obj->data = NULL;
+        }
         if(obj->text)
         {
             obj->flags.draw_label = 0x00;

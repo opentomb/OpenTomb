@@ -231,7 +231,7 @@ int Save_Entity(entity_p ent, void *data)
                 }
             }
         }
-        
+
         if(ent->character)
         {
             fprintf(*f, "\nsetCharacterClimbPoint(%d, %.2f, %.2f, %.2f);", ent->id,
@@ -253,7 +253,7 @@ int Save_Entity(entity_p ent, void *data)
                 fprintf(*f, "\nsetCharacterParam(%d, %d, %.2f, %.2f);", ent->id, i, ent->character->parameters.param[i], ent->character->parameters.maximum[i]);
             }
         }
-        
+
         for(uint16_t i = 0; i < ent->bf->bone_tag_count; ++i)
         {
             ss_bone_tag_p b_tag = ent->bf->bone_tags + i;
@@ -369,7 +369,7 @@ int Game_Save(const char* name)
     }
 
     fprintf(f, "loadMap(\"%s\", %d, %d);\n", Gameflow_GetCurrentLevelPathLocal(), Gameflow_GetCurrentGameID(), Gameflow_GetCurrentLevelID());
-        
+
     // Save flipmap and flipped room states.
     uint8_t *flip_map;
     uint8_t *flip_state;
@@ -587,18 +587,18 @@ int Game_UpdateEntity(entity_p ent, void *data)
 
 
 int Game_ProcessMenu(entity_p player)
-{   
+{
     // GUI and controls should be updated at all times!
     if(control_states.gui_inventory && main_inventory_manager)
     {
         if(player && !main_inventory_manager->isEnabled())
         {
             main_inventory_manager->setInventory(&player->inventory, player->id);
-            main_inventory_manager->send(gui_InventoryManager::OPEN);
+            main_inventory_manager->send(gui_command_e::OPEN);
         }
         if(main_inventory_manager->isIdle() || Gui_GetCurrentMenu())
         {
-            main_inventory_manager->send(gui_InventoryManager::CLOSE);
+            main_inventory_manager->send(gui_command_e::CLOSE);
         }
     }
 
