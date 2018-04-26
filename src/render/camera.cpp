@@ -400,7 +400,7 @@ void Cam_RecalcClipPlanes(camera_p cam)
  */
 void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float tr[16], float lerp)
 {
-    float from[3], to[3], roll;
+    float from[3], to[3]/*, roll*/;
     float t = 1.0f - lerp;
 
     vec3_interpolate_macro(from, a->pos, b->pos, lerp, t);
@@ -408,7 +408,7 @@ void Cam_SetFrame(camera_p cam, camera_frame_p a, camera_frame_p b, float tr[16]
     Mat4_vec3_mul(cam->transform.M4x4 + 12, tr, from);
     Mat4_vec3_mul(to, tr, to);
 
-    roll = a->roll * t + b->roll * lerp;
+    //roll = a->roll * t + b->roll * lerp;
     cam->fov = a->fov * t + b->fov * lerp;
     Cam_SetFovAspect(cam, cam->fov, cam->aspect);
     Cam_LookTo(cam, to);

@@ -67,8 +67,6 @@ static float            ray_test_point[3] = {0.0f, 0.0f, 0.0f};
 static ss_bone_frame_t  test_model = {0};
 static int32_t          test_model_index = 0;
 
-struct engine_control_state_s           control_states = {0};
-struct control_settings_s               control_mapper = {0};
 float                                   engine_frame_time = 0.0;
 
 lua_State                              *engine_lua = NULL;
@@ -596,6 +594,11 @@ void Engine_PollSDLEvents()
     const float color[3] = {1.0f, 0.0f, 0.0f};
     static float from[3], to[3];
 
+    for(int i = 0; i < ACT_LASTINDEX; i++)
+    {
+        control_states.actions[i].prev_state = control_states.actions[i].state;
+    }
+    
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -788,7 +791,6 @@ void Engine_MainLoop()
     const int max_cycles = 64;
     int cycles = 0;
     char fps_str[32] = "0.0";
-    int inv_prev = control_states.gui_inventory;
 
     while(!engine_done)
     {
@@ -875,12 +877,12 @@ void Engine_MainLoop()
             stream_codec_video_unlock(&engine_video);
             Gui_DrawLoadScreen(-1);
 
-            if(inv_prev && !control_states.gui_inventory)
+            if(control_states.actions[ACT_INVENTORY].state && 
+              !control_states.actions[ACT_INVENTORY].prev_state)
             {
                 stream_codec_stop(&engine_video, 0);
             }
         }
-        inv_prev = control_states.gui_inventory;
     }
 }
 
@@ -957,35 +959,35 @@ void ShowModelView(float time)
         const int current_light_number = 0;
         const lit_shader_description *shader = renderer.shaderManager->getEntityShader(current_light_number);
 
-        if(control_states.look_right || control_states.move_right)
+        if(control_states.actions[ACT_LOOKRIGHT].state || control_states.actions[ACT_RIGHT].state)
         {
             test_model_angles[0] += time * 256.0f;
         }
-        if(control_states.look_left || control_states.move_left)
+        if(control_states.actions[ACT_LOOKLEFT].state || control_states.actions[ACT_LEFT].state)
         {
             test_model_angles[0] -= time * 256.0f;
         }
-        if(control_states.look_up)
+        if(control_states.actions[ACT_LOOKUP].state)
         {
             test_model_angles[1] += time * 256.0f;
         }
-        if(control_states.look_down)
+        if(control_states.actions[ACT_LOOKDOWN].state)
         {
             test_model_angles[1] -= time * 256.0f;
         }
-        if(control_states.move_forward && (test_model_dist >= 8.0f))
+        if(control_states.actions[ACT_UP].state && (test_model_dist >= 8.0f))
         {
             test_model_dist -= time * 512.0f;
         }
-        if(control_states.move_backward)
+        if(control_states.actions[ACT_DOWN].state)
         {
             test_model_dist += time * 512.0f;
         }
-        if(control_states.move_up)
+        if(control_states.actions[ACT_JUMP].state)
         {
             test_model_z_offset += time * 512.0f;
         }
-        if(control_states.move_down)
+        if(control_states.actions[ACT_CROUCH].state)
         {
             test_model_z_offset -= time * 512.0f;
         }

@@ -16,20 +16,20 @@ static gui_object_p Gui_CreateMenuRoot();
 static gui_object_p Gui_AddListItem(gui_object_p cont);
 static gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy);
 
-extern "C" int handle_load_game(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_save_game(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_new_game(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h);
+extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int h);
 
 static gui_object_p Gui_CreateMenuRoot()
 {
     gui_object_p root = Gui_CreateObject();
-    root->w = screen_info.w * 0.5;
-    root->h = screen_info.h * 0.6;
-    root->x = screen_info.w * 0.25;
-    root->y = screen_info.h * 0.2;
-    root->color_border[0] = 65;
-    root->color_border[1] = 21;
-    root->color_border[2] = 22;
+    root->color_border[0] = 232;
+    root->color_border[1] = 192;
+    root->color_border[2] = 112;
     root->color_border[3] = 255;
     root->color_background[0] = 32;
     root->color_background[1] = 21;
@@ -58,9 +58,9 @@ static gui_object_p Gui_AddListItem(gui_object_p cont)
     gui_object_p obj = Gui_CreateChildObject(cont);
     obj->h = 32;
     obj->border_width = 3;
-    obj->color_border[0] = 220;
-    obj->color_border[1] = 211;
-    obj->color_border[2] = 242;
+    obj->color_border[0] = 232;
+    obj->color_border[1] = 192;
+    obj->color_border[2] = 112;
     obj->color_border[3] = 255;
 
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
@@ -70,26 +70,11 @@ static gui_object_p Gui_AddListItem(gui_object_p cont)
     return obj;
 }
 
-gui_object_p Gui_BuildLoadGameMenu()
+static gui_object_p Gui_AddLoadGameContainer(gui_object_p root)
 {
-    gui_object_p root = Gui_CreateMenuRoot();
-    gui_object_p obj = Gui_CreateChildObject(root);
-
-    root->handlers.do_command = handle_load_game;
-    obj->h = 40;
-    obj->flags.draw_border = 0x01;
-    Gui_SetObjectLabel(obj, "Load game:", 1, 1);
-    obj->border_width = 4;
-    obj->flags.h_content_align = GUI_ALIGN_CENTER;
-    obj->flags.v_content_align = GUI_ALIGN_CENTER;
-    obj->flags.draw_label = 0x01;
-    obj->flags.draw_border = 0x01;
-    obj->flags.fixed_h = 0x01;
-    obj->line_height = 0.8;
-
     gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_load_game_cont;
     cont->w = root->w - root->margin_left - root->margin_right;
-    cont->h = root->h - obj->h - root->margin_top - root->margin_bottom;
 
     cont->border_width = 0;
     cont->flags.clip_children = 0x01;
@@ -104,39 +89,22 @@ gui_object_p Gui_BuildLoadGameMenu()
     {
         if(!it->is_dir)
         {
-            obj = Gui_AddListItem(cont);
+            gui_object_p obj = Gui_AddListItem(cont);
             obj->flags.draw_border = (obj->prev) ? (0x00) : (0x01);
             Gui_SetObjectLabel(obj, it->name, 2, 2);
             obj->flags.draw_label = 0x01;
         }
     }
     Sys_ListDirFree(list);
-
-    Gui_LayoutObjects(root);
-
-    return root;
+    
+    return cont;
 }
 
-gui_object_p Gui_BuildSaveGameMenu()
+static gui_object_p Gui_AddSaveGameContainer(gui_object_p root)
 {
-    gui_object_p root = Gui_CreateMenuRoot();
-    gui_object_p obj = Gui_CreateChildObject(root);
-
-    root->handlers.do_command = handle_save_game;
-    obj->h = 40;
-    obj->flags.draw_border = 0x01;
-    Gui_SetObjectLabel(obj, "Save game:", 1, 1);
-    obj->border_width = 4;
-    obj->flags.h_content_align = GUI_ALIGN_CENTER;
-    obj->flags.v_content_align = GUI_ALIGN_CENTER;
-    obj->flags.draw_label = 0x01;
-    obj->flags.draw_border = 0x01;
-    obj->flags.fixed_h = 0x01;
-    obj->line_height = 0.8;
-
     gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_save_game_cont;
     cont->w = root->w - root->margin_left - root->margin_right;
-    cont->h = root->h - obj->h - root->margin_top - root->margin_bottom;
 
     cont->border_width = 0;
     cont->flags.clip_children = 0x01;
@@ -146,7 +114,7 @@ gui_object_p Gui_BuildSaveGameMenu()
     cont->flags.h_content_align = GUI_ALIGN_CENTER;
     cont->weight_y = 1;
 
-    obj = Gui_AddListItem(cont);
+    gui_object_p obj = Gui_AddListItem(cont);
     obj->flags.draw_border = (obj->prev) ? (0x00) : (0x01);
     Gui_SetObjectLabel(obj, "NEW SAVE", 2, 2);
     obj->flags.draw_label = 0x01;
@@ -163,32 +131,15 @@ gui_object_p Gui_BuildSaveGameMenu()
         }
     }
     Sys_ListDirFree(list);
-
-    Gui_LayoutObjects(root);
-
-    return root;
+    
+    return cont;
 }
 
-gui_object_p Gui_BuildNewGameMenu()
+static gui_object_p Gui_AddNewGameContainer(gui_object_p root)
 {
-    gui_object_p root = Gui_CreateMenuRoot();
-    gui_object_p obj = Gui_CreateChildObject(root);
-
-    root->handlers.do_command = handle_new_game;
-    obj->h = 40;
-    obj->flags.draw_border = 0x01;
-    Gui_SetObjectLabel(obj, "New game", 1, 1);
-    obj->border_width = 4;
-    obj->flags.h_content_align = GUI_ALIGN_CENTER;
-    obj->flags.v_content_align = GUI_ALIGN_CENTER;
-    obj->flags.draw_label = 0x01;
-    obj->flags.draw_border = 0x01;
-    obj->flags.fixed_h = 0x01;
-    obj->line_height = 0.8;
-
     gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_new_game_cont;
     cont->w = root->w - root->margin_left - root->margin_right;
-    cont->h = root->h - obj->h - root->margin_top - root->margin_bottom;
 
     cont->border_width = 0;
     cont->flags.clip_children = 0x01;
@@ -198,7 +149,7 @@ gui_object_p Gui_BuildNewGameMenu()
     cont->flags.h_content_align = GUI_ALIGN_CENTER;
     cont->weight_y = 1;
 
-    obj = Gui_AddListItem(cont);
+    gui_object_p obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x01;
     Gui_SetObjectLabel(obj, "Tomb Raider I", 2, 2);
     obj->flags.draw_label = 0x01;
@@ -245,7 +196,181 @@ gui_object_p Gui_BuildNewGameMenu()
     Gui_SetObjectLabel(obj, "Tomb Raider V", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_5;
+    
+    return cont;
+}
 
+gui_object_p Gui_BuildMainMenu()
+{
+    gui_object_p root = Gui_CreateMenuRoot();
+    gui_object_p title = Gui_CreateChildObject(root);
+    root->handlers.do_command = handle_main_menu;
+    root->handlers.screen_resized = handle_screen_resized_main;
+
+    title->h = 48;
+    title->flags.draw_border = 0x01;
+    title->border_width = 4;
+    title->spacing = 4;
+    title->margin_top = 6;
+    title->margin_bottom = 6;
+    title->margin_left = 6;
+    title->margin_right = 6;
+    title->flags.layout = GUI_LAYOUT_HORIZONTAL;
+    title->flags.h_content_align = GUI_ALIGN_LEFT;
+    title->flags.v_content_align = GUI_ALIGN_CENTER;
+    title->flags.draw_label = 0x00;
+    title->flags.draw_border = 0x01;
+    title->flags.fixed_h = 0x01;
+    title->flags.clip_children = 0x01;
+
+    gui_object_p cont = Gui_CreateChildObject(root);
+    cont->w = root->w - root->margin_left - root->margin_right;
+    cont->h = root->h - title->h - root->margin_top - root->margin_bottom;
+
+    cont->border_width = 0;
+    cont->flags.clip_children = 0x01;
+    cont->flags.fit_inside = 0x01;
+    cont->flags.draw_background = 0x00;
+    cont->flags.draw_border = 0x00;
+    cont->flags.layout = GUI_LAYOUT_VERTICAL;
+    cont->flags.h_content_align = GUI_ALIGN_CENTER;
+    cont->weight_y = 1;
+    
+    // fill menu
+    gui_object_p obj = Gui_CreateChildObject(title);
+    obj->data = Gui_AddNewGameContainer(cont);
+    title->data = obj;
+    Gui_SetObjectLabel(obj, "New Game", 1, 1);
+    obj->w = 172;
+    obj->line_height = 0.8;
+    obj->border_width = 4;
+    obj->flags.fixed_w = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.draw_label = 0x01;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+
+    obj = Gui_CreateChildObject(title);
+    obj->data = Gui_AddLoadGameContainer(cont);
+    ((gui_object_p)obj->data)->flags.hide = 0x01;
+    Gui_SetObjectLabel(obj, "Load Game", 1, 1);
+    obj->w = 172;
+    obj->line_height = 0.8;
+    obj->border_width = 2;
+    obj->flags.fixed_w = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.draw_label = 0x01;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+
+    obj = Gui_CreateChildObject(title);
+    Gui_SetObjectLabel(obj, "Home", 1, 1);
+    obj->w = 172;
+    obj->line_height = 0.8;
+    obj->border_width = 2;
+    obj->flags.fixed_w = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.draw_label = 0x01;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+
+    obj = Gui_CreateChildObject(title);
+    Gui_SetObjectLabel(obj, "Graphics", 1, 1);
+    obj->w = 172;
+    obj->line_height = 0.8;
+    obj->border_width = 2;
+    obj->flags.fixed_w = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.draw_label = 0x01;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+
+    obj = Gui_CreateChildObject(title);
+    Gui_SetObjectLabel(obj, "Controls", 1, 1);
+    obj->w = 172;
+    obj->line_height = 0.8;
+    obj->border_width = 2;
+    obj->flags.fixed_w = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.draw_label = 0x01;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    
+    root->handlers.screen_resized(root, screen_info.w, screen_info.h);
+
+    return root;
+}
+
+gui_object_p Gui_BuildLoadGameMenu()
+{
+    gui_object_p root = Gui_CreateMenuRoot();
+    gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.screen_resized = handle_screen_resized_inv;
+    root->handlers.do_command = handle_to_container;
+    obj->h = 40;
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "Load game:", 1, 1);
+    obj->border_width = 4;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->flags.draw_label = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.fixed_h = 0x01;
+    obj->line_height = 0.8;
+
+    Gui_AddLoadGameContainer(root);
+    handle_screen_resized_inv(root, screen_info.w, screen_info.h);
+    Gui_LayoutObjects(root);
+
+    return root;
+}
+
+gui_object_p Gui_BuildSaveGameMenu()
+{
+    gui_object_p root = Gui_CreateMenuRoot();
+    gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.screen_resized = handle_screen_resized_inv;
+    root->handlers.do_command = handle_to_container;
+    obj->h = 40;
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "Save game:", 1, 1);
+    obj->border_width = 4;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->flags.draw_label = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.fixed_h = 0x01;
+    obj->line_height = 0.8;
+
+    Gui_AddSaveGameContainer(root);
+    handle_screen_resized_inv(root, screen_info.w, screen_info.h);
+    Gui_LayoutObjects(root);
+
+    return root;
+}
+
+gui_object_p Gui_BuildNewGameMenu()
+{
+    gui_object_p root = Gui_CreateMenuRoot();
+    gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.screen_resized = handle_screen_resized_inv;
+    root->handlers.do_command = handle_to_container;
+    obj->h = 40;
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "New game", 1, 1);
+    obj->border_width = 4;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->flags.draw_label = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.fixed_h = 0x01;
+    obj->line_height = 0.8;
+
+    Gui_AddNewGameContainer(root);
+    handle_screen_resized_inv(root, screen_info.w, screen_info.h);
     Gui_LayoutObjects(root);
 
     return root;
@@ -254,10 +379,9 @@ gui_object_p Gui_BuildNewGameMenu()
 gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy)
 {
     gui_object_p ret = NULL;
-    if(root && root->childs && root->childs->next)
+    if(root)
     {
-        gui_object_p cont = root->childs->next;
-        for(gui_object_p obj = cont->childs; obj; obj = obj->next)
+        for(gui_object_p obj = root->childs; obj; obj = obj->next)
         {
             if(obj->flags.draw_border)
             {
@@ -283,57 +407,140 @@ gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy)
 }
 
 // HANDLERS
-extern "C" int handle_load_game(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e cmd)
 {
+    if(obj && obj->childs && obj->childs->next && obj->childs->next->handlers.do_command)
+    {
+        return obj->childs->next->handlers.do_command(obj->childs->next, cmd);
+    }
+    return 0;
+}
+
+extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h)
+{
+    obj->w = w * 0.50f;
+    obj->h = h * 0.60f;
+    obj->x = w * 0.25f;
+    obj->y = h * 0.20f;
+    Gui_LayoutObjects(obj);
+}
+
+extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int h)
+{
+    obj->w = w * 0.80f;
+    obj->h = h * 0.90f;
+    obj->x = w * 0.10f;
+    obj->y = h * 0.05f;
+    Gui_LayoutObjects(obj);
+}
+
+extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    gui_object_p title = obj->childs;
+    gui_object_p curr_in_title = (gui_object_p)title->data;
+    gui_object_p curr_menu = (curr_in_title) ? ((gui_object_p)curr_in_title->data) : (NULL);
+    gui_object_p cont = title->next;
+    if(!cont->handlers.do_command)
+    {
+        if((cmd == LEFT) && (curr_in_title->prev))
+        {
+            curr_in_title->border_width = 2;
+            curr_in_title = curr_in_title->prev;
+            title->data = curr_in_title;
+            curr_in_title->border_width = 4;
+            Gui_EnsureVisible(curr_in_title);
+
+            for(gui_object_p it = cont->childs; it; it = it->next)
+            {
+                it->flags.hide = (it != curr_in_title->data) ? (0x01) : (0x00);
+            }
+            Gui_LayoutObjects(cont);
+        }
+        else if((cmd == RIGHT) && (curr_in_title->next))
+        {
+            curr_in_title->border_width = 2;
+            curr_in_title = curr_in_title->next;
+            title->data = curr_in_title;
+            curr_in_title->border_width = 4;
+            Gui_EnsureVisible(curr_in_title);
+
+            for(gui_object_p it = cont->childs; it; it = it->next)
+            {
+                it->flags.hide = (it != curr_in_title->data) ? (0x01) : (0x00);
+            }
+            Gui_LayoutObjects(cont);
+        }
+        else if(curr_menu && (cmd == ACTIVATE))
+        {
+            cont->handlers.do_command = curr_menu->handlers.do_command;
+        }
+        else if(cmd == CLOSE)
+        {
+            return 0;
+        }
+    }
+    else if(!cont->handlers.do_command(curr_menu, cmd) && (cmd == CLOSE))
+    {
+        cont->handlers.do_command = NULL;
+    }
+
+    return 1;
+}
+
+extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    int ret = 0;
     if(cmd == UP)
     {
-        Gui_ListInventoryMenu(obj, 1);
+        ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
     else if(cmd == DOWN)
     {
-        Gui_ListInventoryMenu(obj, -1);
+        ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
     else if(cmd == ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->text)
         {
-            return Game_Load(item->text);
+            ret = Game_Load(item->text);
         }
     }
-    return 0;
+    return ret;
 }
 
-extern "C" int handle_save_game(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
 {
+    int ret = 0;
     if(cmd == UP)
     {
-        Gui_ListInventoryMenu(obj, 1);
+        ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
     else if(cmd == DOWN)
     {
-        Gui_ListInventoryMenu(obj, -1);
+        ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
     else if(cmd == ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->text)
         {
-            return Game_Save(item->text);
+            ret = Game_Save(item->text);
         }
     }
-    return 0;
+    return ret;
 }
 
-extern "C" int handle_new_game(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
 {
+    int ret = 0;
     if(cmd == UP)
     {
-        Gui_ListInventoryMenu(obj, 1);
+        ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
     else if(cmd == DOWN)
     {
-        Gui_ListInventoryMenu(obj, -1);
+        ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
     else if(cmd == ACTIVATE)
     {
@@ -365,8 +572,8 @@ extern "C" int handle_new_game(struct gui_object_s *obj, enum gui_command_e cmd)
                     Gameflow_Send(GF_OP_STARTFMV, 2);
                     break;
             }
-            return 1;
+            ret = 1;
         }
     }
-    return 0;
+    return ret;
 }

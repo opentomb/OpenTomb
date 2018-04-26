@@ -578,7 +578,7 @@ void gui_InventoryManager::frameStates(float time)
 void gui_InventoryManager::frameItems(float time)
 {
     int ring_item_index = 0;
-    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); i; i = i->next)
+    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
         if(bi && (bi->type == m_current_items_type))
@@ -619,6 +619,10 @@ void gui_InventoryManager::frameItems(float time)
                     if(bi->id == ITEM_PASSPORT)
                     {
                         handlePassport(bi, time / 2.0f);
+                    }
+                    else if(bi->id == ITEM_COMPASS)
+                    {
+                        handleCompass(bi, time / 2.0f);
                     }
                     else if(m_command == ACTIVATE)
                     {
@@ -801,6 +805,13 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
 
     SSBoneFrame_Update(bi->bf, 0);
     Gui_SetCurrentMenu(m_current_menu);
+
+    if(m_current_menu && m_current_menu->handlers.do_command
+      && m_current_menu->handlers.do_command(m_current_menu, m_command))
+    {
+        m_command = NONE;
+    }
+    
     if(m_command == CLOSE)
     {
         m_menu_mode = 4;
@@ -808,17 +819,83 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         Gui_DeleteObjects(m_current_menu);
         m_current_menu = NULL;
     }
-    else if(m_current_menu && m_current_menu->handlers.do_command)
+}
+
+void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
+{
+    switch(m_menu_mode)
     {
-        if(m_current_menu->handlers.do_command(m_current_menu, m_command))
+    case 0:  // enter menu
+        if(m_current_menu)
         {
-            Gui_SetCurrentMenu(NULL);
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
-            m_inventory = NULL;
+        }
+        if(m_command == CLOSE)
+        {
+            m_command = NONE;
+            m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
+        else if(m_command == ACTIVATE)
+        {
+            m_command = NONE;
+            m_menu_mode = 1;
+        }
+        break;
+
+    case 1:  // load game
+        if(bi->bf->animations.current_frame < 10)
+        {
+            Anim_IncTime(&bi->bf->animations, time);
+            m_command = NONE;
+            break;
+        }
+
+        if(!m_current_menu)
+        {
+            m_current_menu = Gui_BuildMainMenu();
+        }
+        break;
+
+    case 2:  // leave menu
         m_command = NONE;
+        Gui_SetCurrentMenu(NULL);
+        if(m_current_menu)
+        {
+            Gui_DeleteObjects(m_current_menu);
+            m_current_menu = NULL;
+        }
+        Anim_IncTime(&bi->bf->animations, time);
+        if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
+        {
+            Anim_SetAnimation(&bi->bf->animations, 0, 0);
+            m_command = NONE;
+            m_current_state = INVENTORY_DEACTIVATING;
+            m_menu_mode = 0;
+        }
+        break;
+    }
+
+    SSBoneFrame_Update(bi->bf, 0);
+    if(m_command == ACTIVATE)
+    {
+        SSBoneFrame_Update(bi->bf, 0);
+    }
+    Gui_SetCurrentMenu(m_current_menu);
+    
+    if(m_current_menu && m_current_menu->handlers.do_command
+      && m_current_menu->handlers.do_command(m_current_menu, m_command))
+    {
+        m_command = NONE;
+    }
+    
+    if(m_command == CLOSE)
+    {
+        m_menu_mode = 2;
+        Gui_SetCurrentMenu(NULL);
+        Gui_DeleteObjects(m_current_menu);
+        m_current_menu = NULL;
     }
 }
 

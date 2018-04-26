@@ -501,7 +501,7 @@ void Gui_LayoutHorizontal(gui_object_p root)
         {
             if(!obj->flags.fixed_h)
             {
-                obj->y = root->y + root->margin_bottom;
+                obj->y = root->margin_bottom;
                 obj->h = root->h - root->margin_bottom - root->margin_top;
             }
             else if(obj->flags.v_self_align == GUI_ALIGN_BOTTOM)

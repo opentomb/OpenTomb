@@ -58,6 +58,7 @@ typedef struct gui_object_flags_s
 typedef struct gui_handlers_s
 {
     int  (*do_command)(struct gui_object_s *obj, enum gui_command_e cmd);
+    void (*screen_resized)(struct gui_object_s *obj, int w, int h);
     void (*delete_user_data)(void *data);
 }gui_handlers_t, *gui_handlers_p;
 

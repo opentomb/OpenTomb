@@ -201,13 +201,9 @@ void Gui_UpdateResize()
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
     
-    if(g_current_menu)
+    if(g_current_menu && g_current_menu->handlers.screen_resized)
     {
-        g_current_menu->w = screen_info.w * 0.5;
-        g_current_menu->h = screen_info.h * 0.6;
-        g_current_menu->x = screen_info.w * 0.25;
-        g_current_menu->y = screen_info.h * 0.2;
-        Gui_LayoutObjects(g_current_menu);
+        g_current_menu->handlers.screen_resized(g_current_menu, screen_info.w, screen_info.h);
     }
 }
 

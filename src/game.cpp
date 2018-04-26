@@ -412,23 +412,21 @@ int Game_Save(const char* name)
 
 void Game_ApplyControls(struct entity_s *ent)
 {
+    control_action_p act = control_states.actions;
     int8_t move_logic[3];
     int8_t look_logic[3];
 
     // Keyboard move logic
-
-    move_logic[0] = control_states.move_forward - control_states.move_backward;
-    move_logic[1] = control_states.move_right - control_states.move_left;
-    move_logic[2] = control_states.move_up - control_states.move_down;
+    move_logic[0] = act[ACT_UP].state - act[ACT_DOWN].state;
+    move_logic[1] = act[ACT_RIGHT].state - act[ACT_LEFT].state;
+    move_logic[2] = act[ACT_JUMP].state - act[ACT_CROUCH].state;
 
     // Keyboard look logic
-
-    look_logic[0] = control_states.look_left - control_states.look_right;
-    look_logic[1] = control_states.look_down - control_states.look_up;
-    look_logic[2] = control_states.look_roll_right - control_states.look_roll_left;
+    look_logic[0] = act[ACT_LOOKLEFT].state - act[ACT_LOOKRIGHT].state;
+    look_logic[1] = act[ACT_LOOKDOWN].state - act[ACT_LOOKUP].state;
+    look_logic[2] = 0;//control_states.look_roll_right - control_states.look_roll_left;
 
     // APPLY CONTROLS
-
     control_states.cam_angles[0] += 2.2 * engine_frame_time * look_logic[0];
     control_states.cam_angles[1] += 2.2 * engine_frame_time * look_logic[1];
     control_states.cam_angles[2] += 2.2 * engine_frame_time * look_logic[2];
@@ -439,12 +437,11 @@ void Game_ApplyControls(struct entity_s *ent)
         {
             if(control_mapper.joy_look_x != 0)
             {
-                control_states.cam_angles[0] -=0.015 * engine_frame_time * control_mapper.joy_look_x;
-
+                control_states.cam_angles[0] -= 0.015 * engine_frame_time * control_mapper.joy_look_x;
             }
             if(control_mapper.joy_look_y != 0)
             {
-                control_states.cam_angles[1] -=0.015 * engine_frame_time * control_mapper.joy_look_y;
+                control_states.cam_angles[1] -= 0.015 * engine_frame_time * control_mapper.joy_look_y;
             }
         }
 
@@ -457,7 +454,7 @@ void Game_ApplyControls(struct entity_s *ent)
         }
 
         Cam_SetRotation(&engine_camera, control_states.cam_angles);
-        float dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        float dist = (act[ACT_WALK].state) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
         Cam_MoveVertical(&engine_camera, dist * move_logic[2]);
@@ -487,7 +484,7 @@ void Game_ApplyControls(struct entity_s *ent)
 
     if(control_states.free_look || !ent || !ent->character)
     {
-        float dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        float dist = (act[ACT_WALK].state) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(&engine_camera, control_states.cam_angles);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
@@ -497,7 +494,7 @@ void Game_ApplyControls(struct entity_s *ent)
     else if(control_states.noclip)
     {
         float pos[3];
-        float dist = (control_states.state_walk) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
+        float dist = (act[ACT_WALK].state) ? (control_states.free_look_speed * engine_frame_time * 0.3f) : (control_states.free_look_speed * engine_frame_time);
         Cam_SetRotation(&engine_camera, control_states.cam_angles);
         Cam_MoveAlong(&engine_camera, dist * move_logic[0]);
         Cam_MoveStrafe(&engine_camera, dist * move_logic[1]);
@@ -518,27 +515,25 @@ void Game_ApplyControls(struct entity_s *ent)
     else
     {
         // Apply controls to Lara
-        ent->character->cmd.action = control_states.state_action;
-        ent->character->cmd.ready_weapon = control_states.do_draw_weapon;
-        ent->character->cmd.jump = control_states.do_jump;
-        ent->character->cmd.shift = control_states.state_walk;
+        ent->character->cmd.action = control_states.actions[ACT_ACTION].state;
+        ent->character->cmd.ready_weapon = control_states.actions[ACT_DRAWWEAPON].state;
+        ent->character->cmd.jump = control_states.actions[ACT_JUMP].state;
+        ent->character->cmd.shift = control_states.actions[ACT_WALK].state;
 
-        ent->character->cmd.roll = ((control_states.move_forward && control_states.move_backward) || control_states.do_roll);
+        ent->character->cmd.roll = ((act[ACT_UP].state && act[ACT_DOWN].state) || act[ACT_ROLL].state);
 
         // New commands only for TR3 and above
-        ent->character->cmd.sprint = control_states.state_sprint;
-        ent->character->cmd.crouch = control_states.state_crouch;
+        ent->character->cmd.sprint = control_states.actions[ACT_SPRINT].state;
+        ent->character->cmd.crouch = control_states.actions[ACT_CROUCH].state;
 
-        if(control_states.use_small_medi)
+        if(control_states.actions[ACT_SMALLMEDI].state && !control_states.actions[ACT_SMALLMEDI].prev_state)
         {
             Script_UseItem(engine_lua, ITEM_SMALL_MEDIPACK, ent->id);
-            control_states.use_small_medi = 0;
         }
 
-        if(control_states.use_big_medi)
+        if(control_states.actions[ACT_BIGMEDI].state && !control_states.actions[ACT_BIGMEDI].prev_state)
         {
             Script_UseItem(engine_lua, ITEM_LARGE_MEDIPACK, ent->id);
-            control_states.use_big_medi = 0;
         }
 
         if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
@@ -588,17 +583,45 @@ int Game_UpdateEntity(entity_p ent, void *data)
 
 int Game_ProcessMenu(entity_p player)
 {
-    // GUI and controls should be updated at all times!
-    if(control_states.gui_inventory && main_inventory_manager)
+    control_action_p act = control_states.actions;
+    if(main_inventory_manager && main_inventory_manager->isEnabled())
+    {
+        if(act[ACT_INVENTORY].state && !act[ACT_INVENTORY].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::CLOSE);
+        }
+        else if(act[ACT_ACTION].state && !act[ACT_ACTION].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::ACTIVATE);
+        }
+        else if(act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::UP);
+        }
+        else if(act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::DOWN);
+        }
+        else if(act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::LEFT);
+        }
+        else if(act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state)
+        {
+            main_inventory_manager->send(gui_command_e::RIGHT);
+        }
+        else
+        {
+            main_inventory_manager->send(gui_command_e::NONE);
+        }
+    }
+
+    if(act[ACT_INVENTORY].state && main_inventory_manager)
     {
         if(player && !main_inventory_manager->isEnabled())
         {
             main_inventory_manager->setInventory(&player->inventory, player->id);
             main_inventory_manager->send(gui_command_e::OPEN);
-        }
-        if(main_inventory_manager->isIdle() || Gui_GetCurrentMenu())
-        {
-            main_inventory_manager->send(gui_command_e::CLOSE);
         }
     }
 
@@ -739,10 +762,7 @@ void Game_Frame(float time)
     }
 
     World_IterateAllEntities(Game_UpdateEntity, NULL);
-
     Physics_StepSimulation(time);
-
-    Controls_RefreshStates();
     renderer.UpdateAnimTextures();
 }
 

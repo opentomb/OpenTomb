@@ -11,6 +11,17 @@
 
 #define JOY_TRIGGER_DEADZONE 10000
 
+
+enum AXES {
+    AXIS_LOOK_X,        // Look axes
+    AXIS_LOOK_Y,
+    AXIS_MOVE_X,        // Move axes
+    AXIS_MOVE_Y,
+    // Last axis index. This should ALWAYS remain last entry!
+    AXIS_LASTINDEX
+};
+
+
 // Action mapper index constants
 enum ACTIONS {
     // Movement directions
@@ -67,22 +78,32 @@ enum ACTIONS {
     ACT_LASTINDEX               // 43
 };
 
-enum AXES {
-    AXIS_LOOK_X,        // Look axes
-    AXIS_LOOK_Y,
-    AXIS_MOVE_X,        // Move axes
-    AXIS_MOVE_Y,
-    // Last axis index. This should ALWAYS remain last entry!
-    AXIS_LASTINDEX
-};
 
 typedef struct control_action_s
 {
-    int      primary;
-    int      secondary;
-    bool     state;
-    bool     already_pressed;
+    int         primary;
+    int         secondary;
+    int16_t     state;
+    int16_t     prev_state;
 }control_action_t, *control_action_p;
+
+
+typedef struct engine_control_state_s
+{
+    int8_t              look;                              // Look (camera) keys.
+    int8_t              free_look;
+    int8_t              mouse_look;
+    int8_t              noclip;
+
+    float               free_look_speed;
+    float               cam_distance;
+    float               cam_angles[3];
+    float               look_axis_x;                       // Unified look axis data.
+    float               look_axis_y;
+    
+    control_action_t    actions[ACT_LASTINDEX];            // Actions array for action mapper.
+}engine_control_state_t, *engine_control_state_p;
+
 
 typedef struct control_settings_s
 {
@@ -111,13 +132,11 @@ typedef struct control_settings_s
     int16_t     joy_move_deadzone;
 
     int8_t      joy_axis_map[AXIS_LASTINDEX];      // Axis array for action mapper.
-
-    control_action_s  action_map[ACT_LASTINDEX];         // Actions array for action mapper.
 }control_settings_t, *control_settings_p;
 
 
-extern struct engine_control_state_s            control_states;
 extern struct control_settings_s                control_mapper;
+extern struct engine_control_state_s            control_states;
 
 void Controls_DebugKeys(int button, int state);
 void Controls_PrimaryMouseDown(float from[3], float to[3]);
@@ -128,7 +147,6 @@ void Controls_WrapGameControllerKey(int button, int state);
 void Controls_WrapGameControllerAxis(int axis, Sint16 value);
 void Controls_JoyAxis(int axis, Sint16 value);
 void Controls_JoyHat(int value);
-void Controls_RefreshStates();
 void Controls_InitGlobals();
 
 #endif /* CONTROLS_H */

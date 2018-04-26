@@ -660,12 +660,12 @@ int lua_BindKey(lua_State *lua)
 
     else if(top == 2)
     {
-        control_mapper.action_map[act].primary = lua_tointeger(lua, 2);
+        control_states.actions[act].primary = lua_tointeger(lua, 2);
     }
     else if(top == 3)
     {
-        control_mapper.action_map[act].primary   = lua_tointeger(lua, 2);
-        control_mapper.action_map[act].secondary = lua_tointeger(lua, 3);
+        control_states.actions[act].primary   = lua_tointeger(lua, 2);
+        control_states.actions[act].secondary = lua_tointeger(lua, 3);
     }
     else
     {
@@ -684,7 +684,7 @@ int lua_BindKey(lua_State *lua)
 
         if((act >= 0) && (act < ACT_LASTINDEX))
         {
-            lua_pushinteger(lua, (int)(control_mapper.action_map[act].state));
+            lua_pushinteger(lua, (int)(control_states.actions[act].state));
             return 1;
         }
 
@@ -701,11 +701,11 @@ int lua_GetActionChange(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
-        int act = lua_tointeger(lua, 1);
-
-        if((act >= 0) && (act < ACT_LASTINDEX))
+        int index = lua_tointeger(lua, 1);
+        if((index >= 0) && (index < ACT_LASTINDEX))
         {
-            lua_pushinteger(lua, (int)(control_mapper.action_map[act].already_pressed));
+            control_action_p act = control_states.actions + index;
+            lua_pushinteger(lua, (int)(act->state != act->prev_state));
             return 1;
         }
 

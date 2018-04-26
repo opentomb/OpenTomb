@@ -155,7 +155,7 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
             break;
 
         case TR_STATE_WINGED_MUTANT_FLY:
-            if((ent->move_type != MOVE_FLY) || cmd->crouch && hi->floor_hit.hit && (pos[2] < hi->floor_hit.point[2] + 256.0f))
+            if((ent->move_type != MOVE_FLY) || (cmd->crouch && hi->floor_hit.hit && (pos[2] < hi->floor_hit.point[2] + 256.0f)))
             {
                 ent->move_type = MOVE_ON_FLOOR;
                 ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
