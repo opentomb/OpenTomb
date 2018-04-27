@@ -811,7 +811,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
     {
         m_command = NONE;
     }
-    
+
     if(m_command == CLOSE)
     {
         m_menu_mode = 4;
@@ -848,8 +848,11 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
         if(bi->bf->animations.current_frame < 10)
         {
             Anim_IncTime(&bi->bf->animations, time);
-            m_command = NONE;
-            break;
+            if((bi->bf->animations.frame_changing_state != SS_CHANGING_END_ANIM))
+            {
+                m_command = NONE;
+                break;
+            }
         }
 
         if(!m_current_menu)
@@ -883,13 +886,13 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
         SSBoneFrame_Update(bi->bf, 0);
     }
     Gui_SetCurrentMenu(m_current_menu);
-    
+
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
         m_command = NONE;
     }
-    
+
     if(m_command == CLOSE)
     {
         m_menu_mode = 2;

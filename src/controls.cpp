@@ -88,6 +88,10 @@ void Controls_Key(int32_t button, int state)
                     }
                     break;
             }
+            if(control_states.actions[i].state && state)
+            {
+                control_states.actions[i].prev_state = 0x00;
+            }
             control_states.actions[i].state = state;
             break;
         }

@@ -63,7 +63,7 @@ void Gameflow_Init()
     memset(global_gameflow.m_currentLevelName, 0, sizeof(global_gameflow.m_currentLevelName));
     memset(global_gameflow.m_currentLevelPath, 0, sizeof(global_gameflow.m_currentLevelPath));
     memset(global_gameflow.m_secretsTriggerMap, 0, sizeof(global_gameflow.m_secretsTriggerMap));
-    
+
     global_gameflow.head = (gameflow_action_t*)malloc(sizeof(gameflow_action_t));
     global_gameflow.head->opcode = GF_FREE_LIST;
     global_gameflow.head->operand = 0;
@@ -110,12 +110,20 @@ bool Gameflow_Send(int opcode, int operand)
 void Gameflow_ProcessCommands()
 {
     level_info_t info;
+
+    if(global_gameflow.m_nextGameID >= 0)
+    {
+        Gameflow_SetGameInternal(global_gameflow.m_nextGameID, global_gameflow.m_nextLevelID);
+        global_gameflow.m_nextGameID = -1;
+        global_gameflow.m_nextLevelID = -1;
+    }
+
     while(!Engine_IsVideoPlayed() && (global_gameflow.head->opcode != GF_FREE_LIST))
     {
         gameflow_action_t *processed = global_gameflow.head;
         int16_t opcode = processed->opcode;
         uint16_t operand = processed->operand;
-        
+
         processed->opcode = GF_FREE_LIST;
         if(processed->next)
         {
@@ -127,7 +135,7 @@ void Gameflow_ProcessCommands()
             global_gameflow.tail->next = processed;
             global_gameflow.tail = processed;
         }
-        
+
         switch(opcode)
         {
             case GF_OP_LEVELCOMPLETE:
@@ -165,13 +173,6 @@ void Gameflow_ProcessCommands()
                 //Con_Printf("Unimplemented gameflow opcode: %i", global_gameflow.m_actions[i].m_opcode);
                 break;
         };   // end switch(gameflow_manager.Operand)
-    }
-
-    if(global_gameflow.m_nextGameID >= 0)
-    {
-        Gameflow_SetGameInternal(global_gameflow.m_nextGameID, global_gameflow.m_nextLevelID);
-        global_gameflow.m_nextGameID = -1;
-        global_gameflow.m_nextLevelID = -1;
     }
 }
 

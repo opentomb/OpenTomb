@@ -20,6 +20,7 @@ extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e 
 extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h);
 extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int h);
@@ -96,7 +97,7 @@ static gui_object_p Gui_AddLoadGameContainer(gui_object_p root)
         }
     }
     Sys_ListDirFree(list);
-    
+
     return cont;
 }
 
@@ -131,7 +132,7 @@ static gui_object_p Gui_AddSaveGameContainer(gui_object_p root)
         }
     }
     Sys_ListDirFree(list);
-    
+
     return cont;
 }
 
@@ -196,7 +197,60 @@ static gui_object_p Gui_AddNewGameContainer(gui_object_p root)
     Gui_SetObjectLabel(obj, "Tomb Raider V", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_5;
-    
+
+    return cont;
+}
+
+static gui_object_p Gui_AddHomeContainer(gui_object_p root)
+{
+    gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_home_cont;
+    cont->w = root->w - root->margin_left - root->margin_right;
+
+    cont->border_width = 0;
+    cont->flags.clip_children = 0x01;
+    cont->flags.draw_background = 0x00;
+    cont->flags.draw_border = 0x00;
+    cont->flags.layout = GUI_LAYOUT_VERTICAL;
+    cont->flags.h_content_align = GUI_ALIGN_CENTER;
+    cont->weight_y = 1;
+
+    gui_object_p obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "Tomb Raider I", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_1;
+
+    obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    Gui_SetObjectLabel(obj, "Tomb Raider I UB", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_1_5;
+
+    obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    Gui_SetObjectLabel(obj, "Tomb Raider II", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_2;
+
+    obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    Gui_SetObjectLabel(obj, "Tomb Raider II Gold", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_2_5;
+
+    obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    Gui_SetObjectLabel(obj, "Tomb Raider III", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_3;
+
+    obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    Gui_SetObjectLabel(obj, "Tomb Raider III Gold", 2, 2);
+    obj->flags.draw_label = 0x01;
+    obj->data = (void*)GAME_3_5;
+
     return cont;
 }
 
@@ -235,7 +289,7 @@ gui_object_p Gui_BuildMainMenu()
     cont->flags.layout = GUI_LAYOUT_VERTICAL;
     cont->flags.h_content_align = GUI_ALIGN_CENTER;
     cont->weight_y = 1;
-    
+
     // fill menu
     gui_object_p obj = Gui_CreateChildObject(title);
     obj->data = Gui_AddNewGameContainer(cont);
@@ -264,6 +318,8 @@ gui_object_p Gui_BuildMainMenu()
     obj->flags.v_content_align = GUI_ALIGN_CENTER;
 
     obj = Gui_CreateChildObject(title);
+    obj->data = Gui_AddHomeContainer(cont);
+    ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Home", 1, 1);
     obj->w = 172;
     obj->line_height = 0.8;
@@ -295,7 +351,7 @@ gui_object_p Gui_BuildMainMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
     obj->flags.v_content_align = GUI_ALIGN_CENTER;
-    
+
     root->handlers.screen_resized(root, screen_info.w, screen_info.h);
 
     return root;
@@ -504,6 +560,7 @@ extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_
         if(item && item->text)
         {
             ret = Game_Load(item->text);
+            Gui_SetCurrentMenu(NULL);
         }
     }
     return ret;
@@ -549,6 +606,7 @@ extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e
         {
             int game_id = 0x7FFF & (uint64_t)item->data;
             Gameflow_SetGame(game_id, 1);
+            Gui_SetCurrentMenu(NULL);
             switch(game_id)
             {
                 case GAME_1:
@@ -570,6 +628,50 @@ extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e
                 case GAME_3_5:
                     Gameflow_Send(GF_OP_STARTFMV, 0);
                     Gameflow_Send(GF_OP_STARTFMV, 2);
+                    break;
+            }
+            ret = 1;
+        }
+    }
+    return ret;
+}
+
+extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    int ret = 0;
+    if(cmd == UP)
+    {
+        ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
+    }
+    else if(cmd == DOWN)
+    {
+        ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
+    }
+    else if(cmd == ACTIVATE)
+    {
+        gui_object_p item = Gui_ListInventoryMenu(obj, 0);
+        if(item && item->text)
+        {
+            int game_id = 0x7FFF & (uint64_t)item->data;
+            Gameflow_SetGame(game_id, 0);
+            Gui_SetCurrentMenu(NULL);
+            switch(game_id)
+            {
+                case GAME_1:
+                case GAME_1_1:
+                case GAME_1_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 1);
+                    break;
+
+                case GAME_2:
+                case GAME_2_1:
+                case GAME_2_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 1);
+                    break;
+
+                case GAME_3:
+                case GAME_3_5:
+                    Gameflow_Send(GF_OP_STARTFMV, 1);
                     break;
             }
             ret = 1;
