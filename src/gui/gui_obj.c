@@ -331,6 +331,8 @@ static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
 {
     if(!root->flags.hide && (root->w > 0) && (root->h > 0))
     {
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        BindWhiteTexture();
         if(root->flags.draw_background)
         {
             Gui_DrawBackgroundInternal(root);

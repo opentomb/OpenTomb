@@ -87,6 +87,10 @@ void Controls_Key(int32_t button, int state)
                         Game_Load("qsave.lua");
                     }
                     break;
+                    
+                case ACT_LOOK:
+                    control_states.look = state;
+                    break;
             }
             if(control_states.actions[i].state && state)
             {

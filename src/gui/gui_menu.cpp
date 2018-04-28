@@ -278,10 +278,11 @@ gui_object_p Gui_BuildMainMenu()
     title->flags.clip_children = 0x01;
 
     gui_object_p cont = Gui_CreateChildObject(root);
-    cont->w = root->w - root->margin_left - root->margin_right;
-    cont->h = root->h - title->h - root->margin_top - root->margin_bottom;
-
-    cont->border_width = 0;
+    cont->margin_left = 6;
+    cont->margin_right = 6;
+    cont->margin_top = 6;
+    cont->margin_bottom = 6;
+    cont->border_width = 4;
     cont->flags.clip_children = 0x01;
     cont->flags.fit_inside = 0x01;
     cont->flags.draw_background = 0x00;
@@ -498,6 +499,8 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
     gui_object_p cont = title->next;
     if(!cont->handlers.do_command)
     {
+        title->flags.draw_border = 0x01;
+        cont->flags.draw_border = 0x00;
         if((cmd == LEFT) && (curr_in_title->prev))
         {
             curr_in_title->border_width = 2;
@@ -528,6 +531,8 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
         }
         else if(curr_menu && (cmd == ACTIVATE))
         {
+            title->flags.draw_border = 0x00;
+            cont->flags.draw_border = 0x01;
             cont->handlers.do_command = curr_menu->handlers.do_command;
         }
         else if(cmd == CLOSE)
@@ -537,6 +542,8 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
     }
     else if(!cont->handlers.do_command(curr_menu, cmd) && (cmd == CLOSE))
     {
+        title->flags.draw_border = 0x01;
+        cont->flags.draw_border = 0x00;
         cont->handlers.do_command = NULL;
     }
 
