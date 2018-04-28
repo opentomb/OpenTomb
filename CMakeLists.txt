@@ -14,7 +14,7 @@ option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal l
 # Detect system FreeType
 
 if (FORCE_SYSTEM_FREETYPE)
-    find_package(freetype QUIET)
+    find_package(Freetype QUIET)
     if (NOT FREETYPE_FOUND)
         message(WARNING "FreeType not found. Enabling internal FreeType support.")
         set(OPENTOMB_INTERNAL_FREETYPE ON)
