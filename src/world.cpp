@@ -45,7 +45,7 @@ extern "C" {
 {
     char                           *name;
     uint32_t                        id;
-    uint32_t                        version;
+    int32_t                         version;
 
     uint32_t                        rooms_count;
     struct room_s                  *rooms;
@@ -131,6 +131,7 @@ extern "C" void AVL_DeleteItem(void *p) { BaseItem_Delete((base_item_p)p); }
 
 void World_Prepare()
 {
+    global_world.version = -1;
     global_world.id = 0;
     global_world.name = NULL;
     global_world.type = 0x00;
@@ -421,10 +422,11 @@ void World_Clear()
         free(global_world.anim_sequences);
         global_world.anim_sequences = NULL;
     }
+    global_world.version = -1;
 }
 
 
-int World_GetVersion()
+int32_t World_GetVersion()
 {
     return global_world.version;
 }

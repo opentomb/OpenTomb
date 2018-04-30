@@ -61,10 +61,8 @@ int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t acto
         switch(bi->id)
         {
             case ITEM_LARAHOME:
+                Gameflow_Send(GF_OP_STARTFMV, 1);
                 return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 0);
-
-            case ITEM_PASSPORT:
-                return Gameflow_SetGame(Gameflow_GetCurrentGameID(), 1);
 
             case ITEM_COMPASS:
             case ITEM_VIDEO:
@@ -826,11 +824,11 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     switch(m_menu_mode)
     {
     case 0:  // enter menu
-        if(m_current_menu)
+        /*if(m_current_menu)
         {
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
-        }
+        }*/
         if(m_command == CLOSE)
         {
             m_command = NONE;
@@ -855,20 +853,20 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             }
         }
 
-        if(!m_current_menu)
+        /*if(!m_current_menu)
         {
             m_current_menu = Gui_BuildMainMenu();
-        }
+        }*/
         break;
 
     case 2:  // leave menu
         m_command = NONE;
         Gui_SetCurrentMenu(NULL);
-        if(m_current_menu)
+        /*if(m_current_menu)
         {
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
-        }
+        }*/
         Anim_IncTime(&bi->bf->animations, time);
         if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
         {
@@ -885,20 +883,20 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     {
         SSBoneFrame_Update(bi->bf, 0);
     }
-    Gui_SetCurrentMenu(m_current_menu);
+    /*Gui_SetCurrentMenu(m_current_menu);
 
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
         m_command = NONE;
-    }
+    }*/
 
     if(m_command == CLOSE)
     {
         m_menu_mode = 2;
-        Gui_SetCurrentMenu(NULL);
-        Gui_DeleteObjects(m_current_menu);
-        m_current_menu = NULL;
+        //Gui_SetCurrentMenu(NULL);
+        //Gui_DeleteObjects(m_current_menu);
+        //m_current_menu = NULL;
     }
 }
 

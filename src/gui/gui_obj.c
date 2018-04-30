@@ -394,8 +394,6 @@ void Gui_DrawObjects(gui_object_p root)
 {
     if(root)
     {
-        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        BindWhiteTexture();
         qglEnable(GL_STENCIL_TEST);
         qglClear(GL_STENCIL_BUFFER_BIT);
         qglStencilFunc(GL_ALWAYS, 0, 0xFF);

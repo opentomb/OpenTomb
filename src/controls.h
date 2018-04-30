@@ -90,10 +90,11 @@ typedef struct control_action_s
 
 typedef struct engine_control_state_s
 {
-    int8_t              look;                              // Look (camera) keys.
-    int8_t              free_look;
-    int8_t              mouse_look;
-    int8_t              noclip;
+    uint32_t            menumode : 4;
+    uint32_t            look : 1;
+    uint32_t            free_look : 1;
+    uint32_t            mouse_look : 1;
+    uint32_t            noclip : 1;
 
     float               free_look_speed;
     float               cam_distance;
