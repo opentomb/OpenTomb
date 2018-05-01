@@ -824,11 +824,11 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     switch(m_menu_mode)
     {
     case 0:  // enter menu
-        /*if(m_current_menu)
+        if(m_current_menu)
         {
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
-        }*/
+        }
         if(m_command == CLOSE)
         {
             m_command = NONE;
@@ -853,20 +853,20 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             }
         }
 
-        /*if(!m_current_menu)
+        if(!m_current_menu)
         {
-            m_current_menu = Gui_BuildMainMenu();
-        }*/
+            m_current_menu = Gui_BuildStatisticsMenu();
+        }
         break;
 
     case 2:  // leave menu
         m_command = NONE;
         Gui_SetCurrentMenu(NULL);
-        /*if(m_current_menu)
+        if(m_current_menu)
         {
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
-        }*/
+        }
         Anim_IncTime(&bi->bf->animations, time);
         if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
         {
@@ -883,20 +883,20 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     {
         SSBoneFrame_Update(bi->bf, 0);
     }
-    /*Gui_SetCurrentMenu(m_current_menu);
+    Gui_SetCurrentMenu(m_current_menu);
 
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
         m_command = NONE;
-    }*/
+    }
 
     if(m_command == CLOSE)
     {
         m_menu_mode = 2;
-        //Gui_SetCurrentMenu(NULL);
-        //Gui_DeleteObjects(m_current_menu);
-        //m_current_menu = NULL;
+        Gui_SetCurrentMenu(NULL);
+        Gui_DeleteObjects(m_current_menu);
+        m_current_menu = NULL;
     }
 }
 

@@ -433,6 +433,77 @@ gui_object_p Gui_BuildNewGameMenu()
     return root;
 }
 
+static void Gui_AddKeyValueHObj(gui_object_p cont, const char *name_str, const char *value_str)
+{
+    gui_object_p obj = Gui_AddListItem(cont);
+    obj->flags.draw_border = 0x00;
+    obj->flags.fit_inside = 0x01;
+    obj->flags.layout = GUI_LAYOUT_HORIZONTAL;
+    gui_object_p name = Gui_CreateChildObject(obj);
+    Gui_SetObjectLabel(name, name_str, 2, 2);
+    name->flags.draw_label = 0x01;
+    name->weight_x = 1;
+    name->flags.v_content_align = GUI_ALIGN_CENTER;
+    name->flags.h_content_align = GUI_ALIGN_CENTER;
+    gui_object_p value = Gui_CreateChildObject(obj);
+    Gui_SetObjectLabel(value, value_str, 2, 2);
+    value->flags.draw_label = 0x01;
+    value->weight_x = 1;
+    value->flags.v_content_align = GUI_ALIGN_CENTER;
+    value->flags.h_content_align = GUI_ALIGN_CENTER;
+}
+
+gui_object_p Gui_BuildStatisticsMenu()
+{
+    gui_object_p root = Gui_CreateMenuRoot();
+    gui_object_p obj = Gui_CreateChildObject(root);
+
+    root->handlers.screen_resized = handle_screen_resized_inv;
+    obj->h = 40;
+    obj->flags.draw_border = 0x01;
+    Gui_SetObjectLabel(obj, "Statistics", 1, 1);
+    obj->border_width = 4;
+    obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->flags.draw_label = 0x01;
+    obj->flags.draw_border = 0x01;
+    obj->flags.fixed_h = 0x01;
+    obj->line_height = 0.8;
+
+    gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_new_game_cont;
+    cont->w = root->w - root->margin_left - root->margin_right;
+
+    cont->border_width = 0;
+    cont->flags.clip_children = 0x01;
+    cont->flags.draw_background = 0x00;
+    cont->flags.draw_border = 0x00;
+    cont->flags.layout = GUI_LAYOUT_VERTICAL;
+    cont->flags.v_content_align = GUI_ALIGN_TOP;
+    cont->flags.h_content_align = GUI_ALIGN_CENTER;
+    cont->weight_y = 1;
+
+    char buff[128];
+    Gui_AddKeyValueHObj(cont, "Level time", "Too late");
+    {
+        int secrets = 0;
+        for(int i = 0; i < GF_MAX_SECRETS; ++i)
+        {
+            secrets += Gameflow_GetSecretStateAtIndex(i);
+        }
+        snprintf(buff, sizeof(buff), "%d", secrets);
+        Gui_AddKeyValueHObj(cont, "Secrets found", buff);
+    }
+    Gui_AddKeyValueHObj(cont, "Items found", "N/A");
+    Gui_AddKeyValueHObj(cont, "Kills", "N/A");
+    Gui_AddKeyValueHObj(cont, "Meds used", "N/A");
+    
+    handle_screen_resized_inv(root, screen_info.w, screen_info.h);
+    Gui_LayoutObjects(root);
+
+    return root;
+}
+
 gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy)
 {
     gui_object_p ret = NULL;

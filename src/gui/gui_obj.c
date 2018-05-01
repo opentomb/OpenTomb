@@ -522,7 +522,7 @@ void Gui_LayoutHorizontal(gui_object_p root)
                 weights_used += obj->weight_x;
                 obj->w = width_used;
                 width_used = (int32_t)weights_used * (int32_t)free_w / (int32_t)weights_total;
-                obj->h = width_used - obj->w;
+                obj->w = width_used - obj->w;
             }
             
             obj->x = (prev) ? (prev->x + prev->w + root->spacing)
