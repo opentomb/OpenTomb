@@ -622,6 +622,10 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         handleCompass(bi, time / 2.0f);
                     }
+                    else if(bi->id == ITEM_CONTROLS)
+                    {
+                        handleControls(bi, time / 2.0f);
+                    }
                     else if(m_command == ACTIVATE)
                     {
                         if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
@@ -875,6 +879,73 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
+        break;
+    }
+
+    SSBoneFrame_Update(bi->bf, 0);
+    if(m_command == ACTIVATE)
+    {
+        SSBoneFrame_Update(bi->bf, 0);
+    }
+    Gui_SetCurrentMenu(m_current_menu);
+
+    if(m_current_menu && m_current_menu->handlers.do_command
+      && m_current_menu->handlers.do_command(m_current_menu, m_command))
+    {
+        m_command = NONE;
+    }
+
+    if(m_command == CLOSE)
+    {
+        m_menu_mode = 2;
+        Gui_SetCurrentMenu(NULL);
+        Gui_DeleteObjects(m_current_menu);
+        m_current_menu = NULL;
+    }
+}
+
+void gui_InventoryManager::handleControls(struct base_item_s *bi, float time)
+{
+    switch(m_menu_mode)
+    {
+    case 0:  // enter menu
+        if(m_current_menu)
+        {
+            Gui_DeleteObjects(m_current_menu);
+            m_current_menu = NULL;
+        }
+        if(m_command == CLOSE)
+        {
+            m_command = NONE;
+            m_current_state = INVENTORY_DEACTIVATING;
+            m_menu_mode = 0;
+        }
+        else if(m_command == ACTIVATE)
+        {
+            m_command = NONE;
+            m_menu_mode = 1;
+        }
+        break;
+
+    case 1:  // load game
+        if(!m_current_menu)
+        {
+            m_current_menu = Gui_BuildControlsMenu();
+        }
+        break;
+
+    case 2:  // leave menu
+        m_command = NONE;
+        Gui_SetCurrentMenu(NULL);
+        if(m_current_menu)
+        {
+            Gui_DeleteObjects(m_current_menu);
+            m_current_menu = NULL;
+        }
+        Anim_SetAnimation(&bi->bf->animations, 0, 0);
+        m_command = NONE;
+        m_current_state = INVENTORY_DEACTIVATING;
+        m_menu_mode = 0;
         break;
     }
 

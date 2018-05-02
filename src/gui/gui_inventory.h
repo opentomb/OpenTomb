@@ -153,6 +153,7 @@ private:
     void frameItems(float time);
     void handlePassport(struct base_item_s *bi, float time);
     void handleCompass(struct base_item_s *bi, float time);
+    void handleControls(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
 };
 
