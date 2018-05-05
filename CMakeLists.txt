@@ -109,6 +109,7 @@ set(OPENTOMB_SRCS
     src/script/script.cpp
     src/script/script_audio.cpp
     src/script/script_character.cpp
+    src/script/script_config.cpp
     src/script/script_entity.cpp
     src/script/script_skeletal_model.cpp
     src/script/script_world.cpp

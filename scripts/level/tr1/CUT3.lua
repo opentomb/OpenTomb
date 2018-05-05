@@ -13,7 +13,7 @@ level_PostLoad = function()
             setGlobalFlipState(0);
         end;
         entity_funcs[1].t = entity_funcs[1].t + frame_time;
-        if(not setCameraFrame(entity_funcs[1].t * 30) or (0 ~= getActionState(act.look))) then
+        if(not setCameraFrame(entity_funcs[1].t * 30) or (0 ~= getActionState(ACT_LOOK))) then
             gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
             gameflowSend(GF_OP_STARTFMV, 8);
             entity_funcs[1].onLoop = nil;

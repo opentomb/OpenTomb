@@ -36,6 +36,7 @@ int  lua_BindKey(lua_State *lua);
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
+void Script_LuaRegisterConfigFuncs(lua_State *lua);
 int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc);
 int Script_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as);

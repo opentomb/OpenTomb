@@ -36,6 +36,11 @@ void Controls_Key(int32_t button, int state)
     // Fill script-driven debug keyboard input.
     Script_AddKey(engine_lua, button, state);
 
+    if((control_states.last_key == 0) && state)
+    {
+        control_states.last_key = button;
+    }
+
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
         if((button == control_states.actions[i].primary) ||
@@ -87,7 +92,7 @@ void Controls_Key(int32_t button, int state)
                         Game_Load("qsave.lua");
                     }
                     break;
-                    
+
                 case ACT_LOOK:
                     control_states.look = state;
                     break;
@@ -1351,7 +1356,7 @@ void Controls_KeyToStr(char buff[128], int key)
         case 1205:
             strncpy(buff, "JOY_TRIGGERRIGHT", 128);
             break;
-        
+
         default:
             snprintf(buff, 128, "%d", key);
             break;

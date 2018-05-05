@@ -275,48 +275,52 @@ JOY_POVRIGHT = 1102;
 JOY_TRIGGERLEFT = 1204;        -- Only for XBOX360-like controllers - analog triggers.
 JOY_TRIGGERRIGHT = 1205;
 
-act = {};
+--ACT_UP,                     // 0
+--ACT_DOWN,                   // 1
+--ACT_LEFT,                   // 2
+--ACT_RIGHT,                  // 3
 
-act.up = 0;
-act.down = 1;
-act.left = 2;
-act.right = 3;
-act.action = 4;
-act.jump = 5;
-act.roll = 6;
-act.drawweapon = 7;
-act.look = 8;
-act.walk = 9;
-act.sprint = 10;
-act.crouch = 11;
-act.stepleft = 12;
-act.stepright = 13;
-act.lookup = 14;
-act.lookdown = 15;
-act.lookleft = 16;
-act.lookright = 17;
-act.nextweapon = 18;
-act.prevweapon = 19;
-act.flare = 20;
-act.bigmedi = 21;
-act.smallmedi = 22;
-act.weapon1 = 23;
-act.weapon2 = 24;
-act.weapon3 = 25;
-act.weapon4 = 26;
-act.weapon5 = 27;
-act.weapon6 = 28;
-act.weapon7 = 29;
-act.weapon8 = 30;
-act.weapon9 = 31;
-act.weapon10 = 32;
-act.binoculars = 33;
-act.pls = 34;
-act.pause = 35;
-act.inventory = 36;
-act.diary = 37;
-act.map = 38;
-act.loadgame = 39;
-act.savegame = 40;
-act.console = 41;
-act.screenshot = 42;
+--ACT_ACTION,                 // 4
+--ACT_JUMP,                   // 5
+--ACT_ROLL,                   // 6
+--ACT_DRAWWEAPON,             // 7
+--ACT_LOOK,                   // 8
+--ACT_WALK,                   // 9
+--ACT_SPRINT,                 // 10
+--ACT_CROUCH,                 // 11
+--ACT_STEPLEFT,               // 12
+--ACT_STEPRIGHT,              // 13
+
+--ACT_LOOKUP,                 // 14
+--ACT_LOOKDOWN,               // 15
+--ACT_LOOKLEFT,               // 16
+--ACT_LOOKRIGHT,              // 17
+
+--ACT_NEXTWEAPON,             // 18
+--ACT_PREVWEAPON,             // 19
+
+--ACT_FLARE,                  // 20
+--ACT_BIGMEDI,                // 21
+--ACT_SMALLMEDI,              // 22
+--ACT_WEAPON1,                // 23
+--ACT_WEAPON2,                // 24
+--ACT_WEAPON3,                // 25
+--ACT_WEAPON4,                // 26
+--ACT_WEAPON5,                // 27
+--ACT_WEAPON6,                // 28
+--ACT_WEAPON7,                // 29
+--ACT_WEAPON8,                // 30
+--ACT_WEAPON9,                // 31
+--ACT_WEAPON10,               // 32
+--ACT_BINOCULARS,             // 33
+--ACT_PLS,                    // 34 Not in original, reserved for future
+
+--ACT_PAUSE,                  // 35
+--ACT_INVENTORY,              // 36
+--ACT_DIARY,                  // 37 Not in original, reserved for future
+--ACT_MAP,                    // 38 Not in original, reserved for future
+--ACT_LOADGAME,               // 39
+--ACT_SAVEGAME,               // 40
+
+--ACT_CONSOLE,                // 41
+--ACT_SCREENSHOT,             // 42

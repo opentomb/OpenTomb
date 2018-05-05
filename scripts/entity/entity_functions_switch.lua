@@ -393,7 +393,7 @@ function keyhole_init(id)    -- Key and puzzle holes
         if(entity_funcs[object_id].on.ready_anim < 0 or entity_funcs[object_id].on.ready_anim == t) then
             if(entity_funcs[object_id].key ~= nil) then
                 if(getItemsCount(activator_id, entity_funcs[object_id].key) <= 0) then
-                    if(getActionChange(act.action) == 0) then
+                    if(getActionChange(ACT_ACTION) == 0) then
                         playSound(SOUND_NO);
                     end;
                     return ENTITY_TRIGGERING_NOT_READY;

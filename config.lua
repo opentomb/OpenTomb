@@ -76,30 +76,30 @@ console =
 
 dofile(base_path .. "scripts/config/control_constants.lua");
 
-bind(act.jump, KEY_SPACE, JOY_3);
-bind(act.action, KEY_LCTRL, JOY_1);
-bind(act.drawweapon, KEY_F);
-bind(act.roll, KEY_X, JOY_2);
-bind(act.sprint, KEY_CAPSLOCK, JOY_TRIGGERRIGHT);
-bind(act.crouch, KEY_V, JOY_TRIGGERLEFT);
-bind(act.walk, KEY_LSHIFT, JOY_11);
+bind(ACT_JUMP, KEY_SPACE, JOY_3);
+bind(ACT_ACTION, KEY_LCTRL, JOY_1);
+bind(ACT_DRAWWEAPON, KEY_F);
+bind(ACT_ROLL, KEY_X, JOY_2);
+bind(ACT_SPRINT, KEY_CAPSLOCK, JOY_TRIGGERRIGHT);
+bind(ACT_CROUCH, KEY_V, JOY_TRIGGERLEFT);
+bind(ACT_WALK, KEY_LSHIFT, JOY_11);
 
-bind(act.up, KEY_W);
-bind(act.down, KEY_S);
-bind(act.left, KEY_A);
-bind(act.right, KEY_D);
+bind(ACT_UP, KEY_W);
+bind(ACT_DOWN, KEY_S);
+bind(ACT_LEFT, KEY_A);
+bind(ACT_RIGHT, KEY_D);
 
-bind(act.look, KEY_O);
-bind(act.lookup, KEY_UP, JOY_POVUP);
-bind(act.lookdown, KEY_DOWN, JOY_POVDOWN);
-bind(act.lookleft, KEY_LEFT, JOY_POVLEFT);
-bind(act.lookright, KEY_RIGHT, JOY_POVRIGHT);
+bind(ACT_LOOK, KEY_O);
+bind(ACT_LOOKUP, KEY_UP, JOY_POVUP);
+bind(ACT_LOOKDOWN, KEY_DOWN, JOY_POVDOWN);
+bind(ACT_LOOKLEFT, KEY_LEFT, JOY_POVLEFT);
+bind(ACT_LOOKRIGHT, KEY_RIGHT, JOY_POVRIGHT);
 
-bind(act.inventory, KEY_ESCAPE);
-bind(act.screenshot, KEY_PRINTSCREEN);
-bind(act.console, KEY_BACKQUOTE);
-bind(act.savegame, KEY_F5);
-bind(act.loadgame, KEY_F6);
+bind(ACT_INVENTORY, KEY_ESCAPE);
+bind(ACT_SCREENSHOT, KEY_PRINTSCREEN);
+bind(ACT_CONSOLE, KEY_BACKQUOTE);
+bind(ACT_SAVEGAME, KEY_F5);
+bind(ACT_LOADGAME, KEY_F6);
 
-bind(act.smallmedi, KEY_9);
-bind(act.bigmedi, KEY_0);
+bind(ACT_SMALLMEDI, KEY_9);
+bind(ACT_BIGMEDI, KEY_0);

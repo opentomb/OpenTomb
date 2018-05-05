@@ -27,6 +27,12 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
 extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h);
 extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int h);
 
+struct gui_controls_data_s
+{
+    uint32_t    wait_key : 1;
+    uint32_t    is_primary : 1;
+};
+
 static gui_object_p Gui_CreateMenuRoot()
 {
     gui_object_p root = Gui_CreateObject();
@@ -263,6 +269,7 @@ static void Gui_AddControlsHObj(gui_object_p cont, int ctrl)
         control_action_p act = control_states.actions + ctrl;
         gui_object_p obj = Gui_AddListItem(cont);
         char buff[128];
+        obj->data = act;
         obj->border_width = 2;
         obj->spacing = 4;
         obj->margin_bottom = 4;
@@ -304,7 +311,11 @@ static void Gui_AddControlsHObj(gui_object_p cont, int ctrl)
 static gui_object_p Gui_AddControlsContainer(gui_object_p root)
 {
     gui_object_p cont = Gui_CreateChildObject(root);
+    struct gui_controls_data_s *params = (struct gui_controls_data_s*)calloc(1, sizeof(struct gui_controls_data_s));
+    params->is_primary = 0x01;
     cont->handlers.do_command = handle_controls_cont;
+    cont->handlers.delete_user_data = free;
+    cont->data = params;
     cont->w = root->w - root->margin_left - root->margin_right;
 
     cont->border_width = 0;
@@ -320,7 +331,8 @@ static gui_object_p Gui_AddControlsContainer(gui_object_p root)
         Gui_AddControlsHObj(cont, i);
     }
     cont->childs->flags.draw_border = 0x01;
-    
+    cont->childs->childs->next->flags.draw_border = 0x01;
+
     return cont;
 }
 
@@ -594,7 +606,7 @@ gui_object_p Gui_BuildStatisticsMenu()
     Gui_AddKeyValueHObj(cont, "Items found", "N/A");
     Gui_AddKeyValueHObj(cont, "Kills", "N/A");
     Gui_AddKeyValueHObj(cont, "Meds used", "N/A");
-    
+
     handle_screen_resized_inv(root, screen_info.w, screen_info.h);
     Gui_LayoutObjects(root);
 
@@ -858,7 +870,49 @@ extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd
 extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    struct gui_controls_data_s *params = (struct gui_controls_data_s*)obj->data;
+
+    if(params->wait_key)
+    {
+        gui_object_p curr = Gui_ListInventoryMenu(obj, 0);
+        control_action_p act = (control_action_p)curr->data;
+
+        curr = curr->childs->next;
+        curr = (params->is_primary) ? (curr) : (curr->next);
+        curr->color_border[0] = 188;
+        curr->color_border[1] = 0;
+        curr->color_border[2] = 0;
+
+        if(control_states.last_key)
+        {
+            char buff[128];
+            Controls_KeyToStr(buff, control_states.last_key);
+            Gui_SetObjectLabel(curr, buff, 2, 2);
+            if(params->is_primary)
+            {
+                act->primary = control_states.last_key;
+            }
+            else
+            {
+                act->secondary = control_states.last_key;
+            }
+            params->wait_key = 0x00;
+        }
+
+        if(cmd == CLOSE)
+        {
+            params->wait_key = 0x00;
+            ret = 1;
+        }
+
+        if(params->wait_key == 0x00)
+        {
+            curr->color_border[0] = curr->parent->color_border[0];
+            curr->color_border[1] = curr->parent->color_border[1];
+            curr->color_border[2] = curr->parent->color_border[2];
+        }
+    }
+    else if(cmd == UP)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, 1);
         if(curr->next)
@@ -867,9 +921,16 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             {
                 it->flags.draw_border = 0x00;
             }
+            ret = 1;
         }
-        curr->childs->next->flags.draw_border = 0x01;
-        ret = (curr) ? (1) : (0);
+        if(params->is_primary)
+        {
+            curr->childs->next->flags.draw_border = 0x01;
+        }
+        else
+        {
+            curr->childs->next->next->flags.draw_border = 0x01;
+        }
     }
     else if(cmd == DOWN)
     {
@@ -880,15 +941,23 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             {
                 it->flags.draw_border = 0x00;
             }
+            ret = 1;
         }
-        curr->childs->next->flags.draw_border = 0x01;
-        ret = (curr) ? (1) : (0);
+        if(params->is_primary)
+        {
+            curr->childs->next->flags.draw_border = 0x01;
+        }
+        else
+        {
+            curr->childs->next->next->flags.draw_border = 0x01;
+        }
     }
-    if(cmd == LEFT)
+    else if(cmd == LEFT)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, 0);
         curr->childs->next->next->flags.draw_border = 0x00;
         curr->childs->next->flags.draw_border = 0x01;
+        params->is_primary = 0x01;
         ret = 1;
     }
     else if(cmd == RIGHT)
@@ -896,10 +965,12 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
         gui_object_p curr = Gui_ListInventoryMenu(obj, 0);
         curr->childs->next->next->flags.draw_border = 0x01;
         curr->childs->next->flags.draw_border = 0x00;
+        params->is_primary = 0x00;
         ret = 1;
     }
     else if(cmd == ACTIVATE)
     {
+        params->wait_key = 0x01;
     }
     return ret;
 }

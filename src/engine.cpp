@@ -496,6 +496,7 @@ void Engine_LoadConfig(const char *filename)
             lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
             lua_pushstring(lua, Engine_GetBasePath());
             lua_setglobal(lua, "base_path");
+            Script_LuaRegisterConfigFuncs(lua);
             luaL_dofile(lua, filename);
 
             Script_ParseScreen(lua, &screen_info);
@@ -598,7 +599,8 @@ void Engine_PollSDLEvents()
     {
         control_states.actions[i].prev_state = control_states.actions[i].state;
     }
-    
+    control_states.last_key = 0;
+
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -877,7 +879,7 @@ void Engine_MainLoop()
             stream_codec_video_unlock(&engine_video);
             Gui_DrawLoadScreen(-1);
 
-            if(control_states.actions[ACT_INVENTORY].state && 
+            if(control_states.actions[ACT_INVENTORY].state &&
               !control_states.actions[ACT_INVENTORY].prev_state)
             {
                 stream_codec_stop(&engine_video, 0);

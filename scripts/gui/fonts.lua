@@ -51,11 +51,11 @@ addFont(FONT_SECONDARY, base_path .. "resource/fonts/Roboto-Regular.ttf",       
 -- addFontStyle(STYLE, R, G, B, A, SHD)
 -- where STYLE is unique style index,
 --       R, G, B are font colours, A is font transparency,
---       SHD is shadowed flag, FAD is TR4-5 style fading flag
+--       SHD is shadowed flag
 
------------------------------------------------------------------------
+---------------------------------------------------------------------
 --------- STYLE ---------------------------- R -- G -- B -- A -- SHD 
------------------------------------------------------------------------
+---------------------------------------------------------------------
 addFontStyle(FONTSTYLE_CONSOLE_INFO,        0.9, 0.9, 0.9, 1.0, false);
 addFontStyle(FONTSTYLE_CONSOLE_WARNING,     1.0, 0.7, 0.7, 1.0, false);
 addFontStyle(FONTSTYLE_CONSOLE_EVENT,       0.7, 0.7, 1.0, 1.0, false);

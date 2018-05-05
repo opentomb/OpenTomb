@@ -19,7 +19,7 @@ function gtp(id)
 end
 
 function checkDebugKeys()
-    if(checkKey(KEY_KP_PLUS, true)) then
+    if(checkKey(KEY_RETURN, true)) then
         setGame(debug_game, debug_level);
         debug_level = debug_level + 1;
         if(debug_game == GAME_1) then

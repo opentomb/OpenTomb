@@ -95,7 +95,8 @@ typedef struct engine_control_state_s
     uint32_t            free_look : 1;
     uint32_t            mouse_look : 1;
     uint32_t            noclip : 1;
-
+    int32_t             last_key;
+    
     float               free_look_speed;
     float               cam_distance;
     float               cam_angles[3];
