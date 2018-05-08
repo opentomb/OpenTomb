@@ -20,36 +20,6 @@ extern "C" {
 #include "../world.h"
 
 
-int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as)
-{
-    if(lua)
-    {
-        int top = lua_gettop(lua);
-
-        lua_getglobal(lua, "audio");
-        lua_getfield(lua, -1, "music_volume");
-        as->music_volume = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "sound_volume");
-        as->sound_volume = lua_tonumber(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "use_effects");
-        as->use_effects  = lua_tointeger(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_getfield(lua, -1, "listener_is_player");
-        as->listener_is_player = lua_tointeger(lua, -1);
-        lua_pop(lua, 1);
-
-        lua_settop(lua, top);
-        return 1;
-    }
-
-    return -1;
-}
-
 /*
  *   Specific functions to get specific parameters from script.
  */

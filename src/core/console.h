@@ -11,12 +11,23 @@ extern "C" {
 #define CON_MIN_LINE_INTERVAL 0.5
 #define CON_MAX_LINE_INTERVAL 4.0
 
+typedef struct console_params_s
+{
+    uint8_t         background_color[4];
+    uint16_t        commands_count;
+    uint16_t        lines_count;
+    uint16_t        height;
+    uint16_t        show;
+    float           spacing;
+    float           show_cursor_period;
+}console_params_t, *console_params_p;
 
 void Con_Init();
 void Con_SetExecFunction(int(*exec_cmd)(char *ch));
 void Con_InitFont();
 void Con_InitGlobals();
 void Con_Destroy();
+void Con_GetParams(console_params_p cp);
 
 float Con_GetLineInterval();
 void  Con_SetLineInterval(float interval);

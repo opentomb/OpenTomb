@@ -28,7 +28,7 @@ extern "C" {
 
 
 struct engine_control_state_s           control_states = {0};
-struct control_settings_s               control_mapper = {0};
+struct control_settings_s               control_settings = {0};
 
 
 void Controls_Key(int32_t button, int state)
@@ -111,54 +111,54 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
 {
     for(int i = 0; i < AXIS_LASTINDEX; i++)            // Compare with ALL mapped axes.
     {
-        if(axis == control_mapper.joy_axis_map[i])      // If mapped = current...
+        if(axis == control_settings.joy_axis_map[i])      // If mapped = current...
         {
             switch(i)                                   // ...Choose corresponding action.
             {
                 case AXIS_LOOK_X:
-                    if((axisValue < -control_mapper.joy_look_deadzone) || (axisValue > control_mapper.joy_look_deadzone))
+                    if((axisValue < -control_settings.joy_look_deadzone) || (axisValue > control_settings.joy_look_deadzone))
                     {
-                        if(control_mapper.joy_look_invert_x)
+                        if(control_settings.joy_look_invert_x)
                         {
-                            control_mapper.joy_look_x = -(axisValue / (32767 / control_mapper.joy_look_sensitivity)); // 32767 is the max./min. axis value.
+                            control_settings.joy_look_x = -(axisValue / (32767 / control_settings.joy_look_sensitivity)); // 32767 is the max./min. axis value.
                         }
                         else
                         {
-                            control_mapper.joy_look_x = (axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            control_settings.joy_look_x = (axisValue / (32767 / control_settings.joy_look_sensitivity));
                         }
                     }
                     else
                     {
-                        control_mapper.joy_look_x = 0;
+                        control_settings.joy_look_x = 0;
                     }
                     return;
 
                 case AXIS_LOOK_Y:
-                    if( (axisValue < -control_mapper.joy_look_deadzone) || (axisValue > control_mapper.joy_look_deadzone) )
+                    if( (axisValue < -control_settings.joy_look_deadzone) || (axisValue > control_settings.joy_look_deadzone) )
                     {
-                        if(control_mapper.joy_look_invert_y)
+                        if(control_settings.joy_look_invert_y)
                         {
-                            control_mapper.joy_look_y = -(axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            control_settings.joy_look_y = -(axisValue / (32767 / control_settings.joy_look_sensitivity));
                         }
                         else
                         {
-                            control_mapper.joy_look_y = (axisValue / (32767 / control_mapper.joy_look_sensitivity));
+                            control_settings.joy_look_y = (axisValue / (32767 / control_settings.joy_look_sensitivity));
                         }
                     }
                     else
                     {
-                        control_mapper.joy_look_y = 0;
+                        control_settings.joy_look_y = 0;
                     }
                     return;
 
                 case AXIS_MOVE_X:
-                    if( (axisValue < -control_mapper.joy_move_deadzone) || (axisValue > control_mapper.joy_move_deadzone) )
+                    if( (axisValue < -control_settings.joy_move_deadzone) || (axisValue > control_settings.joy_move_deadzone) )
                     {
-                        if(control_mapper.joy_move_invert_x)
+                        if(control_settings.joy_move_invert_x)
                         {
-                            control_mapper.joy_move_x = -(axisValue / (32767 / control_mapper.joy_move_sensitivity));
+                            control_settings.joy_move_x = -(axisValue / (32767 / control_settings.joy_move_sensitivity));
 
-                            if(axisValue > control_mapper.joy_move_deadzone)
+                            if(axisValue > control_settings.joy_move_deadzone)
                             {
                                 control_states.actions[ACT_LEFT].state = SDL_PRESSED;
                                 control_states.actions[ACT_RIGHT].state = SDL_RELEASED;
@@ -171,8 +171,8 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_move_x = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
-                            if(axisValue > control_mapper.joy_move_deadzone)
+                            control_settings.joy_move_x = (axisValue / (32767 / control_settings.joy_move_sensitivity));
+                            if(axisValue > control_settings.joy_move_deadzone)
                             {
                                 control_states.actions[ACT_LEFT].state = SDL_RELEASED;
                                 control_states.actions[ACT_RIGHT].state = SDL_PRESSED;
@@ -188,18 +188,18 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     {
                         control_states.actions[ACT_LEFT].state = SDL_RELEASED;
                         control_states.actions[ACT_RIGHT].state = SDL_RELEASED;
-                        control_mapper.joy_move_x = 0;
+                        control_settings.joy_move_x = 0;
                     }
                     return;
 
                 case AXIS_MOVE_Y:
-                    if( (axisValue < -control_mapper.joy_move_deadzone) || (axisValue > control_mapper.joy_move_deadzone) )
+                    if( (axisValue < -control_settings.joy_move_deadzone) || (axisValue > control_settings.joy_move_deadzone) )
                     {
 
-                        if(control_mapper.joy_move_invert_y)
+                        if(control_settings.joy_move_invert_y)
                         {
-                            control_mapper.joy_move_y = -(axisValue / (32767 / control_mapper.joy_move_sensitivity));
-                            if(axisValue > control_mapper.joy_move_deadzone)
+                            control_settings.joy_move_y = -(axisValue / (32767 / control_settings.joy_move_sensitivity));
+                            if(axisValue > control_settings.joy_move_deadzone)
                             {
                                 control_states.actions[ACT_UP].state = SDL_PRESSED;
                                 control_states.actions[ACT_DOWN].state = SDL_RELEASED;
@@ -212,8 +212,8 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                         }
                         else
                         {
-                            control_mapper.joy_move_y = (axisValue / (32767 / control_mapper.joy_move_sensitivity));
-                            if(axisValue > control_mapper.joy_move_deadzone)
+                            control_settings.joy_move_y = (axisValue / (32767 / control_settings.joy_move_sensitivity));
+                            if(axisValue > control_settings.joy_move_deadzone)
                             {
                                 control_states.actions[ACT_UP].state = SDL_RELEASED;
                                 control_states.actions[ACT_DOWN].state = SDL_PRESSED;
@@ -229,7 +229,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     {
                         control_states.actions[ACT_UP].state = SDL_RELEASED;
                         control_states.actions[ACT_DOWN].state = SDL_RELEASED;
-                        control_mapper.joy_move_y = 0;
+                        control_settings.joy_move_y = 0;
                     }
                     return;
 
@@ -317,28 +317,28 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
 
 void Controls_InitGlobals()
 {
-    control_mapper.mouse_sensitivity_x = 0.25f;
-    control_mapper.mouse_sensitivity_y = 0.25f;
-    control_mapper.use_joy = 0;
+    control_settings.mouse_sensitivity_x = 0.25f;
+    control_settings.mouse_sensitivity_y = 0.25f;
+    control_settings.use_joy = 0;
 
-    control_mapper.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
-    control_mapper.joy_rumble = 0;              ///@FIXME: Make it according to GetCaps of default joystick.
+    control_settings.joy_number = 0;              ///@FIXME: Replace with joystick scanner default value when done.
+    control_settings.joy_rumble = 0;              ///@FIXME: Make it according to GetCaps of default joystick.
 
-    control_mapper.joy_axis_map[AXIS_MOVE_X] = 0;
-    control_mapper.joy_axis_map[AXIS_MOVE_Y] = 1;
-    control_mapper.joy_axis_map[AXIS_LOOK_X] = 2;
-    control_mapper.joy_axis_map[AXIS_LOOK_Y] = 3;
+    control_settings.joy_axis_map[AXIS_MOVE_X] = 0;
+    control_settings.joy_axis_map[AXIS_MOVE_Y] = 1;
+    control_settings.joy_axis_map[AXIS_LOOK_X] = 2;
+    control_settings.joy_axis_map[AXIS_LOOK_Y] = 3;
 
-    control_mapper.joy_look_invert_x = 0;
-    control_mapper.joy_look_invert_y = 0;
-    control_mapper.joy_move_invert_x = 0;
-    control_mapper.joy_move_invert_y = 0;
+    control_settings.joy_look_invert_x = 0;
+    control_settings.joy_look_invert_y = 0;
+    control_settings.joy_move_invert_x = 0;
+    control_settings.joy_move_invert_y = 0;
 
-    control_mapper.joy_look_deadzone = 1500;
-    control_mapper.joy_move_deadzone = 1500;
+    control_settings.joy_look_deadzone = 1500;
+    control_settings.joy_move_deadzone = 1500;
 
-    control_mapper.joy_look_sensitivity = 1.5f;
-    control_mapper.joy_move_sensitivity = 1.5f;
+    control_settings.joy_look_sensitivity = 1.5f;
+    control_settings.joy_move_sensitivity = 1.5f;
 
     control_states.actions[ACT_JUMP].primary       = SDL_SCANCODE_SPACE;
     control_states.actions[ACT_ACTION].primary     = SDL_SCANCODE_LCTRL;

@@ -264,6 +264,13 @@ const char *Engine_GetBasePath()
 
 void Engine_SetDone()
 {
+    char path[1024];
+    size_t path_base_len = sizeof(path) - 1;
+    strncpy(path, Engine_GetBasePath(), path_base_len);
+    path[path_base_len] = 0;
+    strncat(path, "/config.lua", path_base_len - strlen(path));
+    Script_ExportConfig(path);
+
     stream_codec_stop(&engine_video, 0);
     StreamTrack_Stop(Audio_GetStreamExternal());
     engine_done = 1;
@@ -413,11 +420,11 @@ void Engine_InitSDLSubsystems()
     int    NumJoysticks;
     Uint32 init_flags = SDL_INIT_VIDEO | SDL_INIT_EVENTS;                       // These flags are used in any case.
 
-    if(control_mapper.use_joy == 1)
+    if(control_settings.use_joy == 1)
     {
         init_flags |= SDL_INIT_GAMECONTROLLER;                                  // Update init flags for joystick.
 
-        if(control_mapper.joy_rumble)
+        if(control_settings.joy_rumble)
         {
             init_flags |= SDL_INIT_HAPTIC;                                      // Update init flags for force feedback.
         }
@@ -425,49 +432,49 @@ void Engine_InitSDLSubsystems()
         SDL_Init(init_flags);
 
         NumJoysticks = SDL_NumJoysticks();
-        if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_mapper.joy_number))
+        if((NumJoysticks < 1) || ((NumJoysticks - 1) < control_settings.joy_number))
         {
-            Sys_DebugLog(SYS_LOG_FILENAME, "Error: there is no joystick #%d present.", control_mapper.joy_number);
+            Sys_DebugLog(SYS_LOG_FILENAME, "Error: there is no joystick #%d present.", control_settings.joy_number);
             return;
         }
 
-        if(SDL_IsGameController(control_mapper.joy_number))                     // If joystick has mapping (e.g. X360 controller)
+        if(SDL_IsGameController(control_settings.joy_number))                     // If joystick has mapping (e.g. X360 controller)
         {
             SDL_GameControllerEventState(SDL_ENABLE);                           // Use GameController API
-            sdl_controller = SDL_GameControllerOpen(control_mapper.joy_number);
+            sdl_controller = SDL_GameControllerOpen(control_settings.joy_number);
 
             if(!sdl_controller)
             {
-                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open game controller #%d.", control_mapper.joy_number);
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open game controller #%d.", control_settings.joy_number);
                 SDL_GameControllerEventState(SDL_DISABLE);                      // If controller init failed, close state.
-                control_mapper.use_joy = 0;
+                control_settings.use_joy = 0;
             }
-            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            else if(control_settings.joy_rumble)                                  // Create force feedback interface.
             {
                 sdl_haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(sdl_controller));
                 if(!sdl_haptic)
                 {
-                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_mapper.joy_number);
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from game controller #%d.", control_settings.joy_number);
                 }
             }
         }
         else
         {
             SDL_JoystickEventState(SDL_ENABLE);                                 // If joystick isn't mapped, use generic API.
-            sdl_joystick = SDL_JoystickOpen(control_mapper.joy_number);
+            sdl_joystick = SDL_JoystickOpen(control_settings.joy_number);
 
             if(!sdl_joystick)
             {
-                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open joystick #%d.", control_mapper.joy_number);
+                Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't open joystick #%d.", control_settings.joy_number);
                 SDL_JoystickEventState(SDL_DISABLE);                            // If joystick init failed, close state.
-                control_mapper.use_joy = 0;
+                control_settings.use_joy = 0;
             }
-            else if(control_mapper.joy_rumble)                                  // Create force feedback interface.
+            else if(control_settings.joy_rumble)                                  // Create force feedback interface.
             {
                 sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joystick);
                 if(!sdl_haptic)
                 {
-                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_mapper.joy_number);
+                    Sys_DebugLog(SYS_LOG_FILENAME, "Error: can't initialize haptic from joystick #%d.", control_settings.joy_number);
                 }
             }
         }
@@ -490,10 +497,10 @@ void Engine_LoadConfig(const char *filename)
     if(filename && Sys_FileFound(filename, 0))
     {
         lua_State *lua = luaL_newstate();
-        if(lua != NULL)
+        if(lua)
         {
             luaL_openlibs(lua);
-            lua_register(lua, "bind", lua_BindKey);                             // get and set key bindings
+            lua_register(lua, "bind", lua_Bind);                                // get and set key bindings
             lua_pushstring(lua, Engine_GetBasePath());
             lua_setglobal(lua, "base_path");
             Script_LuaRegisterConfigFuncs(lua);
@@ -502,8 +509,24 @@ void Engine_LoadConfig(const char *filename)
             Script_ParseScreen(lua, &screen_info);
             Script_ParseRender(lua, &renderer.settings);
             Script_ParseAudio(lua, &audio_settings);
-            Script_ParseConsole(lua);
-            Script_ParseControls(lua, &control_mapper);
+            Script_ParseControls(lua, &control_settings);
+
+            {
+                console_params_t cp = { 0 };
+                float color[4];
+                Script_ParseConsole(lua, &cp);
+                color[0] = cp.background_color[0] / 255.0f;
+                color[1] = cp.background_color[1] / 255.0f;
+                color[2] = cp.background_color[2] / 255.0f;
+                color[3] = cp.background_color[3] / 255.0f;
+                Con_SetBackgroundColor(color);
+                Con_SetLineInterval(cp.spacing);
+                Con_SetHeight(cp.height);
+                Con_SetLinesHistorySize(cp.lines_count);
+                Con_SetCommandsHistorySize(cp.commands_count);
+                Con_SetShown(cp.show);
+                Con_SetShowCursorPeriod(cp.show_cursor_period);
+            }
             lua_close(lua);
         }
     }
@@ -612,8 +635,8 @@ void Engine_PollSDLEvents()
                 {
                     if(mouse_setup)                                             // it is not perfect way, but cursor
                     {                                                           // every engine start is in one place
-                        control_states.look_axis_x = event.motion.xrel * control_mapper.mouse_sensitivity_x;
-                        control_states.look_axis_y = event.motion.yrel * control_mapper.mouse_sensitivity_y;
+                        control_states.look_axis_x = event.motion.xrel * control_settings.mouse_sensitivity_x;
+                        control_states.look_axis_y = event.motion.yrel * control_settings.mouse_sensitivity_y;
                     }
 
                     if((event.motion.x < ((screen_info.w / 2) - (screen_info.w / 4))) ||
@@ -761,6 +784,11 @@ void Engine_PollSDLEvents()
                 if(event.window.event == SDL_WINDOWEVENT_RESIZED)
                 {
                     Engine_Resize(event.window.data1, event.window.data2, event.window.data1, event.window.data2);
+                }
+                else if(event.window.event == SDL_WINDOWEVENT_MOVED)
+                {
+                    screen_info.x = event.window.data1;
+                    screen_info.y = event.window.data2;
                 }
                 break;
 

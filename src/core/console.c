@@ -180,6 +180,22 @@ void Con_Destroy()
 }
 
 
+void Con_GetParams(console_params_p cp)
+{
+    cp->background_color[0] = (con_base.background_color[0] * 255.0f + 0.5f);
+    cp->background_color[1] = (con_base.background_color[1] * 255.0f + 0.5f);
+    cp->background_color[2] = (con_base.background_color[2] * 255.0f + 0.5f);
+    cp->background_color[3] = (con_base.background_color[3] * 255.0f + 0.5f);
+    
+    cp->commands_count = con_base.commands_buff_size;
+    cp->lines_count = con_base.lines_buff_size;
+    cp->height = con_base.height;
+    cp->show_cursor_period = con_base.show_cursor_period;
+    cp->spacing = con_base.spacing;
+    cp->show = con_base.show_console;
+}
+
+
 float Con_GetLineInterval()
 {
     return con_base.spacing;

@@ -367,16 +367,15 @@ int lua_ls(lua_State *lua)
 }
 
 
-int lua_BindKey(lua_State *lua)
+int lua_Bind(lua_State *lua)
 {
     int top = lua_gettop(lua);
     int act = lua_tointeger(lua, 1);
 
-    if(top < 1 || act < 0 || act >= ACT_LASTINDEX)
+    if((top < 1) || (act < 0) || (act >= ACT_LASTINDEX))
     {
         Con_Warning("wrong action number");
     }
-
     else if(top == 2)
     {
         control_states.actions[act].primary = lua_tointeger(lua, 2);
@@ -388,7 +387,7 @@ int lua_BindKey(lua_State *lua)
     }
     else
     {
-        Con_Warning("bindKey: expecting arguments (action_id, key_id1, (key_id2))");
+        Con_Warning("bind: expecting arguments (action_id, key_id1, (key_id2))");
     }
 
     return 0;
@@ -866,7 +865,7 @@ void Script_LuaRegisterFuncs(lua_State *lua)
     lua_register(lua, "getActionState", lua_GetActionState);
     lua_register(lua, "getActionChange", lua_GetActionChange);
 
-    lua_register(lua, "bind", lua_BindKey);
+    lua_register(lua, "bind", lua_Bind);
     lua_register(lua, "addFont", lua_AddFont);
     lua_register(lua, "removeFont", lua_RemoveFont);
     lua_register(lua, "addFontStyle", lua_AddFontStyle);

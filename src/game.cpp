@@ -433,15 +433,15 @@ void Game_ApplyControls(struct entity_s *ent)
 
     if(!World_GetRoomByID(0))
     {
-        if(control_mapper.use_joy)
+        if(control_settings.use_joy)
         {
-            if(control_mapper.joy_look_x != 0)
+            if(control_settings.joy_look_x != 0)
             {
-                control_states.cam_angles[0] -= 0.015 * engine_frame_time * control_mapper.joy_look_x;
+                control_states.cam_angles[0] -= 0.015 * engine_frame_time * control_settings.joy_look_x;
             }
-            if(control_mapper.joy_look_y != 0)
+            if(control_settings.joy_look_y != 0)
             {
-                control_states.cam_angles[1] -= 0.015 * engine_frame_time * control_mapper.joy_look_y;
+                control_states.cam_angles[1] -= 0.015 * engine_frame_time * control_settings.joy_look_y;
             }
         }
 
@@ -462,15 +462,15 @@ void Game_ApplyControls(struct entity_s *ent)
         return;
     }
 
-    if(control_mapper.use_joy)
+    if(control_settings.use_joy)
     {
-        if(control_mapper.joy_look_x != 0)
+        if(control_settings.joy_look_x != 0)
         {
-            control_states.cam_angles[0] -=engine_frame_time * control_mapper.joy_look_x;
+            control_states.cam_angles[0] -=engine_frame_time * control_settings.joy_look_x;
         }
-        if(control_mapper.joy_look_y != 0)
+        if(control_settings.joy_look_y != 0)
         {
-            control_states.cam_angles[1] -=engine_frame_time * control_mapper.joy_look_y;
+            control_states.cam_angles[1] -=engine_frame_time * control_settings.joy_look_y;
         }
     }
 
@@ -536,18 +536,18 @@ void Game_ApplyControls(struct entity_s *ent)
             Script_UseItem(engine_lua, ITEM_LARGE_MEDIPACK, ent->id);
         }
 
-        if((control_mapper.use_joy == 1) && (control_mapper.joy_move_x != 0))
+        if((control_settings.use_joy == 1) && (control_settings.joy_move_x != 0))
         {
-            ent->character->cmd.rot[0] = (control_mapper.joy_move_x > 0) ? (-1) : (1);
+            ent->character->cmd.rot[0] = (control_settings.joy_move_x > 0) ? (-1) : (1);
         }
         else
         {
             ent->character->cmd.rot[0] = -move_logic[1];
         }
 
-        if( (control_mapper.use_joy == 1) && (control_mapper.joy_move_y != 0 ) )
+        if( (control_settings.use_joy == 1) && (control_settings.joy_move_y != 0 ) )
         {
-            ent->character->cmd.rot[1] = (control_mapper.joy_move_y > 0) ? (-1) : (1);
+            ent->character->cmd.rot[1] = (control_settings.joy_move_y > 0) ? (-1) : (1);
         }
         else
         {

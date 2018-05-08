@@ -30,17 +30,18 @@ float SC_ParseFloat(char **ch);
 int   SC_ParseInt(char **ch);
 
 int  lua_print(lua_State * lua);
-int  lua_BindKey(lua_State *lua);
+int  lua_Bind(lua_State *lua);
 
 
 #define lua_CallAndLog(L,n,r,f) lua_CallWithError(L, n, r, f, __FILE__, __LINE__)
 bool  lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, const char *cfile, int cline);
 
 void Script_LuaRegisterConfigFuncs(lua_State *lua);
+void Script_ExportConfig(const char *path);
 int Script_ParseScreen(lua_State *lua, struct screen_info_s *sc);
 int Script_ParseRender(lua_State *lua, struct render_settings_s *rs);
 int Script_ParseAudio(lua_State *lua, struct audio_settings_s *as);
-int Script_ParseConsole(lua_State *lua);
+int Script_ParseConsole(lua_State *lua, struct console_params_s *cp);
 int Script_ParseControls(lua_State *lua, struct control_settings_s *cs);
 
 bool Script_GetOverridedSamplesInfo(lua_State *lua, int *num_samples, int *num_sounds, char *sample_name_mask);
