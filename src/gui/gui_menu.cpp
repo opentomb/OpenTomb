@@ -18,6 +18,9 @@ static gui_object_p Gui_AddListItem(gui_object_p cont);
 static gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy);
 
 extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_to_item(struct gui_object_s *obj, enum gui_command_e cmd);
+
+extern "C" int handle_on_crosshair(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
 extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
@@ -336,6 +339,29 @@ static gui_object_p Gui_AddControlsContainer(gui_object_p root)
     return cont;
 }
 
+static gui_object_p Gui_AddGraphicsContainer(gui_object_p root)
+{
+    gui_object_p cont = Gui_CreateChildObject(root);
+    cont->handlers.do_command = handle_to_item;
+    cont->w = root->w - root->margin_left - root->margin_right;
+
+    cont->border_width = 0;
+    cont->flags.clip_children = 0x01;
+    cont->flags.draw_background = 0x00;
+    cont->flags.draw_border = 0x00;
+    cont->flags.layout = GUI_LAYOUT_VERTICAL;
+    cont->flags.h_content_align = GUI_ALIGN_CENTER;
+    cont->weight_y = 1;
+
+    gui_object_p obj = Gui_AddListItem(cont);
+    Gui_SetObjectLabel(obj, "Draw crosshair", 2, 2);
+    obj->handlers.do_command = handle_on_crosshair;
+    obj->flags.draw_label = 0x01;
+    obj->flags.draw_border = 0x01;
+
+    return cont;
+}
+
 gui_object_p Gui_BuildMainMenu()
 {
     gui_object_p root = Gui_CreateMenuRoot();
@@ -414,6 +440,8 @@ gui_object_p Gui_BuildMainMenu()
     obj->flags.v_content_align = GUI_ALIGN_CENTER;
 
     obj = Gui_CreateChildObject(title);
+    obj->data = Gui_AddGraphicsContainer(cont);
+    ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Graphics", 1, 1);
     obj->w = 172;
     obj->line_height = 0.8;
@@ -651,6 +679,28 @@ extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e 
         return obj->childs->next->handlers.do_command(obj->childs->next, cmd);
     }
     return 0;
+}
+
+extern "C" int handle_to_item(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    int ret = 0;
+    if(cmd == UP)
+    {
+        ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
+    }
+    else if(cmd == DOWN)
+    {
+        ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
+    }
+    else if(cmd == ACTIVATE)
+    {
+        gui_object_p item = Gui_ListInventoryMenu(obj, 0);
+        if(item && item->handlers.do_command)
+        {
+            ret = item->handlers.do_command(item, cmd);
+        }
+    }
+    return ret;
 }
 
 extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h)
@@ -973,4 +1023,10 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
         params->wait_key = 0x01;
     }
     return ret;
+}
+
+extern "C" int handle_on_crosshair(struct gui_object_s *obj, enum gui_command_e cmd)
+{
+    screen_info.crosshair = !screen_info.crosshair;
+    return 1;
 }

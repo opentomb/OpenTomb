@@ -1,14 +1,14 @@
 -- LUA config file
 screen =
 {
-    x = 50;
-    y = 20;
+    x = 6;
+    y = 30;
     width = 1200;
     height = 800;
     fov = 75.0;
     debug_view_state = 0;
     fullscreen = 0;
-    crosshair = 1;
+    crosshair = 0;
 }
 
 audio =
@@ -17,14 +17,13 @@ audio =
     music_volume = 0.90;
     use_effects = 1;
     listener_is_player = 0;
-    stream_buffer_size = 128;
 }
 
 render =
 {
     mipmap_mode = 3;
     mipmaps = 3;
-    lod_bias = 0;
+    lod_bias = 0.000;
     anisotropy = 4;
     antialias = 1;
     antialias_samples = 4;
@@ -72,6 +71,7 @@ console =
 -- Please note that on XInput game controllers (XBOX360 and such), triggers are NOT
 -- coded as joystick buttons. Instead, they have unique names: JOY_TRIGGERLEFT and
 -- JOY_TRIGGERRIGHT.
+
 dofile(base_path .. "scripts/config/control_constants.lua");
 
 bind(ACT_UP, KEY_W);

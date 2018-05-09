@@ -189,7 +189,7 @@ void Engine_Shutdown(int val)
     size_t path_base_len = sizeof(path) - 1;
     strncpy(path, Engine_GetBasePath(), path_base_len);
     path[path_base_len] = 0;
-    strncat(path, "/config.lua", path_base_len - strlen(path));
+    strncat(path, "config.lua", path_base_len - strlen(path));
     Script_ExportConfig(path);
     
     stream_codec_stop(&engine_video, 0);
