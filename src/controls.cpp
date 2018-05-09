@@ -417,31 +417,6 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
     }
 }
 
-
-void Controls_SecondaryMouseDown(struct engine_container_s **cont, float dot[3])
-{
-    float from[3], to[3];
-    engine_container_t cam_cont;
-    collision_result_t cb;
-
-    vec3_copy(from, engine_camera.transform.M4x4 + 12);
-    vec3_add_mul(to, from, engine_camera.transform.M4x4 + 8, 32768.0f);
-
-    cam_cont.next = NULL;
-    cam_cont.object = NULL;
-    cam_cont.object_type = 0;
-    cam_cont.room = engine_camera.current_room;
-
-    if(Physics_RayTest(&cb, from, to, &cam_cont, COLLISION_MASK_ALL))
-    {
-        if(cb.obj && cb.obj->object_type != OBJECT_BULLET_MISC)
-        {
-            *cont = cb.obj;
-            vec3_copy(dot, cb.point);
-        }
-    }
-}
-
 void Controls_ActionToStr(char buff[128], enum ACTIONS act)
 {
     switch(act)

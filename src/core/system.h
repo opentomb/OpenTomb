@@ -12,6 +12,17 @@ extern "C" {
 
 #define SYS_LOG_FILENAME            "d_log.txt"
 
+enum debug_view_state_e
+{
+    no_debug = 0,
+    player_anim,
+    sector_info,
+    room_objects,
+    ai_boxes,
+    bsp_info,
+    model_view,
+    debug_states_count
+};
     
 typedef struct screen_info_s
 {

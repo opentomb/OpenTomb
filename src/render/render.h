@@ -38,6 +38,7 @@ struct frustum_s;
 struct world_s;
 struct room_s;
 struct camera_s;
+struct ss_bone_frame_s;
 struct entity_s;
 struct sprite_s;
 struct base_mesh_s;

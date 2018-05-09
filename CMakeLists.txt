@@ -181,6 +181,7 @@ set(OPENTOMB_SRCS
     src/controls.cpp
     src/controls.h
     src/engine.cpp
+    src/engine_debug.cpp
     src/engine.h
     src/engine_string.h
     src/entity.cpp
