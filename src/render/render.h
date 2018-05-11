@@ -31,14 +31,11 @@
 #define R_DRAW_AI_OBJECTS       0x00100000      // AI objects drawing
 #define R_DRAW_AI_PATH          0x00200000      // AI character target path drawing
 
-#define STENCIL_FRUSTUM 1
-
 struct portal_s;
 struct frustum_s;
 struct world_s;
 struct room_s;
 struct camera_s;
-struct ss_bone_frame_s;
 struct entity_s;
 struct sprite_s;
 struct base_mesh_s;

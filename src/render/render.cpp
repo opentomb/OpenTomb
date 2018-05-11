@@ -338,7 +338,7 @@ void CRender::DrawList()
         m_cam_right[0] *= m_cam_right[2];
         m_cam_right[1] *= m_cam_right[2];
         m_cam_right[2] = 0.0f;
-        
+
         /*
          * room rendering
          */
@@ -943,7 +943,7 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
             }
         }
     }
-    
+
     if((this->r_flags & R_DRAW_AI_PATH) && entity->character && entity->character->path_dist)
     {
         GLfloat red[3] = {1.0f, 0.0f, 0.0f};
@@ -974,7 +974,6 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
 
     const shader_description *lastShader = 0;
 
-#if STENCIL_FRUSTUM
     ////start test stencil test code
     bool need_stencil = false;
     if(room->frustum != NULL)
@@ -1029,7 +1028,6 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
             qglStencilFunc(GL_EQUAL, 1, 0xFF);
         }
     }
-#endif
 
     if(!(r_flags & R_SKIP_ROOM) && room->content->mesh)
     {
@@ -1054,12 +1052,10 @@ void CRender::DrawRoom(struct room_s *room, const float modelViewMatrix[16], con
         this->DrawMesh(room->content->mesh, NULL, NULL);
     }
 
-#if STENCIL_FRUSTUM
     if(need_stencil)
     {
         qglDisable(GL_STENCIL_TEST);
     }
-#endif
 
     if (room->content->static_mesh_count > 0)
     {
@@ -1168,7 +1164,7 @@ void CRender::DrawRoomSprites(struct room_s *room)
         qglUniform1iARB(shader->sampler, 0);
         qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, m_camera->gl_view_proj_mat);
         qglUniform1fARB(shader->dist_fog, m_camera->dist_far);
-    
+
         for(uint32_t i = 0; i < room->content->sprites_count; i++)
         {
             room_sprite_p s = room->content->sprites + i;

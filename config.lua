@@ -64,7 +64,7 @@ console =
     height = 320;
     spacing = 0.50;
     show_cursor_period = 0.50;
-    show = 0;
+    show = 1;
 }
 
 -- Keys binding
