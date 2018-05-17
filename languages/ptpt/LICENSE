@@ -1,0 +1,161 @@
+                     LICENÇA PÚBLICA GERAL GNU REDUZIDA
+                       Versão 3, 29 de junho de 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+  Todos podem copiar e distribuir cópias exatas
+  deste documento da licença, mas não têm permissão para mudá-lo.
+
+
+  Esta versão da GNU Redução da Licença Pública Geral incorpora os termos
+  e condições da versão 3 da GNU General Public License, complementada
+  para as permissões adicionais detalhadas abaixo.
+
+  0. Definições adicionais.
+
+  Conforme usado neste documento, "esta Licença" refere-se à versão 3 da
+  Licença pública geral reduzida do GNU, e o "GNU LPG" refere-se à versão
+  3 da GNU General Public License.
+
+  "A Biblioteca" refere-se a um trabalho coberto gerido por esta Licença, diferente
+  para um aplicativo ou um trabalho combinado conforme definido abaixo.
+
+  Uma "Aplicação" é qualquer trabalho que use uma interface fornecida pela
+  Biblioteca, mas isto não é baseado na Biblioteca. A definição de uma subclasse
+  de uma classe definida pela Biblioteca é considerada uma forma de usar uma interface
+  fornecida pela biblioteca.
+
+  Um "Trabalho Combinado" é um trabalho produzido ao combinar ou vincular um aplicativo
+  com a Biblioteca. A versão específica da Biblioteca com a qual o
+  Trabalho Combinado também é chamado de "Versão Vinculada".
+
+  A "Fonte Correspondente Mínima" para um Trabalho Combinado significa a Fonte
+  Correspondente ao Trabalho Combinado, excluindo qualquer código fonte para
+  as partes do Trabalho Combinado que, consideradas isoladamente, são baseadas na
+  Aplicação e não na Versão Ligada.
+
+  O "Código de Aplicação Correspondente" para um Trabalho Combinado significa o
+  código de objeto e/ou código-fonte do aplicativo, incluindo dados e programas
+  de utilidade necessária para reproduzir o Trabalho Combinado da Aplicação, mas
+  excluindo as bibliotecas do sistema combinado de trabalho.
+
+  1. Exceção à Seção 3 do GNU LPG.
+
+  Podes transmitir um trabalho coberto nas seções 3 e 4 desta Licença sem
+  estar sujeito à seção 3 do GNU LPG.
+
+  2. Transmitir versões modificadas.
+
+  Se tu modificares uma cópia da Biblioteca e nas tuas modificações, uma instalação
+  refere-se a uma função ou dados a serem fornecidos por uma Aplicação que utiliza
+  a instalação (que não é um argumento aprovado quando a instalação é invocada),
+  Então podes transmitir uma cópia da versão modificada:
+
+   a) sob esta Licença, desde que faças um esforço de boa fé para garantir
+   que, no caso de um aplicativo não fornecer a função ou dados,
+   a instalação continua a funcionar e executa qualquer parte da finalidade que se segue
+   sendo significativo, ou
+
+   b) sob o GNU LPG, sem permissões adicionais desta Licença
+   aplicável a esta cópia.
+
+  3. Código de objeto que incorpora material dos arquivos de cabeçalho do
+  Biblioteca
+
+  O formulário de formulário objeto de um Aplicativo pode incorporar material de um
+  arquivo de cabeçalho que faz parte da Biblioteca. Podes transmitir este código
+  objeto nos termos da tua escolha, desde que, se o material incorporado não
+  está limitado a parâmetros numéricos, projetos de estrutura de dados e acessórios,
+  ou macros pequenas, funções e modelos online (dez ou menos linhas de comprimento),
+  Tu fazes as seguintes duas coisas:
+
+   a) Dá uma notícia proeminente com cada cópia do código do objeto usado na
+   Biblioteca e que a Biblioteca e seu uso estão cobertos por esta Licença.
+
+   b) Acompanha o código do objeto com uma cópia do GNU LPG e este documento da licença.
+
+  4. Trabalhos combinados.
+
+  Podes transmitir um trabalho combinado de acordo com os termos da tua escolha que, em conjunto,
+  não restringe a modificação das partes da Biblioteca contidas no Trabalho
+  Engenharia combinada e reversa para depurar tais modificações se tu também executares
+  cada uma das seguintes ações:
+
+   a) Da uma notícia proeminente com cada cópia do Trabalho Combinado no qual o
+   Biblioteca e que a Biblioteca e a sua utilização estão cobertos por esta Licença.
+
+   b) Acompanha o trabalho combinado com uma cópia do GNU LPG a este documento
+   da licença
+
+   c) Para um trabalho combinado que mostra avisos de direitos de autor durante a execução,
+   incluir o aviso de direitos de autor para a Biblioteca entre estes avisos, bem como uma
+   referência que direciona o utilizador para as cópias do GNU LPG e este documento da
+   licença.
+   
+   d) Seue um destes procedimentos:
+
+       0) Transmite à Fonte Correspondente Mínima nos termos desta
+       Licença e o Código de Aplicação Correspondente numa forma
+       adequada, e sob os termos que permitem, o utilizador a
+       recombinar ou vincular o aplicativo com uma versão modificada da
+       versão vinculada para produzir um trabalho combinado modificado, na
+       maneira especificada na seção 6 da GNU GPL para transporte
+       Fonte Correspondente.
+
+       1) Usa um mecanismo de biblioteca compartilhada adequado para vincular com o
+       Biblioteca. Um mecanismo adequado é aquele que (a) utiliza em tempo de execução
+       uma cópia da Biblioteca já está presente no computador do utilizador do
+       sistema, e (b) funcionará corretamente com uma versão modificada
+       da Biblioteca que é compatível com a interface com o Linked
+       Versão.
+
+   e) Fornecer Informações de Instalação, mas somente se tu fores obrigado
+   a fornecer de outra forma, estas informações na seção 6 do
+   GNU GPL, e somente na medida em que esta informação seja
+   necessária instalar e executar uma versão modificada do
+   Trabalho Combinado produzido pela recombinação ou religação da
+   Aplicação com uma versão modificada da Versão Ligada. (E se
+   usares a opção 4d0, as informações de instalação devem acompanhar
+   a Mínima Correspondente da Fonte e Aplicação Correspondente
+   Código. Se usares a opção 4d1, deves fornecer à instalação
+   informações da maneira especificada na seção 6 da GNU GPL
+   para transmitir a fonte correspondente.)
+
+  5. Bibliotecas Combinadas.
+
+  Podes colocar instalações de biblioteca que são um trabalho baseado na
+Biblioteca lado a lado numa única biblioteca, juntamente com outra biblioteca
+instalações que não são aplicativos e não são cobertas por esta
+Licença e transmita esta biblioteca combinada sob os termos da tua
+escolha, se fizeres as duas coisas a seguir:
+
+   a) Acompanha a biblioteca combinada com uma cópia do mesmo trabalho baseado
+   na Biblioteca, sem combinação com outras instalações da biblioteca,
+   transmitido nos termos desta Licença.
+
+   b) Dá um notável aviso com a biblioteca combinada que parte dela
+   é um trabalho baseado na Biblioteca, e explica onde encontrar o
+   acompanhando a forma não combinada do mesmo trabalho.
+
+  6. Versões Revisadas da GNU Lesser General Public License.
+
+  A Free Software Foundation pode publicar versões revisadas e/ou novas
+da GNU Lesser Public Public Public License de vez em quando. Tais novas
+versões serão semelhantes em espírito à versão atual, mas podem
+diferir em detalhes para resolver novos problemas ou preocupações.
+
+  Cada versão recebe um número de versão distinto. Se
+a biblioteca como tu a recebeste especifica que uma certa versão numerada
+da GNU Lesser General Public License "ou qualquer versão posterior"
+aplica-se a ele, tens a opção de seguir os termos e
+condições daquela versão publicada ou de qualquer versão posterior
+publicado pela Free Software Foundation. Se a Biblioteca como tu
+a recebeste não especifica um número de versão do GNU Lesser
+Licença Pública Geral, podes escolher qualquer versão do GNU Lesser
+Licença Pública Geral já publicada pela Free Software Foundation.
+
+  Se a Biblioteca como tu a recebeste, especifica que um proxy pode decidir
+se as futuras versões da GNU Lesser General Public License devem-se
+aplicar, a declaração pública de aceitação de qualquer versão do proxy é
+autorização permanente para tu escolheres esta versão para a
+Biblioteca.
+
