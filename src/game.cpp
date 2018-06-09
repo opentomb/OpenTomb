@@ -594,19 +594,19 @@ int Game_ProcessMenu(entity_p player)
         {
             main_inventory_manager->send(gui_command_e::ACTIVATE);
         }
-        else if(act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state)
+        else if((act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state) || (act[ACT_UP].state && !act[ACT_UP].prev_state))
         {
             main_inventory_manager->send(gui_command_e::UP);
         }
-        else if(act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state)
+        else if((act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state) || (act[ACT_DOWN].state && !act[ACT_DOWN].prev_state))
         {
             main_inventory_manager->send(gui_command_e::DOWN);
         }
-        else if(act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state)
+        else if((act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state) || (act[ACT_LEFT].state && !act[ACT_LEFT].prev_state))
         {
             main_inventory_manager->send(gui_command_e::LEFT);
         }
-        else if(act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state)
+        else if((act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state) || (act[ACT_RIGHT].state && !act[ACT_RIGHT].prev_state))
         {
             main_inventory_manager->send(gui_command_e::RIGHT);
         }
