@@ -84,7 +84,7 @@ int lua_GetLevelVersion(lua_State *lua)
 /*
  * Load level functions
  */
-int lua_SetSectorFloorConfig(lua_State * lua)
+int lua_SetSectorFloorConfig(lua_State *lua)
 {
     if(lua_gettop(lua) >= 10)
     {
@@ -116,7 +116,7 @@ int lua_SetSectorFloorConfig(lua_State * lua)
 }
 
 
-int lua_SetSectorCeilingConfig(lua_State * lua)
+int lua_SetSectorCeilingConfig(lua_State *lua)
 {
     if(lua_gettop(lua) >= 10)
     {
@@ -148,7 +148,7 @@ int lua_SetSectorCeilingConfig(lua_State * lua)
 }
 
 
-int lua_SetSectorPortal(lua_State * lua)
+int lua_SetSectorPortal(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -174,7 +174,7 @@ int lua_SetSectorPortal(lua_State * lua)
 }
 
 
-int lua_SetSectorFlags(lua_State * lua)
+int lua_SetSectorFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 7)
     {
@@ -221,7 +221,7 @@ int lua_SameRoom(lua_State *lua)
 }
 
 
-int lua_SimilarSector(lua_State * lua)
+int lua_SimilarSector(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -270,7 +270,7 @@ int lua_SimilarSector(lua_State * lua)
 }
 
 
-int lua_GetSectorHeight(lua_State * lua)
+int lua_GetSectorHeight(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -312,7 +312,7 @@ int lua_GetSectorHeight(lua_State * lua)
 }
 
 
-int lua_SectorTriggerClear(lua_State * lua)
+int lua_SectorTriggerClear(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -349,7 +349,7 @@ int lua_SectorTriggerClear(lua_State * lua)
 }
 
 
-int lua_SectorAddTrigger(lua_State * lua)
+int lua_SectorAddTrigger(lua_State *lua)
 {
     if(lua_gettop(lua) >= 8)
     {
@@ -382,7 +382,7 @@ int lua_SectorAddTrigger(lua_State * lua)
 }
 
 
-int lua_SectorAddTriggerCommand(lua_State * lua)
+int lua_SectorAddTriggerCommand(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -431,7 +431,7 @@ int lua_SectorAddTriggerCommand(lua_State * lua)
 }
 
 
-int lua_GetGravity(lua_State * lua)
+int lua_GetGravity(lua_State *lua)
 {
     float g[3];
     Physics_GetGravity(g);
@@ -443,7 +443,7 @@ int lua_GetGravity(lua_State * lua)
 }
 
 
-int lua_SetGravity(lua_State * lua)                                             // function to be exported to Lua
+int lua_SetGravity(lua_State *lua)                                              // function to be exported to Lua
 {
     float g[3];
 
@@ -508,7 +508,7 @@ int lua_SetSecretStatus(lua_State *lua)
 }
 
 
-int lua_AddRoomToOverlappedList(lua_State * lua)
+int lua_AddRoomToOverlappedList(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -523,7 +523,7 @@ int lua_AddRoomToOverlappedList(lua_State * lua)
 }
 
 
-int lua_AddRoomToNearList(lua_State * lua)
+int lua_AddRoomToNearList(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -538,7 +538,7 @@ int lua_AddRoomToNearList(lua_State * lua)
 }
 
 
-int lua_CreateBaseItem(lua_State * lua)
+int lua_CreateBaseItem(lua_State *lua)
 {
     if(lua_gettop(lua) >= 5)
     {
@@ -559,7 +559,7 @@ int lua_CreateBaseItem(lua_State * lua)
 }
 
 
-int lua_DeleteBaseItem(lua_State * lua)
+int lua_DeleteBaseItem(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -573,7 +573,7 @@ int lua_DeleteBaseItem(lua_State * lua)
 }
 
 
-int lua_GetBaseItemInfo(lua_State * lua)
+int lua_GetBaseItemInfo(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -600,7 +600,7 @@ int lua_GetBaseItemInfo(lua_State * lua)
 }
 
 
-int lua_GetBaseItemInfoByWorldID(lua_State * lua)
+int lua_GetBaseItemInfoByWorldID(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -627,7 +627,7 @@ int lua_GetBaseItemInfoByWorldID(lua_State * lua)
 }
 
 
-int lua_SpawnEntity(lua_State * lua)
+int lua_SpawnEntity(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 8)
@@ -670,7 +670,7 @@ int lua_SpawnEntity(lua_State * lua)
 }
 
 
-int lua_DeleteEntity(lua_State * lua)
+int lua_DeleteEntity(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 1)

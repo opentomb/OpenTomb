@@ -46,6 +46,7 @@ extern "C" {
 #include "trigger.h"
 #include "character_controller.h"
 #include "image.h"
+#include "core/utf8_32.h"
 
 
 static SDL_Window              *sdl_window     = NULL;
@@ -65,6 +66,8 @@ float                           engine_frame_time = 0.0;
 lua_State                      *engine_lua = NULL;
 struct camera_s                 engine_camera;
 struct camera_state_s           engine_camera_state;
+static void (*g_text_handler)(uint32_t key, void *data) = NULL;
+static void *g_text_handler_data;
 
 
 extern "C" int  Engine_ExecCmd(char *ch);
@@ -156,7 +159,6 @@ void Engine_Start(int argc, char **argv)
     // Init generic SDL interfaces.
     Engine_InitSDLSubsystems();
     Engine_InitSDLVideo();
-    Audio_CoreInit();
 
     // Additional OpenGL initialization.
     Engine_InitGL();
@@ -178,6 +180,7 @@ void Engine_Start(int argc, char **argv)
     SDL_SetRelativeMouseMode(SDL_TRUE);
     SDL_WarpMouseInWindow(sdl_window, screen_info.w / 2, screen_info.h / 2);
     SDL_ShowCursor(0);
+    Audio_CoreInit();
 
     luaL_dofile(engine_lua, autoexec_name ? autoexec_name : "autoexec.lua");
 }
@@ -191,10 +194,10 @@ void Engine_Shutdown(int val)
     path[path_base_len] = 0;
     strncat(path, "config.lua", path_base_len - strlen(path));
     Script_ExportConfig(path);
-    
+
     stream_codec_stop(&engine_video, 0);
     StreamTrack_Stop(Audio_GetStreamExternal());
-    
+
     renderer.ResetWorld(NULL, 0, NULL, 0);
     ClearTestModel();
     World_Clear();
@@ -350,13 +353,11 @@ void Engine_InitSDLVideo()
         video_flags |= (SDL_WINDOW_RESIZABLE | SDL_WINDOW_SHOWN);
     }
 
-    ///@TODO: is it really needede for correct work?
     if(SDL_GL_LoadLibrary(NULL) < 0)
     {
         Sys_Error("Could not init OpenGL driver");
     }
 
-    // Check for correct number of antialias samples.
     if(renderer.settings.antialias)
     {
         SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, renderer.settings.antialias);
@@ -370,9 +371,8 @@ void Engine_InitSDLVideo()
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, renderer.settings.z_depth);
-#if STENCIL_FRUSTUM
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-#endif
+
     // set the opengl context version
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -600,7 +600,7 @@ void Engine_PollSDLEvents()
     static int mouse_setup = 0;
     const float color[3] = {1.0f, 0.0f, 0.0f};
     static float from[3], to[3];
-    
+
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
         control_states.actions[i].prev_state = control_states.actions[i].state;
@@ -693,8 +693,24 @@ void Engine_PollSDLEvents()
             case SDL_TEXTEDITING:
                 if(Con_IsShown() && event.key.state)
                 {
-                    Con_Filter(event.text.text);
+                    uint8_t *utf8 = (uint8_t*)event.text.text;
+                    uint32_t utf32;
+                    while(*utf8)
+                    {
+                        utf8 = utf8_to_utf32(utf8, &utf32);
+                        Con_Edit(utf32);
+                    }
                     return;
+                }
+                if(g_text_handler && event.key.state)
+                {
+                    uint8_t *utf8 = (uint8_t*)event.text.text;
+                    uint32_t utf32;
+                    while(*utf8)
+                    {
+                        utf8 = utf8_to_utf32(utf8, &utf32);
+                        g_text_handler(utf32, g_text_handler_data);
+                    }
                 }
                 break;
 
@@ -733,12 +749,37 @@ void Engine_PollSDLEvents()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.scancode, event.key.state);
-                    // DEBUG KEYBOARD COMMANDS
-                    Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
-                    if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
+                    if(g_text_handler && event.key.state)
                     {
-                        TestModelApplyKey(event.key.keysym.scancode);
+                        switch(event.key.keysym.sym)
+                        {
+                            case SDLK_ESCAPE:
+                            case SDLK_RETURN:
+                            case SDLK_UP:
+                            case SDLK_DOWN:
+                            case SDLK_LEFT:
+                            case SDLK_RIGHT:
+                            case SDLK_HOME:
+                            case SDLK_END:
+                            case SDLK_PAGEUP:
+                            case SDLK_PAGEDOWN:
+                            case SDLK_BACKSPACE:
+                            case SDLK_DELETE:
+                                g_text_handler(event.key.keysym.sym, g_text_handler_data);
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                    else if(!g_text_handler)
+                    {
+                        Controls_Key(event.key.keysym.scancode, event.key.state);
+                        Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
+                        if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
+                        {
+                            TestModelApplyKey(event.key.keysym.scancode);
+                        }
                     }
                 }
                 break;
@@ -887,6 +928,20 @@ void Engine_MainLoop()
 /*
  * MISC ENGINE FUNCTIONALITY
  */
+
+void Engine_SetTextInputHandler(void (*f)(uint32_t key, void *data), void *data)
+{
+    g_text_handler = f;
+    g_text_handler_data = data;
+    if(f)
+    {
+        SDL_StartTextInput();
+    }
+    else
+    {
+        SDL_StopTextInput();
+    }
+}
 
 void Engine_TakeScreenShot()
 {

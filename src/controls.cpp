@@ -41,69 +41,65 @@ void Controls_Key(int32_t button, int state)
         control_states.last_key = button;
     }
 
-    for(int i = 0; i < ACT_LASTINDEX; i++)
+    int action = Controls_MapKey(button);
+    switch(action)
     {
-        if((button == control_states.actions[i].primary) ||
-           (button == control_states.actions[i].secondary))
-        {
-            switch(i)
+        case ACT_CONSOLE:
+            if(!state)
             {
-                case ACT_CONSOLE:
-                    if(!state)
-                    {
-                        Con_SetShown(!Con_IsShown());
+                Con_SetShown(!Con_IsShown());
 
-                        if(Con_IsShown())
-                        {
-                            Audio_PauseStreams();
-                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
-                            SDL_ShowCursor(1);
-                            SDL_SetRelativeMouseMode(SDL_FALSE);
-                            SDL_StartTextInput();
-                        }
-                        else
-                        {
-                            Audio_ResumeStreams();
-                            //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
-                            SDL_ShowCursor(0);
-                            SDL_SetRelativeMouseMode(SDL_TRUE);
-                            SDL_StopTextInput();
-                        }
-                    }
-                    break;
-
-                case ACT_SCREENSHOT:
-                    if(!state)
-                    {
-                        Engine_TakeScreenShot();
-                    }
-                    break;
-
-                case ACT_SAVEGAME:
-                    if(!state)
-                    {
-                        Game_Save("qsave.lua");
-                    }
-                    break;
-
-                case ACT_LOADGAME:
-                    if(!state)
-                    {
-                        Game_Load("qsave.lua");
-                    }
-                    break;
-
-                case ACT_LOOK:
-                    control_states.look = state;
-                    break;
+                if(Con_IsShown())
+                {
+                    Audio_PauseStreams();
+                    //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
+                    SDL_ShowCursor(1);
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    SDL_StartTextInput();
+                }
+                else
+                {
+                    Audio_ResumeStreams();
+                    //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
+                    SDL_ShowCursor(0);
+                    SDL_SetRelativeMouseMode(SDL_TRUE);
+                    SDL_StopTextInput();
+                }
             }
-            if(control_states.actions[i].state && state)
-            {
-                control_states.actions[i].prev_state = 0x00;
-            }
-            control_states.actions[i].state = state;
             break;
+
+        case ACT_SCREENSHOT:
+            if(!state)
+            {
+                Engine_TakeScreenShot();
+            }
+            break;
+
+        case ACT_SAVEGAME:
+            if(!state)
+            {
+                Game_Save("qsave.lua");
+            }
+            break;
+
+        case ACT_LOADGAME:
+            if(!state)
+            {
+                Game_Load("qsave.lua");
+            }
+            break;
+
+        case ACT_LOOK:
+            control_states.look = state;
+            break;
+    }
+    if(action < ACTIONS::ACT_LASTINDEX)
+    {
+        if(control_states.actions[action].state && state)
+        {
+            control_states.actions[action].prev_state = 0x00;
         }
+        control_states.actions[action].state = state;
     }
 }
 
@@ -415,6 +411,19 @@ void Controls_PrimaryMouseDown(float from[3], float to[3])
         vec3_copy(from, cb.point);
         vec3_add_mul(to, cb.point, cb.normale, 256.0f);
     }
+}
+
+enum ACTIONS Controls_MapKey(uint32_t key)
+{
+    for(int i = 0; i < ACT_LASTINDEX; i++)
+    {
+        if((key == control_states.actions[i].primary) ||
+           (key == control_states.actions[i].secondary))
+        {
+            return (enum ACTIONS)i;
+        }
+    }
+    return ACTIONS::ACT_LASTINDEX;
 }
 
 void Controls_ActionToStr(char buff[128], enum ACTIONS act)

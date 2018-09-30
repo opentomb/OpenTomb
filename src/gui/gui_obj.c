@@ -32,8 +32,7 @@ static int Gui_CheckObjectsRects(gui_object_p parent, gui_object_p obj)
 gui_object_p Gui_CreateObject()
 {
     gui_object_p ret = (gui_object_p)calloc(1, sizeof(gui_object_t));
-    ret->text = NULL;
-    ret->line_height = 1.0f;
+    ret->label = NULL;
     return ret;
 }
 
@@ -46,12 +45,14 @@ void Gui_DeleteObject(gui_object_p obj)
             obj->handlers.delete_user_data(obj->data);
             obj->data = NULL;
         }
-        if(obj->text)
+        if(obj->label)
         {
             obj->flags.draw_label = 0x00;
-            obj->text_size = 0;
-            free(obj->text);
-            obj->text = NULL;
+            obj->label->text_size = 0;
+            free(obj->label->text);
+            obj->label->text = NULL;
+            free(obj->label);
+            obj->label = NULL;
         }
         free(obj);
     }
@@ -114,26 +115,31 @@ void Gui_DeleteChildObject(gui_object_p obj)
 
 void Gui_SetObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, uint16_t style_id)
 {
-    obj->font_id = font_id;
-    obj->style_id = style_id;
-
-    if(!text && obj->text)
+    if(!obj->label)
     {
-        obj->text[0] = 0;
+        obj->label = (gui_object_text_p)calloc(1, sizeof(gui_object_text_t));
+        obj->label->line_height = 1.0f;
+    }
+    obj->label->font_id = font_id;
+    obj->label->style_id = style_id;
+
+    if(!text && obj->label->text)
+    {
+        obj->label->text[0] = 0;
         return;
     }
 
     if(text)
     {
         size_t len = strlen(text) + 1;
-        if(obj->text_size < len)
+        if(obj->label->text_size < len)
         {
-            char *old_ptr = obj->text;
-            obj->text_size = len + 8 - (len % 8);
-            obj->text = (char*)malloc(obj->text_size * sizeof(char));
+            char *old_ptr = obj->label->text;
+            obj->label->text_size = len + 8 - (len % 8);
+            obj->label->text = (char*)malloc(obj->label->text_size * sizeof(char));
             free(old_ptr);
         }
-        strncpy(obj->text, text, len);
+        strncpy(obj->label->text, text, len);
     }
 }
 
@@ -243,12 +249,50 @@ static void Gui_DrawBorderInternal(gui_object_p root)
     qglDrawArrays(GL_TRIANGLE_STRIP, 0, 10);
 }
 
+static void Gui_DrawCursorInternal(GLint x, GLint y, GLint h)
+{
+    /*if(con_base.show_cursor_period)
+    {
+        if(con_base.cursor_time > con_base.show_cursor_period)
+        {
+            con_base.cursor_time = 0.0f;
+            con_base.show_cursor = !con_base.show_cursor;
+        }
+    }
+
+    if(con_base.show_cursor && cursorBuffer)*/
+    {
+        GLfloat line_w = 1.0f;
+        GLfloat cursor_array[16];
+        GLfloat *v = cursor_array;
+
+       *v++ = (GLfloat)x;
+       *v++ = (GLfloat)y - 0.1 * (GLfloat)h;
+        v[0] = 1.0; v[1] = 1.0; v[2] = 1.0; v[3] = 0.7;             v += 4;
+        v[0] = 0.0; v[1] = 0.0;                                     v += 2;
+       *v++ = (GLfloat)x;
+       *v++ = (GLfloat)y + 0.7 * (GLfloat)h;
+        v[0] = 1.0; v[1]= 1.0; v[2] = 1.0; v[3] = 0.7;              v += 4;
+        v[0] = 0.0; v[1] = 0.0;
+
+        BindWhiteTexture();
+        qglGetFloatv(GL_LINE_WIDTH, &line_w);
+        qglLineWidth(1.0f);        
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array);
+        qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array + 2);
+        qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), cursor_array + 6);
+        qglDrawArrays(GL_LINES, 0, 2);
+        qglLineWidth(line_w);
+    }
+}
+
 static void Gui_DrawLabelInternal(gui_object_p root)
 {
     gl_tex_font_p gl_font = NULL;
     gl_fontstyle_p style = NULL;
-
-    if((gl_font = GLText_GetFont(root->font_id)) && (style = GLText_GetFontStyle(root->style_id)))
+    gui_object_text_p label = root->label;
+            
+    if((gl_font = GLText_GetFont(label->font_id)) && (style = GLText_GetFontStyle(label->style_id)))
     {
         GLfloat real_x = 0.0f, real_y = 0.0f;
         int32_t x0, y0, x1, y1;
@@ -256,26 +300,27 @@ static void Gui_DrawLabelInternal(gui_object_p root)
         int32_t w_pt = ((root->w - 2 * root->border_width) * 64.0f + 0.5f);
         GLfloat ascender = glf_get_ascender(gl_font) / 64.0f;
         GLfloat descender = glf_get_descender(gl_font) / 64.0f;
-        GLfloat dy = root->line_height * (ascender - descender);
+        GLfloat dy = label->line_height * (ascender - descender);
         int n_lines = 1;
-        char *begin = root->text;
+        int total_chars = 0;
+        char *begin = label->text;
         char *end = begin;
 
         shadow_color[0] = 0.0f;
         shadow_color[1] = 0.0f;
         shadow_color[2] = 0.0f;
         shadow_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;
-
+        
         if(root->flags.word_wrap)
         {
             int n_sym = 0;
             n_lines = 0;
-            for(char *ch = glf_get_string_for_width(gl_font, root->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            for(char *ch = glf_get_string_for_width(gl_font, label->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
             {
                 ++n_lines;
                 begin = ch;
             }
-            begin = root->text;
+            begin = label->text;
             x1 = x0 + w_pt;
             y1 = y0 + n_lines * dy * 64.0f;
         }
@@ -291,14 +336,12 @@ static void Gui_DrawLabelInternal(gui_object_p root)
                 break;
         }
 
+        total_chars = 0;
         for(int line = n_lines - 1; line >= 0; --line)
         {
-            int n_sym = -1;
-            if(n_lines > 1)
-            {
-                end = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym);
-            }
-
+            int n_sym = 0;
+            end = glf_get_string_for_width(gl_font, begin, w_pt, &n_sym);
+            
             glf_get_string_bb(gl_font, begin, n_sym, &x0, &y0, &x1, &y1);
 
             real_x = root->x + root->border_width - x0 / 64.0f;
@@ -311,7 +354,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
                     real_x = root->x + root->w / 2 - (x1 + x0) / 128.0f;
                     break;
             }
-
+            
             if(style->shadowed)
             {
                 vec4_copy(gl_font->gl_font_color, shadow_color);
@@ -322,6 +365,14 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             }
             vec4_copy(gl_font->gl_font_color, style->font_color);
             glf_render_str(gl_font, real_x, real_y + line * dy, begin, n_sym);
+            
+            if(root->flags.edit_text && (label->cursor_pos <= total_chars + n_sym) && ((label->cursor_pos > total_chars) || (label->cursor_pos == 0)))
+            {
+                int cursor_x = glf_get_string_len(gl_font, begin, label->cursor_pos - total_chars) / 64;
+                Gui_DrawCursorInternal(real_x + cursor_x, real_y + line * dy, dy);
+            }
+            
+            total_chars += n_sym;
             begin = end;
         }
     }
@@ -343,7 +394,7 @@ static void Gui_DrawObjectsInternal(gui_object_p root, int stencil)
             Gui_DrawBorderInternal(root);
         }
 
-        if(root->text && root->flags.draw_label)
+        if(root->label && root->label->text && root->flags.draw_label)
         {
             Gui_DrawLabelInternal(root);
         }
