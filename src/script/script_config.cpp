@@ -408,7 +408,7 @@ void Script_ExportConfig(const char *path)
             fprintf(f, "    height = %d;\n", cp.height);
             fprintf(f, "    spacing = %.2f;\n", cp.spacing);
             fprintf(f, "    show_cursor_period = %.2f;\n", cp.show_cursor_period);
-            fprintf(f, "    show = %d;\n", cp.show);
+            fprintf(f, "    show = 0;\n");
             fprintf(f, "}\n\n");
         }
 

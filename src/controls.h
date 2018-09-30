@@ -142,6 +142,7 @@ extern struct engine_control_state_s            control_states;
 
 void Controls_DebugKeys(int button, int state);
 void Controls_PrimaryMouseDown(float from[3], float to[3]);
+enum ACTIONS Controls_MapKey(uint32_t key);
 
 void Controls_ActionToStr(char buff[128], enum ACTIONS act);
 void Controls_KeyToStr(char buff[128], int key);

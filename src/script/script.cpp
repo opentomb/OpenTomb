@@ -233,7 +233,7 @@ void Script_AddKey(lua_State *lua, int keycode, int state)
     lua_settop(lua, top);
 }
 
-bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call)
+bool Script_CallVoidFunc(lua_State *lua, const char *func_name, bool destroy_after_call)
 {
     int top = lua_gettop(lua);
 
@@ -281,7 +281,7 @@ bool lua_CallWithError(lua_State *lua, int nargs, int nresults, int errfunc, con
 /*
  * debug functions
  */
-int lua_print(lua_State * lua)
+int lua_print(lua_State *lua)
 {
     int top = lua_gettop(lua);
 

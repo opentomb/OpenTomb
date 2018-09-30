@@ -29,7 +29,7 @@ char *SC_ParseToken(char *data, char *token, size_t token_size);
 float SC_ParseFloat(char **ch);
 int   SC_ParseInt(char **ch);
 
-int  lua_print(lua_State * lua);
+int  lua_print(lua_State *lua);
 int  lua_Bind(lua_State *lua);
 
 
@@ -61,7 +61,7 @@ size_t Script_GetEntitySaveData(lua_State *lua, int id_entity, char *buf, size_t
 void Script_DoFlipEffect(lua_State *lua, int id_effect, int id_object, int param);
 size_t Script_GetFlipEffectsSaveData(lua_State *lua, char *buf, size_t buf_size);
 int  Script_DoTasks(lua_State *lua, float time);
-bool Script_CallVoidFunc(lua_State *lua, const char* func_name, bool destroy_after_call = false);
+bool Script_CallVoidFunc(lua_State *lua, const char *func_name, bool destroy_after_call = false);
 
 void Script_AddKey(lua_State *lua, int keycode, int state);
 

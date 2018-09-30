@@ -37,8 +37,8 @@ typedef struct char_info_s
     GLfloat         tex_x1;
     GLfloat         tex_y1;
 
-    GLfloat         advance_x_pt;
-    GLfloat         advance_y_pt;
+    GLuint          advance_x_pt;
+    GLuint          advance_y_pt;
 }char_info_t, *char_info_p;
 
 void glf_init()
@@ -400,20 +400,19 @@ int32_t glf_get_string_len(gl_tex_font_p glf, const char *text, int n)
     if(glf && glf->ft_face && *ch)
     {
         uint32_t curr_utf32, next_utf32;
-        int i = 0;
         FT_Vector kern;
 
         ch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        for(; (n < 0) || (i < n); i++)
+        for(int i = 0; (n < 0) || (i < n); ++i)
         {
             n = (*ch) ? (n) : (0);
             ch = utf8_to_utf32(ch, &next_utf32);
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
-            curr_utf32 = next_utf32;
             x += kern.x + glf->glyphs[curr_utf32].advance_x_pt;
+            curr_utf32 = next_utf32;
         }
     }
 
@@ -435,7 +434,6 @@ char *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int 
 
         ch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        w_pt -= glf->glyphs[curr_utf32].advance_x_pt;
         do
         {
             ret = (char*)ch;
@@ -445,8 +443,8 @@ char *glf_get_string_for_width(gl_tex_font_p glf, char *text, int32_t w_pt, int 
             next_utf32 = FT_Get_Char_Index(glf->ft_face, next_utf32);
 
             FT_Get_Kerning(glf->ft_face, curr_utf32, next_utf32, FT_KERNING_UNSCALED, &kern);   // kern in 1/64 pixel
-            curr_utf32 = next_utf32;
             x += kern.x + glf->glyphs[curr_utf32].advance_x_pt;
+            curr_utf32 = next_utf32;
         }
         while(x < w_pt);
     }
@@ -473,7 +471,7 @@ void glf_get_string_bb(gl_tex_font_p glf, const char *text, int n, int32_t *x0, 
 
         ch = utf8_to_utf32(ch, &curr_utf32);
         curr_utf32 = FT_Get_Char_Index(glf->ft_face, curr_utf32);
-        for(int i = 0; (n < 0) || (i < n); i++)
+        for(int i = 0; (n < 0) || (i < n); ++i)
         {
             char_info_p g = glf->glyphs + curr_utf32;
             n = (*ch) ? (n) : (0);

@@ -46,6 +46,7 @@ extern "C" {
 #include "trigger.h"
 #include "character_controller.h"
 #include "image.h"
+#include "core/utf8_32.h"
 
 
 static SDL_Window              *sdl_window     = NULL;
@@ -65,6 +66,8 @@ float                           engine_frame_time = 0.0;
 lua_State                      *engine_lua = NULL;
 struct camera_s                 engine_camera;
 struct camera_state_s           engine_camera_state;
+static void (*g_text_handler)(uint32_t key, void *data) = NULL;
+static void *g_text_handler_data;
 
 
 extern "C" int  Engine_ExecCmd(char *ch);
@@ -690,8 +693,24 @@ void Engine_PollSDLEvents()
             case SDL_TEXTEDITING:
                 if(Con_IsShown() && event.key.state)
                 {
-                    Con_Filter(event.text.text);
+                    uint8_t *utf8 = (uint8_t*)event.text.text;
+                    uint32_t utf32;
+                    while(*utf8)
+                    {
+                        utf8 = utf8_to_utf32(utf8, &utf32);
+                        Con_Edit(utf32);
+                    }
                     return;
+                }
+                if(g_text_handler && event.key.state)
+                {
+                    uint8_t *utf8 = (uint8_t*)event.text.text;
+                    uint32_t utf32;
+                    while(*utf8)
+                    {
+                        utf8 = utf8_to_utf32(utf8, &utf32);
+                        g_text_handler(utf32, g_text_handler_data);
+                    }
                 }
                 break;
 
@@ -730,12 +749,37 @@ void Engine_PollSDLEvents()
                 }
                 else
                 {
-                    Controls_Key(event.key.keysym.scancode, event.key.state);
-                    // DEBUG KEYBOARD COMMANDS
-                    Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
-                    if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
+                    if(g_text_handler && event.key.state)
                     {
-                        TestModelApplyKey(event.key.keysym.scancode);
+                        switch(event.key.keysym.sym)
+                        {
+                            case SDLK_ESCAPE:
+                            case SDLK_RETURN:
+                            case SDLK_UP:
+                            case SDLK_DOWN:
+                            case SDLK_LEFT:
+                            case SDLK_RIGHT:
+                            case SDLK_HOME:
+                            case SDLK_END:
+                            case SDLK_PAGEUP:
+                            case SDLK_PAGEDOWN:
+                            case SDLK_BACKSPACE:
+                            case SDLK_DELETE:
+                                g_text_handler(event.key.keysym.sym, g_text_handler_data);
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                    else if(!g_text_handler)
+                    {
+                        Controls_Key(event.key.keysym.scancode, event.key.state);
+                        Controls_DebugKeys(event.key.keysym.scancode, event.key.state);
+                        if((screen_info.debug_view_state == debug_view_state_e::model_view) && event.key.state)
+                        {
+                            TestModelApplyKey(event.key.keysym.scancode);
+                        }
                     }
                 }
                 break;
@@ -884,6 +928,20 @@ void Engine_MainLoop()
 /*
  * MISC ENGINE FUNCTIONALITY
  */
+
+void Engine_SetTextInputHandler(void (*f)(uint32_t key, void *data), void *data)
+{
+    g_text_handler = f;
+    g_text_handler_data = data;
+    if(f)
+    {
+        SDL_StartTextInput();
+    }
+    else
+    {
+        SDL_StopTextInput();
+    }
+}
 
 void Engine_TakeScreenShot()
 {

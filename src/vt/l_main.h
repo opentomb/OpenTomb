@@ -418,7 +418,7 @@ class TR_Level
                         this->rooms[i].portals = NULL;
                     }
                     
-                    if(this->rooms[i].num_xsectors * this->rooms[i].num_zsectors)
+                    if(this->rooms[i].num_xsectors && this->rooms[i].num_zsectors)
                     {
                         this->rooms[i].num_xsectors = 0;
                         this->rooms[i].num_zsectors = 0;

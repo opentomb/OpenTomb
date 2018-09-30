@@ -20,7 +20,7 @@ extern "C" {
 #include "../world.h"
 
 
-int lua_SetStateChangeRange(lua_State * lua)
+int lua_SetStateChangeRange(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -76,7 +76,7 @@ int lua_SetStateChangeRange(lua_State * lua)
 }
 
 
-int lua_GetEntityModelID(lua_State * lua)
+int lua_GetEntityModelID(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 1)
@@ -97,7 +97,7 @@ int lua_GetEntityModelID(lua_State * lua)
 }
 
 
-int lua_GetEntityAnimState(lua_State * lua)
+int lua_GetEntityAnimState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -131,7 +131,7 @@ int lua_GetEntityAnimState(lua_State * lua)
 /*
  * Base engine functions
  */
-int lua_SetEntityBaseAnimModel(lua_State * lua)
+int lua_SetEntityBaseAnimModel(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -162,7 +162,7 @@ int lua_SetEntityBaseAnimModel(lua_State * lua)
 }
 
 
-int lua_SetModelCollisionMap(lua_State * lua)
+int lua_SetModelCollisionMap(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -191,7 +191,7 @@ int lua_SetModelCollisionMap(lua_State * lua)
 }
 
 
-int lua_SetModelBodyPartFlag(lua_State * lua)
+int lua_SetModelBodyPartFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -224,7 +224,7 @@ int lua_SetModelBodyPartFlag(lua_State * lua)
 }
 
 
-int lua_CopyModelAnimations(lua_State * lua)
+int lua_CopyModelAnimations(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -246,7 +246,7 @@ int lua_CopyModelAnimations(lua_State * lua)
 }
 
 
-int lua_SetEntityAnimState(lua_State * lua)
+int lua_SetEntityAnimState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -277,7 +277,7 @@ int lua_SetEntityAnimState(lua_State * lua)
 }
 
 
-int lua_SetEntityAnimStateHeavy(lua_State * lua)
+int lua_SetEntityAnimStateHeavy(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -359,7 +359,7 @@ int lua_GetEntityMeshCount(lua_State *lua)
 }
 
 
-int lua_SetEntityMeshes(lua_State * lua)
+int lua_SetEntityMeshes(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -387,7 +387,7 @@ int lua_SetEntityMeshes(lua_State * lua)
 }
 
 
-int lua_SetEntitySkinMeshes(lua_State * lua)
+int lua_SetEntitySkinMeshes(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -443,7 +443,7 @@ int lua_SetModelMeshReplaceFlag(lua_State *lua)
 }
 
 
-int lua_SetEntityAnimFlag(lua_State * lua)
+int lua_SetEntityAnimFlag(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -529,7 +529,7 @@ int lua_CopyMeshFromModelToModel(lua_State *lua)
 }
 
 
-int lua_SetEntityBoneVisibility(lua_State * lua)
+int lua_SetEntityBoneVisibility(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -559,7 +559,7 @@ int lua_SetEntityBoneVisibility(lua_State * lua)
 
 
 
-int lua_SetEntityAnim(lua_State * lua)
+int lua_SetEntityAnim(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -600,7 +600,7 @@ int lua_SetEntityAnim(lua_State * lua)
 }
 
 
-int lua_GetEntityAnim(lua_State * lua)
+int lua_GetEntityAnim(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -635,7 +635,7 @@ int lua_GetEntityAnim(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimCopy(lua_State * lua)
+int lua_EntitySSAnimCopy(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -655,7 +655,7 @@ int lua_EntitySSAnimCopy(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimEnsureExists(lua_State * lua)
+int lua_EntitySSAnimEnsureExists(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -689,7 +689,7 @@ int lua_EntitySSAnimEnsureExists(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetBoneMeshes(lua_State * lua)
+int lua_EntitySSAnimSetBoneMeshes(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -721,7 +721,7 @@ int lua_EntitySSAnimSetBoneMeshes(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetTarget(lua_State * lua)
+int lua_EntitySSAnimSetTarget(lua_State *lua)
 {
     if(lua_gettop(lua) >= 8)
     {
@@ -754,7 +754,7 @@ int lua_EntitySSAnimSetTarget(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetAxisMod(lua_State * lua)
+int lua_EntitySSAnimSetAxisMod(lua_State *lua)
 {
     if(lua_gettop(lua) >= 5)
     {
@@ -783,7 +783,7 @@ int lua_EntitySSAnimSetAxisMod(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
+int lua_EntitySSAnimSetTargetingLimit(lua_State *lua)
 {
     if(lua_gettop(lua) >= 6)
     {
@@ -813,7 +813,7 @@ int lua_EntitySSAnimSetTargetingLimit(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
+int lua_EntitySSAnimSetCurrentRotation(lua_State *lua)
 {
     if(lua_gettop(lua) >= 6)
     {
@@ -841,7 +841,7 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetExtFlags(lua_State * lua)
+int lua_EntitySSAnimSetExtFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -869,7 +869,7 @@ int lua_EntitySSAnimSetExtFlags(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimSetEnable(lua_State * lua)
+int lua_EntitySSAnimSetEnable(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -900,7 +900,7 @@ int lua_EntitySSAnimSetEnable(lua_State * lua)
 }
 
 
-int lua_EntitySSAnimGetEnable(lua_State * lua)
+int lua_EntitySSAnimGetEnable(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {

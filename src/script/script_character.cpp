@@ -24,7 +24,7 @@ extern "C" {
 #include "../character_controller.h"
 
 
-int lua_CharacterCreate(lua_State * lua)
+int lua_CharacterCreate(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 1)
@@ -48,7 +48,7 @@ int lua_CharacterCreate(lua_State * lua)
 }
 
 
-int lua_SetCharacterBones(lua_State * lua)
+int lua_SetCharacterBones(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 7)
@@ -76,7 +76,7 @@ int lua_SetCharacterBones(lua_State * lua)
 }
 
 
-int lua_SetCharacterMoveSizes(lua_State * lua)
+int lua_SetCharacterMoveSizes(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 6)
@@ -118,7 +118,7 @@ int lua_SetCharacterMoveSizes(lua_State * lua)
 }
 
 
-int lua_SetCharacterStateControlFunctions(lua_State * lua)
+int lua_SetCharacterStateControlFunctions(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 2)
@@ -141,7 +141,7 @@ int lua_SetCharacterStateControlFunctions(lua_State * lua)
 }
 
 
-int lua_SetCharacterKeyAnim(lua_State * lua)
+int lua_SetCharacterKeyAnim(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 3)
@@ -168,7 +168,7 @@ int lua_SetCharacterKeyAnim(lua_State * lua)
 }
 
 
-int lua_SetCharacterTarget(lua_State * lua)
+int lua_SetCharacterTarget(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 1)
@@ -191,7 +191,7 @@ int lua_SetCharacterTarget(lua_State * lua)
 }
 
 
-int lua_SetCharacterAIParams(lua_State * lua)
+int lua_SetCharacterAIParams(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 3)
@@ -215,7 +215,7 @@ int lua_SetCharacterAIParams(lua_State * lua)
 }
 
 
-int lua_SetCharacterPathTarget(lua_State * lua)
+int lua_SetCharacterPathTarget(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 2)
@@ -236,7 +236,7 @@ int lua_SetCharacterPathTarget(lua_State * lua)
 }
 
 
-int lua_GetCharacterTarget(lua_State * lua)
+int lua_GetCharacterTarget(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 1)
@@ -261,7 +261,7 @@ int lua_GetCharacterTarget(lua_State * lua)
 }
 
 
-int lua_GetCharacterParam(lua_State * lua)
+int lua_GetCharacterParam(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -293,7 +293,7 @@ int lua_GetCharacterParam(lua_State * lua)
 }
 
 
-int lua_SetCharacterParam(lua_State * lua)
+int lua_SetCharacterParam(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 3)
@@ -333,7 +333,7 @@ int lua_SetCharacterParam(lua_State * lua)
 }
 
 
-int lua_GetCharacterCombatMode(lua_State * lua)
+int lua_GetCharacterCombatMode(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -349,7 +349,7 @@ int lua_GetCharacterCombatMode(lua_State * lua)
 }
 
 
-int lua_ChangeCharacterParam(lua_State * lua)
+int lua_ChangeCharacterParam(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -561,7 +561,7 @@ int lua_SetCharacterRagdollActivity(lua_State *lua)
 }
 
 
-int lua_SetCharacterState(lua_State * lua)
+int lua_SetCharacterState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -595,7 +595,7 @@ int lua_SetCharacterState(lua_State * lua)
 }
 
 
-int lua_GetCharacterState(lua_State * lua)
+int lua_GetCharacterState(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {

@@ -313,7 +313,7 @@ int lua_NoEntityMove(lua_State *lua)
 }
 
 
-int lua_EnableEntity(lua_State * lua)
+int lua_EnableEntity(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -332,7 +332,7 @@ int lua_EnableEntity(lua_State * lua)
 }
 
 
-int lua_DisableEntity(lua_State * lua)
+int lua_DisableEntity(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -427,7 +427,7 @@ int lua_GetEntityBoxID(lua_State *lua)
 }
 
 
-int lua_GetEntityActivationOffset(lua_State * lua)
+int lua_GetEntityActivationOffset(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -446,7 +446,7 @@ int lua_GetEntityActivationOffset(lua_State * lua)
 }
 
 
-int lua_SetEntityActivationOffset(lua_State * lua)
+int lua_SetEntityActivationOffset(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -485,7 +485,7 @@ int lua_SetEntityActivationOffset(lua_State * lua)
 }
 
 
-int lua_GetEntityActivationDirection(lua_State * lua)
+int lua_GetEntityActivationDirection(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -504,7 +504,7 @@ int lua_GetEntityActivationDirection(lua_State * lua)
 }
 
 
-int lua_SetEntityActivationDirection(lua_State * lua)
+int lua_SetEntityActivationDirection(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -543,7 +543,7 @@ int lua_SetEntityActivationDirection(lua_State * lua)
 /*
  * Moveables script control section
  */
-int lua_GetEntityVector(lua_State * lua)
+int lua_GetEntityVector(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -566,7 +566,7 @@ int lua_GetEntityVector(lua_State * lua)
 }
 
 
-int lua_GetEntityDistance(lua_State * lua)
+int lua_GetEntityDistance(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -587,7 +587,7 @@ int lua_GetEntityDistance(lua_State * lua)
 }
 
 
-int lua_GetEntityDirDot(lua_State * lua)
+int lua_GetEntityDirDot(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -608,7 +608,7 @@ int lua_GetEntityDirDot(lua_State * lua)
 }
 
 
-int lua_GetEntityRoom(lua_State * lua)
+int lua_GetEntityRoom(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -639,7 +639,7 @@ int lua_GetEntityRoom(lua_State * lua)
 }
 
 
-int lua_GetEntityPosition(lua_State * lua)
+int lua_GetEntityPosition(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -668,7 +668,7 @@ int lua_GetEntityPosition(lua_State * lua)
 }
 
 
-int lua_GetEntityAngles(lua_State * lua)
+int lua_GetEntityAngles(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -694,7 +694,7 @@ int lua_GetEntityAngles(lua_State * lua)
 }
 
 
-int lua_GetEntityScaling(lua_State * lua)
+int lua_GetEntityScaling(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -720,7 +720,7 @@ int lua_GetEntityScaling(lua_State * lua)
 }
 
 
-int lua_SetEntityScaling(lua_State * lua)
+int lua_SetEntityScaling(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -748,7 +748,7 @@ int lua_SetEntityScaling(lua_State * lua)
 }
 
 
-int lua_SetEntityPosition(lua_State * lua)
+int lua_SetEntityPosition(lua_State *lua)
 {
     switch(lua_gettop(lua))
     {
@@ -799,7 +799,7 @@ int lua_SetEntityPosition(lua_State * lua)
 }
 
 
-int lua_SetEntityAngles(lua_State * lua)
+int lua_SetEntityAngles(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -825,7 +825,7 @@ int lua_SetEntityAngles(lua_State * lua)
 }
 
 
-int lua_MoveEntityGlobal(lua_State * lua)
+int lua_MoveEntityGlobal(lua_State *lua)
 {
     switch(lua_gettop(lua))
     {
@@ -855,7 +855,7 @@ int lua_MoveEntityGlobal(lua_State * lua)
 }
 
 
-int lua_MoveEntityLocal(lua_State * lua)
+int lua_MoveEntityLocal(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -886,7 +886,7 @@ int lua_MoveEntityLocal(lua_State * lua)
 }
 
 
-int lua_MoveEntityToSink(lua_State * lua)
+int lua_MoveEntityToSink(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -905,7 +905,7 @@ int lua_MoveEntityToSink(lua_State * lua)
 }
 
 
-int lua_MoveEntityToEntity(lua_State * lua)
+int lua_MoveEntityToEntity(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -976,7 +976,7 @@ int lua_RotateEntity(lua_State *lua)
 }
 
 
-int lua_GetEntitySpeed(lua_State * lua)
+int lua_GetEntitySpeed(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1002,7 +1002,7 @@ int lua_GetEntitySpeed(lua_State * lua)
 }
 
 
-int lua_GetEntitySpeedLinear(lua_State * lua)
+int lua_GetEntitySpeedLinear(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1026,7 +1026,7 @@ int lua_GetEntitySpeedLinear(lua_State * lua)
 }
 
 
-int lua_SetEntitySpeed(lua_State * lua)
+int lua_SetEntitySpeed(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -1051,7 +1051,7 @@ int lua_SetEntitySpeed(lua_State * lua)
 }
 
 
-int lua_SetEntityLinearSpeed(lua_State * lua)
+int lua_SetEntityLinearSpeed(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1074,7 +1074,7 @@ int lua_SetEntityLinearSpeed(lua_State * lua)
 }
 
 
-int lua_SetEntityBodyPartFlag(lua_State * lua)
+int lua_SetEntityBodyPartFlag(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -1101,7 +1101,7 @@ int lua_SetEntityBodyPartFlag(lua_State * lua)
 }
 
 
-int lua_AddItem(lua_State * lua)
+int lua_AddItem(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 2)
@@ -1133,7 +1133,7 @@ int lua_AddItem(lua_State * lua)
 }
 
 
-int lua_RemoveItem(lua_State * lua)
+int lua_RemoveItem(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -1159,7 +1159,7 @@ int lua_RemoveItem(lua_State * lua)
 }
 
 
-int lua_RemoveAllItems(lua_State * lua)
+int lua_RemoveAllItems(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1182,7 +1182,7 @@ int lua_RemoveAllItems(lua_State * lua)
 }
 
 
-int lua_GetItemsCount(lua_State * lua)
+int lua_GetItemsCount(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1207,7 +1207,7 @@ int lua_GetItemsCount(lua_State * lua)
 }
 
 
-int lua_GetItems(lua_State * lua)
+int lua_GetItems(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1239,7 +1239,7 @@ int lua_GetItems(lua_State * lua)
 }
 
 
-int lua_CanTriggerEntity(lua_State * lua)
+int lua_CanTriggerEntity(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1255,7 +1255,7 @@ int lua_CanTriggerEntity(lua_State * lua)
 }
 
 
-int lua_EntityRotateToTriggerZ(lua_State * lua)
+int lua_EntityRotateToTriggerZ(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1267,7 +1267,7 @@ int lua_EntityRotateToTriggerZ(lua_State * lua)
 }
 
 
-int lua_EntityRotateToTrigger(lua_State * lua)
+int lua_EntityRotateToTrigger(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -1280,7 +1280,7 @@ int lua_EntityRotateToTrigger(lua_State * lua)
 }
 
 
-int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
+int lua_EntityMoveToTriggerActivationPoint(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1297,7 +1297,7 @@ int lua_EntityMoveToTriggerActivationPoint(lua_State * lua)
 }
 
 
-int lua_GetEntityVisibility(lua_State * lua)
+int lua_GetEntityVisibility(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1321,7 +1321,7 @@ int lua_GetEntityVisibility(lua_State * lua)
 }
 
 
-int lua_SetEntityVisibility(lua_State * lua)
+int lua_SetEntityVisibility(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1351,7 +1351,7 @@ int lua_SetEntityVisibility(lua_State * lua)
 }
 
 
-int lua_GetEntityEnability(lua_State * lua)
+int lua_GetEntityEnability(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1375,7 +1375,7 @@ int lua_GetEntityEnability(lua_State * lua)
 }
 
 
-int lua_GetEntityActivity(lua_State * lua)
+int lua_GetEntityActivity(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1399,7 +1399,7 @@ int lua_GetEntityActivity(lua_State * lua)
 }
 
 
-int lua_SetEntityActivity(lua_State * lua)
+int lua_SetEntityActivity(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1486,7 +1486,7 @@ int lua_SetEntityTriggerLayout(lua_State *lua)
 }
 
 
-int lua_SetEntityLock(lua_State * lua)
+int lua_SetEntityLock(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1504,7 +1504,7 @@ int lua_SetEntityLock(lua_State * lua)
 }
 
 
-int lua_GetEntityLock(lua_State * lua)
+int lua_GetEntityLock(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1520,7 +1520,7 @@ int lua_GetEntityLock(lua_State * lua)
 }
 
 
-int lua_SetEntityEvent(lua_State * lua)
+int lua_SetEntityEvent(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1554,7 +1554,7 @@ int lua_GetEntityEvent(lua_State *lua)
 }
 
 
-int lua_GetEntityMask(lua_State * lua)
+int lua_GetEntityMask(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1570,7 +1570,7 @@ int lua_GetEntityMask(lua_State * lua)
 }
 
 
-int lua_SetEntityMask(lua_State * lua)
+int lua_SetEntityMask(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1622,7 +1622,7 @@ int lua_SetEntitySectorStatus(lua_State *lua)
 }
 
 
-int lua_GetEntityOCB(lua_State * lua)
+int lua_GetEntityOCB(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1638,7 +1638,7 @@ int lua_GetEntityOCB(lua_State * lua)
 }
 
 
-int lua_SetEntityOCB(lua_State * lua)
+int lua_SetEntityOCB(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1653,7 +1653,7 @@ int lua_SetEntityOCB(lua_State * lua)
 }
 
 
-int lua_GetEntityFlags(lua_State * lua)
+int lua_GetEntityFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1679,7 +1679,7 @@ int lua_GetEntityFlags(lua_State * lua)
 }
 
 
-int lua_SetEntityFlags(lua_State * lua)
+int lua_SetEntityFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -1937,7 +1937,7 @@ int lua_SetEntityCallbackFlag(lua_State *lua)
 }
 
 
-int lua_GetEntityTimer(lua_State * lua)
+int lua_GetEntityTimer(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1953,7 +1953,7 @@ int lua_GetEntityTimer(lua_State * lua)
 }
 
 
-int lua_SetEntityTimer(lua_State * lua)
+int lua_SetEntityTimer(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -1968,7 +1968,7 @@ int lua_SetEntityTimer(lua_State * lua)
 }
 
 
-int lua_GetEntityMoveType(lua_State * lua)
+int lua_GetEntityMoveType(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -1992,7 +1992,7 @@ int lua_GetEntityMoveType(lua_State * lua)
 }
 
 
-int lua_SetEntityMoveType(lua_State * lua)
+int lua_SetEntityMoveType(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -2011,7 +2011,7 @@ int lua_SetEntityMoveType(lua_State * lua)
 }
 
 
-int lua_SetEntityRoomMove(lua_State * lua)
+int lua_SetEntityRoomMove(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -2057,7 +2057,7 @@ int lua_SetEntityRoomMove(lua_State * lua)
 /*
  * physics routine
  */
-int lua_SetEntityCollision(lua_State * lua)
+int lua_SetEntityCollision(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -2085,7 +2085,7 @@ int lua_SetEntityCollision(lua_State * lua)
 }
 
 
-int lua_SetEntityBoneCollision(lua_State * lua)
+int lua_SetEntityBoneCollision(lua_State *lua)
 {
     int top = lua_gettop(lua);
 
@@ -2106,7 +2106,7 @@ int lua_SetEntityBoneCollision(lua_State * lua)
 }
 
 
-int lua_SetEntityGhostCollisionShape(lua_State * lua)
+int lua_SetEntityGhostCollisionShape(lua_State *lua)
 {
     if(lua_gettop(lua) >= 9)
     {
@@ -2143,7 +2143,7 @@ int lua_SetEntityGhostCollisionShape(lua_State * lua)
 }
 
 
-int lua_SetEntityCollisionFlags(lua_State * lua)
+int lua_SetEntityCollisionFlags(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -2182,7 +2182,7 @@ int lua_SetEntityCollisionFlags(lua_State * lua)
 }
 
 
-int lua_SetEntityCollisionGroupAndMask(lua_State * lua)
+int lua_SetEntityCollisionGroupAndMask(lua_State *lua)
 {
     if(lua_gettop(lua) >= 3)
     {
@@ -2213,7 +2213,7 @@ int lua_SetEntityCollisionGroupAndMask(lua_State * lua)
 }
 
 
-int lua_ResetRigidBodies(lua_State * lua)
+int lua_ResetRigidBodies(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -2236,7 +2236,7 @@ int lua_ResetRigidBodies(lua_State * lua)
 }
 
 
-int lua_CreateGhosts(lua_State * lua)
+int lua_CreateGhosts(lua_State *lua)
 {
     if(lua_gettop(lua) >= 1)
     {
@@ -2260,7 +2260,7 @@ int lua_CreateGhosts(lua_State * lua)
 }
 
 
-int lua_GetEntityGlobalMove(lua_State * lua)
+int lua_GetEntityGlobalMove(lua_State *lua)
 {
     if(lua_gettop(lua) >= 4)
     {
@@ -2293,7 +2293,7 @@ int lua_GetEntityGlobalMove(lua_State * lua)
 }
 
 
-int lua_GetEntityCollisionFix(lua_State * lua)
+int lua_GetEntityCollisionFix(lua_State *lua)
 {
     if(lua_gettop(lua) >= 2)
     {
@@ -2325,7 +2325,7 @@ int lua_GetEntityCollisionFix(lua_State * lua)
 }
 
 
-int lua_GetEntityMoveCollisionFix(lua_State * lua)
+int lua_GetEntityMoveCollisionFix(lua_State *lua)
 {
     if(lua_gettop(lua) >= 5)
     {
@@ -2362,7 +2362,7 @@ int lua_GetEntityMoveCollisionFix(lua_State * lua)
 }
 
 
-int lua_GetEntityRayTest(lua_State * lua)
+int lua_GetEntityRayTest(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 5)
@@ -2414,7 +2414,7 @@ int lua_GetEntityRayTest(lua_State * lua)
 }
 
 
-int lua_GetEntitySphereTest(lua_State * lua)
+int lua_GetEntitySphereTest(lua_State *lua)
 {
     int top = lua_gettop(lua);
     if(top >= 6)
@@ -2467,7 +2467,7 @@ int lua_GetEntitySphereTest(lua_State * lua)
 }
 
 
-int lua_DropEntity(lua_State * lua)
+int lua_DropEntity(lua_State *lua)
 {
     int top = lua_gettop(lua);
 

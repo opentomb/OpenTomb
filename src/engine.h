@@ -23,6 +23,7 @@ void Engine_JoyRumble(float power, int time);
 
 void Engine_GLSwapWindow();
 void Engine_MainLoop();
+void Engine_SetTextInputHandler(void (*f)(uint32_t key, void *data), void *data);
 
 // PC-specific level loader routines.
 
