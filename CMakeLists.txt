@@ -10,6 +10,8 @@ project(OpenTomb)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
+option(FORCE_SYSTEM_LUA      "Use system-provided LUA 5.3+ instead of internal library." OFF)
+option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
 
 # Detect system FreeType
 
@@ -27,12 +29,55 @@ endif ()
 
 if (OPENTOMB_INTERNAL_FREETYPE)
     add_subdirectory(extern/freetype2)
-    set(FREETYPE_INCLUDE_DIRS "")
+    set(FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/extern/freetype2")
     set(FREETYPE_LIBRARIES freetype2)
 endif ()
 
-add_subdirectory(extern/bullet)
-add_subdirectory(extern/lua)
+# Detect system LUA
+
+if (FORCE_SYSTEM_LUA)
+    find_package(lua QUIET)
+    if (NOT LUA_FOUND)
+        message(WARNING "LUA not found. Enabling internal LUA support.")
+        set(OPENTOMB_INTERNAL_LUA ON)
+    else ()
+        # Set minimal version
+        set (LUA_MIN_VERSION 5.3)
+        if (LUA_VERSION_STRING VERSION_EQUAL LUA_MIN_VERSION OR LUA_VERSION_STRING VERSION_GREATER LUA_MIN_VERSION)
+            set(OPENTOMB_INTERNAL_LUA OFF)
+        else ()
+            message(WARNING "Incorrect LUA version found. Enabling internal LUA support.")
+        endif ()
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_LUA ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_LUA)
+    add_subdirectory(extern/lua)
+    set(LUA_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/lua")
+    set(LUA_LIBRARIES lua5.3)
+endif ()
+
+# Detect system BULLET
+
+if (FORCE_SYSTEM_BULLET)
+    find_package(bullet QUIET)
+    if (NOT BULLET_FOUND)
+        message(WARNING "BULLET not found. Enabling internal BULLET support.")
+        set(OPENTOMB_INTERNAL_BULLET ON)
+    else()
+        set(OPENTOMB_INTERNAL_BULLET OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_BULLET ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_BULLET)
+    add_subdirectory(extern/bullet)
+    set(BULLET_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/extern/bullet")
+    set(BULLET_LIBRARIES bullet)
+endif ()
 
 set(OPENTOMB_SRCS
     src/core/avl.c
@@ -254,6 +299,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
     ${FREETYPE_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIR}
+    ${BULLET_INCLUDE_DIRS}
     ${PNG_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
@@ -263,9 +310,9 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    bullet
     ${FREETYPE_LIBRARIES}
-    lua5.3
+    ${LUA_LIBRARIES}
+    ${BULLET_LIBRARIES}
     ${PNG_LIBRARIES}
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}

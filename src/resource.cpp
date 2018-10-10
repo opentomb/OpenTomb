@@ -6,12 +6,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
+#include "core/lua.h"
 #include "core/system.h"
 #include "core/vmath.h"
 #include "core/gl_util.h"

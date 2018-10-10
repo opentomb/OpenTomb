@@ -2,12 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-
+#include "core/lua.h"
 #include "core/system.h"
 #include "core/console.h"
 #include "core/vmath.h"

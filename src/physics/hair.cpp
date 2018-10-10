@@ -1,11 +1,7 @@
 
 #include <stdlib.h>
-extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
+#include "../core/lua.h"
 #include "hair.h"
 
 struct hair_setup_s *Hair_GetSetup(struct lua_State *lua, int stack_pos)

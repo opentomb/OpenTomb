@@ -1,14 +1,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <memory.h>
+
 #include <SDL2/SDL_platform.h>
 #include <SDL2/SDL_opengl.h>
 #include <SDL2/SDL_keycode.h>
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-#include <memory.h>
+#include "../core/lua.h"
 
 #include "utf8_32.h"
 #include "gl_font.h"
