@@ -28,11 +28,13 @@
 #include "gui.h"
 #include "gui_menu.h"
 #include "gui_obj.h"
+#include "gui_console.h"
 #include "gui_inventory.h"
 
 gui_ProgressBar         Bar[BAR_LASTINDEX];
 static gui_object_p     g_current_menu = NULL;
 static gui_object_p     g_main_menu = NULL;
+static gui_object_p     g_console_menu = NULL;
 static GLuint           crosshairBuffer = 0;
 static GLuint           rectBuffer = 0;
 static GLuint           load_screen_tex = 0;
@@ -193,7 +195,7 @@ void Gui_Destroy()
         Gui_DeleteObjects(g_main_menu);
         g_main_menu = NULL;
     }
-    
+
     qglDeleteTextures(1, &load_screen_tex);
     qglDeleteBuffersARB(1, &crosshairBuffer);
     qglDeleteBuffersARB(1, &backgroundBuffer);
@@ -210,7 +212,7 @@ void Gui_UpdateResize()
 
     Gui_FillCrosshairBuffer();
     Gui_FillBackgroundBuffer();
-    
+
     if(g_current_menu && g_current_menu->handlers.screen_resized)
     {
         g_current_menu->handlers.screen_resized(g_current_menu, screen_info.w, screen_info.h);
@@ -237,40 +239,40 @@ void Gui_Render()
     qglEnable(GL_BLEND);
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     qglDisable(GL_ALPHA_TEST);
-      
+
     if(g_main_menu && g_main_menu->handlers.do_command && (World_GetVersion() < 0))
     {
         control_action_p act = control_states.actions;
-        gui_command_e cmd = gui_command_e::NONE;
+        int cmd = GUI_COMMAND_NONE;
         g_current_menu = g_main_menu;
         if(act[ACT_INVENTORY].state && !act[ACT_INVENTORY].prev_state)
         {
-            cmd = gui_command_e::CLOSE;
+            cmd = GUI_COMMAND_CLOSE;
         }
         else if(act[ACT_ACTION].state && !act[ACT_ACTION].prev_state)
         {
-            cmd = gui_command_e::ACTIVATE;
+            cmd = GUI_COMMAND_ACTIVATE;
         }
         else if(act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state)
         {
-            cmd = gui_command_e::UP;
+            cmd = GUI_COMMAND_UP;
         }
         else if(act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state)
         {
-            cmd = gui_command_e::DOWN;
+            cmd = GUI_COMMAND_DOWN;
         }
         else if(act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state)
         {
-            cmd = gui_command_e::LEFT;
+            cmd = GUI_COMMAND_LEFT;
         }
         else if(act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state)
         {
-            cmd = gui_command_e::RIGHT;
+            cmd = GUI_COMMAND_RIGHT;
         }
-        
+
         g_main_menu->handlers.do_command(g_main_menu, cmd);
     }
-    
+
     if(World_GetPlayer() && main_inventory_manager)
     {
         Gui_DrawInventory(engine_frame_time);
@@ -290,13 +292,50 @@ void Gui_Render()
     Gui_DrawBars();
     qglUniform1fARB(shader->colorReplace, 1.0f);
     GLText_RenderStrings();
-    Gui_DrawObjects(g_current_menu);
-    Con_Draw(engine_frame_time);
+
+    if(g_current_menu && !g_current_menu->flags.hide)
+    {
+        if(g_current_menu->handlers.screen_resized)
+        {
+            g_current_menu->handlers.screen_resized(g_current_menu, screen_info.w, screen_info.h);
+        }
+        Gui_DrawObjects(g_current_menu);
+    }
+    if(g_console_menu && !g_console_menu->flags.hide)
+    {
+        Gui_RefreshConsole(&g_console_menu, screen_info.w, screen_info.h);
+        Gui_DrawObjects(g_console_menu);
+    }
 
     qglUniform1fARB(shader->colorReplace, 0.0f);
     qglDepthMask(GL_TRUE);
     qglPopClientAttrib();
     qglPopAttrib();
+}
+
+void Gui_ConScroll(int value)
+{
+    Gui_ConScrollInternal(g_console_menu, value);
+}
+
+void Gui_ConShow(int value)
+{
+    if(value)
+    {
+        Gui_RefreshConsole(&g_console_menu, screen_info.w, screen_info.h);
+        Engine_SetTextInputHandler(Gui_HandleEditConsole, g_console_menu);
+        g_console_menu->flags.hide = 0x00;
+    }
+    else
+    {
+        Engine_SetTextInputHandler(NULL, NULL);
+        g_console_menu->flags.hide = 0x01;
+    }
+}
+
+int  Gui_ConIsShown()
+{
+    return (g_console_menu && !g_console_menu->flags.hide) ? (0x01) : (0x00);
 }
 
 /*

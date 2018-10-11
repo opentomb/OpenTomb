@@ -19,19 +19,19 @@ static gui_object_p Gui_CreateMenuRoot();
 static gui_object_p Gui_AddListItem(gui_object_p cont);
 static gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy);
 
-extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_to_item(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_to_container(struct gui_object_s *obj, int cmd);
+extern "C" int handle_to_item(struct gui_object_s *obj, int cmd);
 
-extern "C" int handle_on_crosshair(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e cmd);
-extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_on_crosshair(struct gui_object_s *obj, int cmd);
+extern "C" int handle_load_game_cont(struct gui_object_s *obj, int cmd);
+extern "C" int handle_save_game_cont(struct gui_object_s *obj, int cmd);
+extern "C" int handle_new_game_cont(struct gui_object_s *obj, int cmd);
+extern "C" int handle_home_cont(struct gui_object_s *obj, int cmd);
+extern "C" int handle_controls_cont(struct gui_object_s *obj, int cmd);
+extern "C" int handle_main_menu(struct gui_object_s *obj, int cmd);
 extern "C" void handle_screen_resized_inv(struct gui_object_s *obj, int w, int h);
 extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int h);
-extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, enum gui_command_e cmd);
+extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, int cmd);
 
 struct gui_controls_data_s
 {
@@ -116,85 +116,12 @@ static gui_object_p Gui_AddLoadGameContainer(gui_object_p root)
     return cont;
 }
 
-void gui_handle_edit_text(uint32_t key, void *data)
+void gui_handle_edit_text(int cmd, uint32_t key, void *data)
 {
     gui_object_p edit = (gui_object_p)data;
     if(edit && edit->label && edit->label->text)
     {
-        uint32_t oldLength = utf8_strlen(edit->label->text);
-        switch(key)
-        {
-            case SDLK_RETURN:
-                if(edit->handlers.do_command)
-                {
-                    edit->handlers.do_command(edit, gui_command_e::ACTIVATE);
-                }
-                break;
-
-            case SDLK_ESCAPE:
-                if(edit->handlers.do_command)
-                {
-                    edit->handlers.do_command(edit, gui_command_e::CLOSE);
-                }
-                break;
-
-            case SDLK_LEFT:
-                if(edit->label->cursor_pos > 0)
-                {
-                    edit->label->cursor_pos--;
-                }
-                break;
-
-            case SDLK_RIGHT:
-                if(edit->label->cursor_pos < oldLength)
-                {
-                    edit->label->cursor_pos++;
-                }
-                break;
-
-            case SDLK_HOME:
-                edit->label->cursor_pos = 0;
-                break;
-
-            case SDLK_END:
-                edit->label->cursor_pos = oldLength;
-                break;
-
-            case SDLK_BACKSPACE:
-                if(edit->label->cursor_pos > 0)
-                {
-                    edit->label->cursor_pos--;
-                    utf8_delete_char((uint8_t*)edit->label->text, edit->label->cursor_pos);
-                }
-                break;
-
-            case SDLK_DELETE:
-                if((edit->label->cursor_pos < oldLength))
-                {
-                    utf8_delete_char((uint8_t*)edit->label->text, edit->label->cursor_pos);
-                }
-                break;
-
-            default:
-                if(oldLength + 8 >= edit->label->text_size)
-                {
-                    char *new_buff = (char*)calloc(edit->label->text_size * 2, sizeof(char));
-                    if(new_buff)
-                    {
-                        memcpy(new_buff, edit->label->text, edit->label->text_size);
-                        free(edit->label->text);
-                        edit->label->text = new_buff;
-                        edit->label->text_size *= 2;
-                    }
-                }
-                if((oldLength + 8 < edit->label->text_size) && (key >= SDLK_SPACE))
-                {
-                    utf8_insert_char((uint8_t*)edit->label->text, key, edit->label->cursor_pos, edit->label->text_size);
-                    ++oldLength;
-                    ++edit->label->cursor_pos;
-                }
-                break;
-        };
+        Gui_ApplyEditCommands(edit, cmd, key);
     }
 }
 
@@ -829,7 +756,7 @@ gui_object_p Gui_ListInventoryMenu(gui_object_p root, int dy)
 }
 
 // HANDLERS
-extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_to_container(struct gui_object_s *obj, int cmd)
 {
     if(obj && obj->childs && obj->childs->next && obj->childs->next->handlers.do_command)
     {
@@ -838,18 +765,18 @@ extern "C" int handle_to_container(struct gui_object_s *obj, enum gui_command_e 
     return 0;
 }
 
-extern "C" int handle_to_item(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_to_item(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    if(cmd == GUI_COMMAND_UP)
     {
         ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->handlers.do_command)
@@ -878,7 +805,7 @@ extern "C" void handle_screen_resized_main(struct gui_object_s *obj, int w, int 
     Gui_LayoutObjects(obj);
 }
 
-extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_main_menu(struct gui_object_s *obj, int cmd)
 {
     gui_object_p title = obj->childs;
     gui_object_p curr_in_title = (gui_object_p)title->data;
@@ -888,7 +815,7 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
     {
         title->flags.draw_border = 0x01;
         cont->flags.draw_border = 0x00;
-        if((cmd == LEFT) && (curr_in_title->prev))
+        if((cmd == GUI_COMMAND_LEFT) && (curr_in_title->prev))
         {
             curr_in_title->border_width = 2;
             curr_in_title = curr_in_title->prev;
@@ -902,7 +829,7 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
             }
             Gui_LayoutObjects(cont);
         }
-        else if((cmd == RIGHT) && (curr_in_title->next))
+        else if((cmd == GUI_COMMAND_RIGHT) && (curr_in_title->next))
         {
             curr_in_title->border_width = 2;
             curr_in_title = curr_in_title->next;
@@ -916,18 +843,18 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
             }
             Gui_LayoutObjects(cont);
         }
-        else if(curr_menu && (cmd == ACTIVATE))
+        else if(curr_menu && (cmd == GUI_COMMAND_ACTIVATE))
         {
             title->flags.draw_border = 0x00;
             cont->flags.draw_border = 0x01;
             cont->handlers.do_command = curr_menu->handlers.do_command;
         }
-        else if(cmd == CLOSE)
+        else if(cmd == GUI_COMMAND_CLOSE)
         {
             return 0;
         }
     }
-    else if(!cont->handlers.do_command(curr_menu, cmd) && (cmd == CLOSE))
+    else if(!cont->handlers.do_command(curr_menu, cmd) && (cmd == GUI_COMMAND_CLOSE))
     {
         title->flags.draw_border = 0x01;
         cont->flags.draw_border = 0x00;
@@ -937,18 +864,18 @@ extern "C" int handle_main_menu(struct gui_object_s *obj, enum gui_command_e cmd
     return 1;
 }
 
-extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_load_game_cont(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    if(cmd == GUI_COMMAND_UP)
     {
         ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->label && item->label->text)
@@ -960,18 +887,18 @@ extern "C" int handle_load_game_cont(struct gui_object_s *obj, enum gui_command_
     return ret;
 }
 
-extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_save_game_cont(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    if(cmd == GUI_COMMAND_UP)
     {
         ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         item->label->cursor_pos = 0;
@@ -983,18 +910,18 @@ extern "C" int handle_save_game_cont(struct gui_object_s *obj, enum gui_command_
     return ret;
 }
 
-extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_new_game_cont(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    if(cmd == GUI_COMMAND_UP)
     {
         ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->label && item->label->text)
@@ -1031,18 +958,18 @@ extern "C" int handle_new_game_cont(struct gui_object_s *obj, enum gui_command_e
     return ret;
 }
 
-extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_home_cont(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
-    if(cmd == UP)
+    if(cmd == GUI_COMMAND_UP)
     {
         ret = (Gui_ListInventoryMenu(obj, 1)) ? (1) : (0);
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         ret = (Gui_ListInventoryMenu(obj, -1)) ? (1) : (0);
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         gui_object_p item = Gui_ListInventoryMenu(obj, 0);
         if(item && item->label && item->label->text)
@@ -1075,7 +1002,7 @@ extern "C" int handle_home_cont(struct gui_object_s *obj, enum gui_command_e cmd
     return ret;
 }
 
-extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_controls_cont(struct gui_object_s *obj, int cmd)
 {
     int ret = 0;
     struct gui_controls_data_s *params = (struct gui_controls_data_s*)obj->data;
@@ -1107,7 +1034,7 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             params->wait_key = 0x00;
         }
 
-        if(cmd == CLOSE)
+        if(cmd == GUI_COMMAND_CLOSE)
         {
             params->wait_key = 0x00;
             ret = 1;
@@ -1120,7 +1047,7 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             curr->color_border[2] = curr->parent->color_border[2];
         }
     }
-    else if(cmd == UP)
+    else if(cmd == GUI_COMMAND_UP)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, 1);
         if(curr->next)
@@ -1140,7 +1067,7 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             curr->childs->next->next->flags.draw_border = 0x01;
         }
     }
-    else if(cmd == DOWN)
+    else if(cmd == GUI_COMMAND_DOWN)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, -1);
         if(curr->prev)
@@ -1160,7 +1087,7 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
             curr->childs->next->next->flags.draw_border = 0x01;
         }
     }
-    else if(cmd == LEFT)
+    else if(cmd == GUI_COMMAND_LEFT)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, 0);
         curr->childs->next->next->flags.draw_border = 0x00;
@@ -1168,7 +1095,7 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
         params->is_primary = 0x01;
         ret = 1;
     }
-    else if(cmd == RIGHT)
+    else if(cmd == GUI_COMMAND_RIGHT)
     {
         gui_object_p curr = Gui_ListInventoryMenu(obj, 0);
         curr->childs->next->next->flags.draw_border = 0x01;
@@ -1176,24 +1103,24 @@ extern "C" int handle_controls_cont(struct gui_object_s *obj, enum gui_command_e
         params->is_primary = 0x00;
         ret = 1;
     }
-    else if(cmd == ACTIVATE)
+    else if(cmd == GUI_COMMAND_ACTIVATE)
     {
         params->wait_key = 0x01;
     }
     return ret;
 }
 
-extern "C" int handle_on_crosshair(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_on_crosshair(struct gui_object_s *obj, int cmd)
 {
     screen_info.crosshair = !screen_info.crosshair;
     return 1;
 }
 
-extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, enum gui_command_e cmd)
+extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, int cmd)
 {
     switch(cmd)
     {
-        case gui_command_e::ACTIVATE:
+        case GUI_COMMAND_ACTIVATE:
             if(Game_Save(obj->label->text))
             {
                 Engine_SetTextInputHandler(NULL, NULL);
@@ -1202,7 +1129,7 @@ extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, enum gui
             }
             break;
             
-        case gui_command_e::CLOSE:
+        case GUI_COMMAND_CLOSE:
             Engine_SetTextInputHandler(NULL, NULL);
             obj->handlers.do_command = NULL;
             obj->flags.edit_text = 0x00;

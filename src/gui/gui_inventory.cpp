@@ -148,24 +148,24 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  */
 gui_InventoryManager::gui_InventoryManager()
 {
-    m_current_state               = INVENTORY_DISABLED;
-    m_command                    = NONE;
-    m_current_items_type           = GUI_MENU_ITEMTYPE_SYSTEM;
-    m_next_items_type              = GUI_MENU_ITEMTYPE_SYSTEM;
-    m_current_items_count          = 0;
-    m_selected_item               = 0;
+    m_current_state             = INVENTORY_DISABLED;
+    m_command                   = GUI_COMMAND_NONE;
+    m_current_items_type        = GUI_MENU_ITEMTYPE_SYSTEM;
+    m_next_items_type           = GUI_MENU_ITEMTYPE_SYSTEM;
+    m_current_items_count       = 0;
+    m_selected_item             = 0;
 
-    m_item_time                   = 0.0f;
-    m_ring_rotate_period           = 0.5f;
-    m_ring_time                   = 0.0f;
-    m_ring_angle                  = 0.0f;
-    m_ring_vertical_angle          = 0.0f;
-    m_ring_angle_step              = 0.0f;
-    m_base_ring_radius             = 600.0f;
-    m_ring_radius                 = 600.0f;
-    m_vertical_offset             = 0.0f;
+    m_item_time                 = 0.0f;
+    m_ring_rotate_period        = 0.5f;
+    m_ring_time                 = 0.0f;
+    m_ring_angle                = 0.0f;
+    m_ring_vertical_angle       = 0.0f;
+    m_ring_angle_step           = 0.0f;
+    m_base_ring_radius          = 600.0f;
+    m_ring_radius               = 600.0f;
+    m_vertical_offset           = 0.0f;
 
-    m_item_rotate_period           = 4.0f;
+    m_item_rotate_period        = 4.0f;
     m_item_angle_z              = 0.0f;
     m_item_angle_x              = 0.0f;
     m_current_scale             = 1.0f;
@@ -173,36 +173,36 @@ gui_InventoryManager::gui_InventoryManager()
 
     m_current_menu              = NULL;
     m_menu_mode                 = 0;
-    m_inventory                  = NULL;
-    m_owner_id                    = ENTITY_ID_NONE;
+    m_inventory                 = NULL;
+    m_owner_id                  = ENTITY_ID_NONE;
 
-    m_label_title.x              = 0.0f;
-    m_label_title.y              = 0.0f;
-    m_label_title.line_width     = -1.0f;
-    m_label_title.x_align        = GLTEXT_ALIGN_CENTER;
-    m_label_title.y_align        = GLTEXT_ALIGN_TOP;
-    m_label_title.next           = NULL;
-    m_label_title.prev           = NULL;
+    m_label_title.x             = 0.0f;
+    m_label_title.y             = 0.0f;
+    m_label_title.line_width    = -1.0f;
+    m_label_title.x_align       = GLTEXT_ALIGN_CENTER;
+    m_label_title.y_align       = GLTEXT_ALIGN_TOP;
+    m_label_title.next          = NULL;
+    m_label_title.prev          = NULL;
 
-    m_label_title.font_id        = FONT_PRIMARY;
-    m_label_title.style_id       = FONTSTYLE_MENU_TITLE;
-    m_label_title.text           = m_label_title_text;
-    m_label_title_text[0]        = 0;
-    m_label_title.show           = 0;
+    m_label_title.font_id       = FONT_PRIMARY;
+    m_label_title.style_id      = FONTSTYLE_MENU_TITLE;
+    m_label_title.text          = m_label_title_text;
+    m_label_title_text[0]       = 0;
+    m_label_title.show          = 0;
 
-    m_label_item_name.x           = 0.0f;
-    m_label_item_name.y           = 50.0f;
-    m_label_item_name.line_width  = -1.0f;
-    m_label_item_name.x_align     = GLTEXT_ALIGN_CENTER;
-    m_label_item_name.y_align     = GLTEXT_ALIGN_BOTTOM;
-    m_label_item_name.next        = NULL;
-    m_label_item_name.prev        = NULL;
+    m_label_item_name.x         = 0.0f;
+    m_label_item_name.y         = 50.0f;
+    m_label_item_name.line_width= -1.0f;
+    m_label_item_name.x_align   = GLTEXT_ALIGN_CENTER;
+    m_label_item_name.y_align   = GLTEXT_ALIGN_BOTTOM;
+    m_label_item_name.next      = NULL;
+    m_label_item_name.prev      = NULL;
 
-    m_label_item_name.font_id     = FONT_PRIMARY;
-    m_label_item_name.style_id    = FONTSTYLE_MENU_CONTENT;
-    m_label_item_name.text        = m_label_item_name_text;
-    m_label_item_name_text[0]     = 0;
-    m_label_item_name.show        = 0;
+    m_label_item_name.font_id   = FONT_PRIMARY;
+    m_label_item_name.style_id  = FONTSTYLE_MENU_CONTENT;
+    m_label_item_name.text      = m_label_item_name_text;
+    m_label_item_name_text[0]   = 0;
+    m_label_item_name.show      = 0;
 
     GLText_AddLine(&m_label_item_name);
     GLText_AddLine(&m_label_title);
@@ -211,7 +211,7 @@ gui_InventoryManager::gui_InventoryManager()
 gui_InventoryManager::~gui_InventoryManager()
 {
     m_current_state = INVENTORY_DISABLED;
-    m_command = CLOSE;
+    m_command = GUI_COMMAND_CLOSE;
     m_inventory = NULL;
 
     m_label_item_name.show = 0;
@@ -265,7 +265,7 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-void gui_InventoryManager::send(enum gui_command_e cmd)
+void gui_InventoryManager::send(int cmd)
 {
     m_command = cmd;
 }
@@ -275,7 +275,7 @@ void gui_InventoryManager::setInventory(struct inventory_node_s **i, uint32_t ow
     m_inventory = i;
     m_owner_id = owner_id;
     m_current_state = INVENTORY_DISABLED;
-    m_command = NONE;
+    m_command = GUI_COMMAND_NONE;
     m_label_item_name.show = 0;
     m_label_title.show = 0;
 }
@@ -328,7 +328,7 @@ void gui_InventoryManager::frame(float time)
     else
     {
         m_current_state = INVENTORY_DISABLED;
-        m_command = CLOSE;
+        m_command = GUI_COMMAND_CLOSE;
     }
 }
 
@@ -337,7 +337,7 @@ void gui_InventoryManager::frameStates(float time)
     switch(m_current_state)
     {
         case INVENTORY_R_LEFT:
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_ring_time += time;
             m_ring_angle = m_ring_angle_step * m_ring_time / m_ring_rotate_period;
             if(m_ring_time >= m_ring_rotate_period)
@@ -355,7 +355,7 @@ void gui_InventoryManager::frameStates(float time)
             break;
 
         case INVENTORY_R_RIGHT:
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_ring_time += time;
             m_ring_angle = -m_ring_angle_step * m_ring_time / m_ring_rotate_period;
             if(m_ring_time >= m_ring_rotate_period)
@@ -377,7 +377,7 @@ void gui_InventoryManager::frameStates(float time)
             switch(m_command)
             {
                 default:
-                case NONE:
+                case GUI_COMMAND_NONE:
                     m_item_time += time;
                     m_item_angle_z = 360.0f * m_item_time / m_item_rotate_period;
                     if(m_item_time >= m_item_rotate_period)
@@ -389,30 +389,30 @@ void gui_InventoryManager::frameStates(float time)
                     m_label_title.show = 1;
                     break;
 
-                case ACTIVATE:
+                case GUI_COMMAND_ACTIVATE:
                     m_current_state = INVENTORY_ACTIVATING;
-                    m_command = NONE;
+                    m_command = GUI_COMMAND_NONE;
                     break;
 
-                case CLOSE:
+                case GUI_COMMAND_CLOSE:
                     Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                     m_label_item_name.show = 0;
                     m_label_title.show = 0;
                     m_current_state = INVENTORY_CLOSING;
                     break;
 
-                case LEFT:
-                case RIGHT:
+                case GUI_COMMAND_LEFT:
+                case GUI_COMMAND_RIGHT:
                     if(m_current_items_count >= 1)
                     {
                         Audio_Send(TR_AUDIO_SOUND_MENUROTATE);
                         m_label_item_name.show = 0;
-                        m_current_state = (m_command == LEFT) ? (INVENTORY_R_LEFT) : (INVENTORY_R_RIGHT);
+                        m_current_state = (m_command == GUI_COMMAND_LEFT) ? (INVENTORY_R_LEFT) : (INVENTORY_R_RIGHT);
                         m_item_time = 0.0f;
                     }
                     break;
 
-                case UP:
+                case GUI_COMMAND_UP:
                     if(m_current_items_type < GUI_MENU_ITEMTYPE_QUEST)
                     {
                         //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
@@ -420,12 +420,12 @@ void gui_InventoryManager::frameStates(float time)
                         m_current_state = INVENTORY_UP;
                         m_ring_time = 0.0f;
                     }
-                    m_command = NONE;
+                    m_command = GUI_COMMAND_NONE;
                     m_label_item_name.show = 0;
                     m_label_title.show = 0;
                     break;
 
-                case DOWN:
+                case GUI_COMMAND_DOWN:
                     if(m_current_items_type > 0)
                     {
                         //Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
@@ -433,7 +433,7 @@ void gui_InventoryManager::frameStates(float time)
                         m_current_state = INVENTORY_DOWN;
                         m_ring_time = 0.0f;
                     }
-                    m_command = NONE;
+                    m_command = GUI_COMMAND_NONE;
                     m_label_item_name.show = 0;
                     m_label_title.show = 0;
                     break;
@@ -441,7 +441,7 @@ void gui_InventoryManager::frameStates(float time)
             break;
 
         case INVENTORY_DISABLED:
-            if(m_command == OPEN)
+            if(m_command == GUI_COMMAND_OPEN)
             {
                 Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                 for(inventory_node_p i = *m_inventory; i; i = i->next)
@@ -542,7 +542,7 @@ void gui_InventoryManager::frameStates(float time)
             if(m_ring_time >= m_ring_rotate_period)
             {
                 m_current_state = INVENTORY_IDLE;
-                m_command = NONE;
+                m_command = GUI_COMMAND_NONE;
                 m_ring_vertical_angle = 0;
 
                 m_ring_radius = m_base_ring_radius;
@@ -562,7 +562,7 @@ void gui_InventoryManager::frameStates(float time)
             if(m_ring_time >= m_ring_rotate_period)
             {
                 m_current_state = INVENTORY_DISABLED;
-                m_command = NONE;
+                m_command = GUI_COMMAND_NONE;
                 m_ring_vertical_angle = 180.0f;
                 m_ring_time = 0.0f;
                 m_label_title.show = 0;
@@ -596,7 +596,7 @@ void gui_InventoryManager::frameItems(float time)
                         m_item_time = 0.0f;
                         m_current_state = INVENTORY_ACTIVATED;
                     }
-                    m_command = NONE;
+                    m_command = GUI_COMMAND_NONE;
                 }
                 else if(m_current_state == INVENTORY_DEACTIVATING)
                 {
@@ -610,7 +610,7 @@ void gui_InventoryManager::frameItems(float time)
                         m_item_offset_z = 0.0f;
                         m_current_state = INVENTORY_IDLE;
                     }
-                    m_command = NONE;
+                    m_command = GUI_COMMAND_NONE;
                 }
                 else if(m_current_state == INVENTORY_ACTIVATED)
                 {
@@ -626,16 +626,16 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         handleControls(bi, time / 2.0f);
                     }
-                    else if(m_command == ACTIVATE)
+                    else if(m_command == GUI_COMMAND_ACTIVATE)
                     {
                         if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
                         {
-                            m_command = CLOSE;
+                            m_command = GUI_COMMAND_CLOSE;
                             m_current_state = INVENTORY_DEACTIVATING;
                         }
                         else
                         {
-                            m_command = NONE;
+                            m_command = GUI_COMMAND_NONE;
                             m_current_state = INVENTORY_DEACTIVATING;
                         }
                     }
@@ -667,20 +667,20 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
             Anim_SetAnimation(&bi->bf->animations, 0, 14);
             m_menu_mode = 1;
         }
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
         break;
 
     case 1:  // load game
         if(bi->bf->animations.current_frame > 14)
         {
             Anim_IncTime(&bi->bf->animations, -time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
         else if(bi->bf->animations.current_frame < 14)
         {
             Anim_IncTime(&bi->bf->animations, time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
 
@@ -689,14 +689,14 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
             m_current_menu = Gui_BuildLoadGameMenu();
         }
 
-        if(m_command == CLOSE)
+        if(m_command == GUI_COMMAND_CLOSE)
         {
             m_menu_mode = 4;
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
         }
-        else if(m_command == RIGHT)
+        else if(m_command == GUI_COMMAND_RIGHT)
         {
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_menu_mode = 2;
             if(m_current_menu)
             {
@@ -710,13 +710,13 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         if(bi->bf->animations.current_frame > 19)
         {
             Anim_IncTime(&bi->bf->animations, -time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
         else if(bi->bf->animations.current_frame < 19)
         {
             Anim_IncTime(&bi->bf->animations, time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
 
@@ -725,24 +725,24 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
             m_current_menu = Gui_BuildSaveGameMenu();
         }
 
-        if(m_command == CLOSE)
+        if(m_command == GUI_COMMAND_CLOSE)
         {
             m_menu_mode = 4;
         }
-        else if(m_command == RIGHT)
+        else if(m_command == GUI_COMMAND_RIGHT)
         {
             m_menu_mode = 3;
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             if(m_current_menu)
             {
                 Gui_DeleteObjects(m_current_menu);
                 m_current_menu = NULL;
             }
         }
-        else if(m_command == LEFT)
+        else if(m_command == GUI_COMMAND_LEFT)
         {
             m_menu_mode = 1;
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             if(m_current_menu)
             {
                 Gui_DeleteObjects(m_current_menu);
@@ -755,13 +755,13 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         if(bi->bf->animations.current_frame > 24)
         {
             Anim_IncTime(&bi->bf->animations, -time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
         else if(bi->bf->animations.current_frame < 24)
         {
             Anim_IncTime(&bi->bf->animations, time);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             break;
         }
 
@@ -770,14 +770,14 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
             m_current_menu = Gui_BuildNewGameMenu();
         }
 
-        if(m_command == CLOSE)
+        if(m_command == GUI_COMMAND_CLOSE)
         {
             m_menu_mode = 4;
         }
-        else if(m_command == LEFT)
+        else if(m_command == GUI_COMMAND_LEFT)
         {
             m_menu_mode = 2;
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             if(m_current_menu)
             {
                 Gui_DeleteObjects(m_current_menu);
@@ -787,7 +787,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         break;
 
     case 4:  // leave menu
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
         Gui_SetCurrentMenu(NULL);
         if(m_current_menu)
         {
@@ -798,7 +798,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
         if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
         {
             Anim_SetAnimation(&bi->bf->animations, 0, 0);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
@@ -811,10 +811,10 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
     }
 
-    if(m_command == CLOSE)
+    if(m_command == GUI_COMMAND_CLOSE)
     {
         m_menu_mode = 4;
         Gui_SetCurrentMenu(NULL);
@@ -833,15 +833,15 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
         }
-        if(m_command == CLOSE)
+        if(m_command == GUI_COMMAND_CLOSE)
         {
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
-        else if(m_command == ACTIVATE)
+        else if(m_command == GUI_COMMAND_ACTIVATE)
         {
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_menu_mode = 1;
         }
         break;
@@ -852,7 +852,7 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             Anim_IncTime(&bi->bf->animations, time);
             if((bi->bf->animations.frame_changing_state != SS_CHANGING_END_ANIM))
             {
-                m_command = NONE;
+                m_command = GUI_COMMAND_NONE;
                 break;
             }
         }
@@ -864,7 +864,7 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
         break;
 
     case 2:  // leave menu
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
         Gui_SetCurrentMenu(NULL);
         if(m_current_menu)
         {
@@ -875,7 +875,7 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
         if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
         {
             Anim_SetAnimation(&bi->bf->animations, 0, 0);
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
@@ -883,7 +883,7 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     }
 
     SSBoneFrame_Update(bi->bf, 0);
-    if(m_command == ACTIVATE)
+    if(m_command == GUI_COMMAND_ACTIVATE)
     {
         SSBoneFrame_Update(bi->bf, 0);
     }
@@ -892,10 +892,10 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
     }
 
-    if(m_command == CLOSE)
+    if(m_command == GUI_COMMAND_CLOSE)
     {
         m_menu_mode = 2;
         Gui_SetCurrentMenu(NULL);
@@ -914,15 +914,15 @@ void gui_InventoryManager::handleControls(struct base_item_s *bi, float time)
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
         }
-        if(m_command == CLOSE)
+        if(m_command == GUI_COMMAND_CLOSE)
         {
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_current_state = INVENTORY_DEACTIVATING;
             m_menu_mode = 0;
         }
-        else if(m_command == ACTIVATE)
+        else if(m_command == GUI_COMMAND_ACTIVATE)
         {
-            m_command = NONE;
+            m_command = GUI_COMMAND_NONE;
             m_menu_mode = 1;
         }
         break;
@@ -935,7 +935,7 @@ void gui_InventoryManager::handleControls(struct base_item_s *bi, float time)
         break;
 
     case 2:  // leave menu
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
         Gui_SetCurrentMenu(NULL);
         if(m_current_menu)
         {
@@ -943,14 +943,14 @@ void gui_InventoryManager::handleControls(struct base_item_s *bi, float time)
             m_current_menu = NULL;
         }
         Anim_SetAnimation(&bi->bf->animations, 0, 0);
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
         m_current_state = INVENTORY_DEACTIVATING;
         m_menu_mode = 0;
         break;
     }
 
     SSBoneFrame_Update(bi->bf, 0);
-    if(m_command == ACTIVATE)
+    if(m_command == GUI_COMMAND_ACTIVATE)
     {
         SSBoneFrame_Update(bi->bf, 0);
     }
@@ -959,10 +959,10 @@ void gui_InventoryManager::handleControls(struct base_item_s *bi, float time)
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
     {
-        m_command = NONE;
+        m_command = GUI_COMMAND_NONE;
     }
 
-    if(m_command == CLOSE)
+    if(m_command == GUI_COMMAND_CLOSE)
     {
         m_menu_mode = 2;
         Gui_SetCurrentMenu(NULL);

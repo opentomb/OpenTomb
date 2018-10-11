@@ -25,6 +25,7 @@ extern "C" {
 #include "engine.h"
 #include "controls.h"
 #include "game.h"
+#include "gui/gui.h"
 
 
 struct engine_control_state_s           control_states = {0};
@@ -33,6 +34,14 @@ struct control_settings_s               control_settings = {0};
 
 void Controls_Key(int32_t button, int state)
 {
+    int action = Controls_MapKey(button);
+    int is_con_show = Gui_ConIsShown();
+    
+    if(is_con_show && (action != ACT_CONSOLE))
+    {
+        return;
+    }
+    
     // Fill script-driven debug keyboard input.
     Script_AddKey(engine_lua, button, state);
 
@@ -40,16 +49,14 @@ void Controls_Key(int32_t button, int state)
     {
         control_states.last_key = button;
     }
-
-    int action = Controls_MapKey(button);
+    
     switch(action)
     {
         case ACT_CONSOLE:
             if(!state)
             {
-                Con_SetShown(!Con_IsShown());
-
-                if(Con_IsShown())
+                Gui_ConShow(!is_con_show);
+                if(!is_con_show)
                 {
                     Audio_PauseStreams();
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
@@ -189,7 +196,7 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
                     return;
 
                 case AXIS_MOVE_Y:
-                    if( (axisValue < -control_settings.joy_move_deadzone) || (axisValue > control_settings.joy_move_deadzone) )
+                    if((axisValue < -control_settings.joy_move_deadzone) || (axisValue > control_settings.joy_move_deadzone))
                     {
 
                         if(control_settings.joy_move_invert_y)
@@ -293,8 +300,8 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     // Button event is invoked only if trigger is pressed more than 1/3 of its range.
     // Triggers are coded as native SDL2 enum number + JOY_TRIGGER_MASK (1200).
 
-    if( (axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) ||
-        (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT) )
+    if((axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT) ||
+       (axis == SDL_CONTROLLER_AXIS_TRIGGERRIGHT))
     {
         if(value >= JOY_TRIGGER_DEADZONE)
         {

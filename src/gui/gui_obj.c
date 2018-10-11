@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#include "../core/utf8_32.h"
 #include "../core/gl_util.h"
 #include "../core/gl_font.h"
 #include "../core/gl_text.h"
@@ -28,6 +29,38 @@ static int Gui_CheckObjectsRects(gui_object_p parent, gui_object_p obj)
     return 1;
 }
 
+static void Gui_HeightForWidth(gui_object_p obj)
+{
+    gl_tex_font_p gl_font = NULL;
+    gui_object_text_p label = obj->label;
+    if(label && (gl_font = GLText_GetFont(label->font_id)))
+    {
+        int32_t ascender = glf_get_ascender(gl_font) * label->line_height / 64.0f;
+        int32_t descender = glf_get_descender(gl_font) * label->line_height / 64.0f;
+        int32_t dy = ascender - descender;
+        int32_t text_h = 0;
+        
+        if(obj->flags.word_wrap && label->text[0])
+        {
+            int32_t w_pt = obj->w - obj->margin_left - obj->margin_right;
+            int n_sym = 0;
+            char *begin = label->text;
+            w_pt *= 64;
+            for(char *ch = glf_get_string_for_width(gl_font, label->text, w_pt, &n_sym); *begin; ch = glf_get_string_for_width(gl_font, ch, w_pt, &n_sym))
+            {
+                text_h += dy;
+                begin = ch;
+            }
+        }
+        else
+        {
+            text_h = dy;
+        }
+        
+        obj->h = text_h + obj->margin_top + obj->margin_bottom;
+    }
+}
+
 
 gui_object_p Gui_CreateObject()
 {
@@ -48,8 +81,11 @@ void Gui_DeleteObject(gui_object_p obj)
         if(obj->label)
         {
             obj->flags.draw_label = 0x00;
+            if(obj->label->text && obj->label->text_size)
+            {
+                free(obj->label->text);
+            }
             obj->label->text_size = 0;
-            free(obj->label->text);
             obj->label->text = NULL;
             free(obj->label);
             obj->label = NULL;
@@ -84,7 +120,7 @@ gui_object_p Gui_CreateChildObject(gui_object_p root)
         *ins = ret;
         
         vec4_copy(ret->color_border, root->color_border);
-        vec4_copy(ret->color_border, root->color_border);
+        vec4_copy(ret->color_background, root->color_background);
         ret->flags.v_self_align = root->flags.v_content_align;
         ret->flags.h_self_align = root->flags.h_content_align;
     }
@@ -135,12 +171,36 @@ void Gui_SetObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, ui
         if(obj->label->text_size < len)
         {
             char *old_ptr = obj->label->text;
-            obj->label->text_size = len + 8 - (len % 8);
-            obj->label->text = (char*)malloc(obj->label->text_size * sizeof(char));
-            free(old_ptr);
+            size_t new_len = len + 8 - (len % 8);
+            obj->label->text = (char*)calloc(new_len, sizeof(char));
+            if(obj->label->text_size)
+            {
+                free(old_ptr);
+            }
+            obj->label->text_size = new_len;
         }
         strncpy(obj->label->text, text, len);
     }
+}
+
+
+void Gui_SetExternalObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, uint16_t style_id)
+{
+    if(!obj->label)
+    {
+        obj->label = (gui_object_text_p)calloc(1, sizeof(gui_object_text_t));
+        obj->label->line_height = 1.0f;
+    }
+    obj->label->font_id = font_id;
+    obj->label->style_id = style_id;
+
+    if(obj->label->text && obj->label->text_size)
+    {
+        free(obj->label->text);
+        obj->label->text_size = 0;
+    }
+
+    obj->label->text = (char*)text;
 }
 
 
@@ -297,10 +357,11 @@ static void Gui_DrawLabelInternal(gui_object_p root)
         GLfloat real_x = 0.0f, real_y = 0.0f;
         int32_t x0, y0, x1, y1;
         GLfloat shadow_color[4];
-        int32_t w_pt = ((root->w - 2 * root->border_width) * 64.0f + 0.5f);
-        GLfloat ascender = glf_get_ascender(gl_font) / 64.0f;
-        GLfloat descender = glf_get_descender(gl_font) / 64.0f;
-        GLfloat dy = label->line_height * (ascender - descender);
+        int32_t awailable_w = root->w - root->margin_left - root->margin_right;
+        int32_t w_pt = awailable_w * 64;
+        int32_t ascender = label->line_height * glf_get_ascender(gl_font) / 64.0f;
+        int32_t descender = label->line_height * glf_get_descender(gl_font) / 64.0f;
+        int32_t dy = ascender - descender;
         int n_lines = 1;
         int total_chars = 0;
         char *begin = label->text;
@@ -311,7 +372,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
         shadow_color[2] = 0.0f;
         shadow_color[3] = (float)style->font_color[3] * GUI_FONT_SHADOW_TRANSPARENCY;
         
-        if(root->flags.word_wrap)
+        if(root->flags.word_wrap && root->label->text[0])
         {
             int n_sym = 0;
             n_lines = 0;
@@ -322,17 +383,19 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             }
             begin = label->text;
             x1 = x0 + w_pt;
-            y1 = y0 + n_lines * dy * 64.0f;
+            y1 = y0 + n_lines * dy * 64;
         }
 
-        real_y = root->y - root->border_width - descender;
         switch(root->flags.v_content_align)
         {
             case GUI_ALIGN_TOP:
-                real_y = root->y - root->border_width - ascender - dy * (n_lines - 1);
+                real_y = root->y - root->margin_top - ascender - dy * (n_lines - 1);
                 break;
             case GUI_ALIGN_CENTER:
-                real_y = root->y - descender + (root->h - dy * n_lines) / 2;
+                real_y = root->y + root->margin_bottom - descender + (root->h - dy * n_lines) / 2;
+                break;
+            default:
+                real_y = root->y + root->margin_bottom - descender;
                 break;
         }
 
@@ -344,14 +407,16 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             
             glf_get_string_bb(gl_font, begin, n_sym, &x0, &y0, &x1, &y1);
 
-            real_x = root->x + root->border_width - x0 / 64.0f;
             switch(root->flags.h_content_align)
             {
                 case GUI_ALIGN_RIGHT:
-                    real_x = root->x + root->w - root->border_width - x1 / 64.0f;
+                    real_x = root->x + root->w - root->margin_right - x1 / 64.0f;
                     break;
                 case GUI_ALIGN_CENTER:
-                    real_x = root->x + root->w / 2 - (x1 + x0) / 128.0f;
+                    real_x = root->x + root->margin_left + (awailable_w) / 2 - (x1 + x0) / 128.0f;
+                    break;
+                default:
+                    real_x = root->x + root->margin_left - x0 / 64.0f;
                     break;
             }
             
@@ -461,26 +526,8 @@ void Gui_LayoutVertical(gui_object_p root)
     int16_t weights_used = 0;
     int16_t weights_total = 0;
     int16_t height_used = 0;
-    
-    if(root->flags.fit_inside)
-    {
-        int total_spacings = 0;
-        for(gui_object_p obj = root->childs; obj; obj = obj->next)
-        {
-            if(!obj->flags.hide)
-            {
-                ++total_spacings;
-                free_h -= (obj->flags.fixed_h) ? (obj->h) : (0);
-                weights_total += (obj->flags.fixed_h) ? (0) : (obj->weight_y);
-            }
-        }
-        if(total_spacings)
-        {
-            --total_spacings;
-            free_h -= total_spacings * root->spacing;
-        }
-        weights_total = (weights_total) ? (weights_total) : (1);
-    }
+    int16_t content_h = -root->spacing;
+    int total_spacings = 0;
     
     for(gui_object_p obj = root->childs; obj; obj = obj->next)
     {
@@ -504,6 +551,31 @@ void Gui_LayoutVertical(gui_object_p root)
                 obj->x = root->margin_left;
             }
             
+            Gui_HeightForWidth(obj);
+            
+            content_h += obj->h + root->spacing;
+            
+            if(root->flags.fit_inside)
+            {
+                ++total_spacings;
+                free_h -= (obj->flags.fixed_h) ? (obj->h) : (0);
+                weights_total += (obj->flags.fixed_h) ? (0) : (obj->weight_y);
+            }
+        }
+    }
+    
+    if(total_spacings)
+    {
+        --total_spacings;
+        free_h -= total_spacings * root->spacing;
+    }
+    
+    weights_total = (weights_total) ? (weights_total) : (1);
+    
+    for(gui_object_p obj = root->childs; obj; obj = obj->next)
+    {
+        if(!obj->flags.hide)
+        {
             if(!obj->flags.fixed_h && root->flags.fit_inside)
             {
                 weights_used += obj->weight_y;
@@ -512,8 +584,18 @@ void Gui_LayoutVertical(gui_object_p root)
                 obj->h = height_used - obj->h;
             }
             
-            obj->y = (prev) ? (prev->y - obj->h - root->spacing)
-                            : (root->h - obj->h - root->margin_top);
+            if(prev)
+            {
+                obj->y = prev->y - obj->h - root->spacing;
+            }
+            else if(root->flags.v_content_align == GUI_ALIGN_BOTTOM)
+            {
+                obj->y = root->margin_bottom + content_h - obj->h;
+            }
+            else
+            {
+                obj->y = root->h - obj->h - root->margin_top;
+            }
             prev = obj;
         }
     }
@@ -526,25 +608,8 @@ void Gui_LayoutHorizontal(gui_object_p root)
     int16_t weights_total = 0;
     int16_t width_used = 0;
     int16_t free_w = root->w - root->margin_left - root->margin_right;
-    
-    if(root->flags.fit_inside)
-    {
-        int total_spacings = 0;
-        for(gui_object_p obj = root->childs; obj; obj = obj->next)
-        {
-            if(!obj->flags.hide)
-            {
-                ++total_spacings;
-                free_w -= (obj->flags.fixed_w) ? (obj->w) : (0);
-                weights_total += (obj->flags.fixed_w) ? (0) : (obj->weight_x);
-            }
-        }
-        if(total_spacings)
-        {
-            --total_spacings;
-            free_w -= total_spacings * root->spacing;
-        }
-    }
+    int16_t content_w = -root->spacing;
+    int total_spacings = 0;
     
     for(gui_object_p obj = root->childs; obj; obj = obj->next)
     {
@@ -568,6 +633,29 @@ void Gui_LayoutHorizontal(gui_object_p root)
                 obj->y = root->h - root->margin_top - obj->h;
             }
             
+            content_w += obj->w + root->spacing;
+            
+            if(root->flags.fit_inside)
+            {
+                ++total_spacings;
+                free_w -= (obj->flags.fixed_w) ? (obj->w) : (0);
+                weights_total += (obj->flags.fixed_w) ? (0) : (obj->weight_x);
+            }
+        }
+    }
+    
+    if(total_spacings)
+    {
+        --total_spacings;
+        free_w -= total_spacings * root->spacing;
+    }
+    
+    weights_total = (weights_total) ? (weights_total) : (1);
+    
+    for(gui_object_p obj = root->childs; obj; obj = obj->next)
+    {
+        if(!obj->flags.hide)
+        {
             if(!obj->flags.fixed_w && root->flags.fit_inside)
             {
                 weights_used += obj->weight_x;
@@ -576,8 +664,19 @@ void Gui_LayoutHorizontal(gui_object_p root)
                 obj->w = width_used - obj->w;
             }
             
-            obj->x = (prev) ? (prev->x + prev->w + root->spacing)
-                            : (root->margin_left);
+            if(prev)
+            {
+                obj->x = prev->x + prev->w + root->spacing;
+            }
+            else if(root->flags.v_content_align == GUI_ALIGN_RIGHT)
+            {
+                obj->x = root->w - root->margin_right + obj->w - content_w;
+            }
+            else
+            {
+                obj->x = root->margin_left;
+            }
+
             prev = obj;
         }
     }
@@ -629,5 +728,82 @@ void Gui_EnsureVisible(gui_object_p obj)
                 cont->content_dx = cont->w - obj->w - obj->x - cont->margin_right;
             }
         }
+    }
+}
+
+
+void Gui_ApplyEditCommands(gui_object_p edit, int cmd, uint32_t key)
+{
+    if(edit && edit->label && edit->label->text && edit->label->text_size)
+    {
+        uint32_t oldLength = utf8_strlen(edit->label->text);
+        switch(cmd)
+        {
+            case GUI_COMMAND_OPEN:
+            case GUI_COMMAND_ACTIVATE:
+            case GUI_COMMAND_CLOSE:
+                if(edit->handlers.do_command)
+                {
+                    edit->handlers.do_command(edit, cmd);
+                }
+                break;
+
+            case GUI_COMMAND_LEFT:
+                if(edit->label->cursor_pos > 0)
+                {
+                    edit->label->cursor_pos--;
+                }
+                break;
+
+            case GUI_COMMAND_RIGHT:
+                if(edit->label->cursor_pos < oldLength)
+                {
+                    edit->label->cursor_pos++;
+                }
+                break;
+
+            case GUI_COMMAND_HOME:
+                edit->label->cursor_pos = 0;
+                break;
+
+            case GUI_COMMAND_END:
+                edit->label->cursor_pos = oldLength;
+                break;
+
+            case GUI_COMMAND_BACKSPACE:
+                if(edit->label->cursor_pos > 0)
+                {
+                    edit->label->cursor_pos--;
+                    utf8_delete_char((uint8_t*)edit->label->text, edit->label->cursor_pos);
+                }
+                break;
+
+            case GUI_COMMAND_DELETE:
+                if((edit->label->cursor_pos < oldLength))
+                {
+                    utf8_delete_char((uint8_t*)edit->label->text, edit->label->cursor_pos);
+                }
+                break;
+                
+            case GUI_COMMAND_TEXT:
+                if(oldLength + 8 >= edit->label->text_size)
+                {
+                    char *new_buff = (char*)calloc(edit->label->text_size * 2, sizeof(char));
+                    if(new_buff)
+                    {
+                        memcpy(new_buff, edit->label->text, edit->label->text_size);
+                        free(edit->label->text);
+                        edit->label->text = new_buff;
+                        edit->label->text_size *= 2;
+                    }
+                }
+                if((oldLength + 8 < edit->label->text_size) && (key >= ' '))
+                {
+                    utf8_insert_char((uint8_t*)edit->label->text, key, edit->label->cursor_pos, edit->label->text_size);
+                    ++oldLength;
+                    ++edit->label->cursor_pos;
+                }
+                break;
+        };
     }
 }

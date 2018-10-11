@@ -588,31 +588,31 @@ int Game_ProcessMenu(entity_p player)
     {
         if(act[ACT_INVENTORY].state && !act[ACT_INVENTORY].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::CLOSE);
+            main_inventory_manager->send(GUI_COMMAND_CLOSE);
         }
         else if(act[ACT_ACTION].state && !act[ACT_ACTION].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::ACTIVATE);
+            main_inventory_manager->send(GUI_COMMAND_ACTIVATE);
         }
         else if(act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::UP);
+            main_inventory_manager->send(GUI_COMMAND_UP);
         }
         else if(act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::DOWN);
+            main_inventory_manager->send(GUI_COMMAND_DOWN);
         }
         else if(act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::LEFT);
+            main_inventory_manager->send(GUI_COMMAND_LEFT);
         }
         else if(act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state)
         {
-            main_inventory_manager->send(gui_command_e::RIGHT);
+            main_inventory_manager->send(GUI_COMMAND_RIGHT);
         }
         else
         {
-            main_inventory_manager->send(gui_command_e::NONE);
+            main_inventory_manager->send(GUI_COMMAND_NONE);
         }
     }
 
@@ -621,7 +621,7 @@ int Game_ProcessMenu(entity_p player)
         if(player && !main_inventory_manager->isEnabled())
         {
             main_inventory_manager->setInventory(&player->inventory, player->id);
-            main_inventory_manager->send(gui_command_e::OPEN);
+            main_inventory_manager->send(GUI_COMMAND_OPEN);
         }
     }
 

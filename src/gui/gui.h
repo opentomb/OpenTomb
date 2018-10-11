@@ -129,6 +129,10 @@ void Gui_Init();
 void Gui_InitBars();
 void Gui_Destroy();
 
+void Gui_ConScroll(int value);
+void Gui_ConShow(int value);
+int  Gui_ConIsShown();
+
 /**
  * Helper method to setup OpenGL state for console drawing.
  *

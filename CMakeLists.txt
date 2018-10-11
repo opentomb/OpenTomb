@@ -61,6 +61,8 @@ set(OPENTOMB_SRCS
     src/gui/gui.h
     src/gui/gui_obj.c
     src/gui/gui_obj.h
+    src/gui/gui_console.c
+    src/gui/gui_console.h
     src/gui/gui_menu.cpp
     src/gui/gui_menu.h
     src/gui/gui_inventory.cpp
