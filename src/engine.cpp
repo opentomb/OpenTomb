@@ -840,10 +840,10 @@ void Engine_MainLoop()
         Engine_PollSDLEvents();
 
         if (renderer.settings.show_fps)
-		{
+        {
             gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
             if (fps)
-			{
+            {
                 fps->x_align = GLTEXT_ALIGN_RIGHT;
                 fps->y_align = GLTEXT_ALIGN_BOTTOM;
                 fps->font_id = FONT_PRIMARY;
