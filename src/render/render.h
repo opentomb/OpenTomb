@@ -81,6 +81,7 @@ typedef struct render_settings_s
     GLfloat   fog_color[4];
     float     fog_start_depth;
     float     fog_end_depth;
+    bool      show_fps;
 }render_settings_t, *render_settings_p;
 
 
