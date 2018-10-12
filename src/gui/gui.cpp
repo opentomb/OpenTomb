@@ -253,19 +253,19 @@ void Gui_Render()
         {
             cmd = GUI_COMMAND_ACTIVATE;
         }
-        else if(act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state)
+        else if((act[ACT_LOOKUP].state && !act[ACT_LOOKUP].prev_state) || (act[ACT_UP].state && !act[ACT_UP].prev_state))
         {
             cmd = GUI_COMMAND_UP;
         }
-        else if(act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state)
+        else if((act[ACT_LOOKDOWN].state && !act[ACT_LOOKDOWN].prev_state) || (act[ACT_DOWN].state && !act[ACT_DOWN].prev_state))
         {
             cmd = GUI_COMMAND_DOWN;
         }
-        else if(act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state)
+        else if((act[ACT_LOOKLEFT].state && !act[ACT_LOOKLEFT].prev_state) || (act[ACT_LEFT].state && !act[ACT_LEFT].prev_state))
         {
             cmd = GUI_COMMAND_LEFT;
         }
-        else if(act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state)
+        else if((act[ACT_LOOKRIGHT].state && !act[ACT_LOOKRIGHT].prev_state) || (act[ACT_RIGHT].state && !act[ACT_RIGHT].prev_state))
         {
             cmd = GUI_COMMAND_RIGHT;
         }
