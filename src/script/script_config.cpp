@@ -200,6 +200,9 @@ int Script_ParseRender(lua_State *lua, struct render_settings_s *rs)
         rs->fog_end_depth = lua_tonumber(lua, -1);
         lua_pop(lua, 1);
 
+        lua_getfield(lua, -1, "show_fps");
+        rs->show_fps = lua_tonumber(lua, -1);
+        lua_pop(lua, 1);
 
         lua_getfield(lua, -1, "fog_color");
         if(lua_istable(lua, -1))
@@ -364,6 +367,7 @@ void Script_ExportConfig(const char *path)
             int b = renderer.settings.fog_color[2] * 255.5f;
             fprintf(f, "    fog_color = {r = %d, g = %d, b = %d};\n", r, g, b);
         }
+        fprintf(f, "    show_fps = %d;\n", renderer.settings.show_fps);
         fprintf(f, "}\n\n");
 
         fprintf(f, "controls =\n{\n");

@@ -30,6 +30,7 @@ render =
     z_depth = 24;
     texture_border = 16;
     fog_color = {r = 255, g = 255, b = 255};
+    show_fps = 0;
 }
 
 controls =

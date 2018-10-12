@@ -839,13 +839,16 @@ void Engine_MainLoop()
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
 
-        gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
-        if(fps)
-        {
-            fps->x_align    = GLTEXT_ALIGN_RIGHT;
-            fps->y_align    = GLTEXT_ALIGN_BOTTOM;
-            fps->font_id    = FONT_PRIMARY;
-            fps->style_id   = FONTSTYLE_MENU_TITLE;
+        if (renderer.settings.show_fps)
+		{
+            gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
+            if (fps)
+			{
+                fps->x_align = GLTEXT_ALIGN_RIGHT;
+                fps->y_align = GLTEXT_ALIGN_BOTTOM;
+                fps->font_id = FONT_PRIMARY;
+                fps->style_id = FONTSTYLE_MENU_TITLE;
+            }
         }
 
         int codec_end_state = stream_codec_check_end(&engine_video);
@@ -1208,6 +1211,11 @@ extern "C" int Engine_ExecCmd(char *ch)
         else if(!strcmp(token, "cls"))
         {
             Con_Clean();
+            return 1;
+        }
+        else if(!strcmp(token, "show_fps"))
+        {
+            renderer.settings.show_fps = !renderer.settings.show_fps;
             return 1;
         }
         else if(!strcmp(token, "r_wireframe"))
