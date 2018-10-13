@@ -599,7 +599,7 @@ void Engine_PollSDLEvents()
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(control_states.mouse_look != 0 &&
+                if(!Gui_ConIsShown() && (control_states.mouse_look != 0) &&
                     ((event.motion.x != (screen_info.w / 2)) ||
                      (event.motion.y != (screen_info.h / 2))))
                 {

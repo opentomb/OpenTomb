@@ -4,13 +4,19 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "../core/utf8_32.h"
-#include "../core/gl_util.h"
-#include "../core/gl_font.h"
-#include "../core/gl_text.h"
-#include "../core/vmath.h"
+#include "../utf8_32.h"
+#include "../gl_util.h"
+#include "../gl_font.h"
+#include "../gl_text.h"
+#include "../vmath.h"
 #include "gui_obj.h"
 
+static float g_frame_time = 0.0f;
+
+void Gui_SetFrameTime(float time)
+{
+    g_frame_time = time;
+}
 
 static int Gui_CheckObjectsRects(gui_object_p parent, gui_object_p obj)
 {
@@ -309,18 +315,15 @@ static void Gui_DrawBorderInternal(gui_object_p root)
     qglDrawArrays(GL_TRIANGLE_STRIP, 0, 10);
 }
 
-static void Gui_DrawCursorInternal(GLint x, GLint y, GLint h)
+static void Gui_DrawCursorInternal(GLint x, GLint y, GLint h, float *time)
 {
-    /*if(con_base.show_cursor_period)
+    *time += g_frame_time;
+    if(*time > 1.0f)
     {
-        if(con_base.cursor_time > con_base.show_cursor_period)
-        {
-            con_base.cursor_time = 0.0f;
-            con_base.show_cursor = !con_base.show_cursor;
-        }
+        *time = 0.0f;
     }
 
-    if(con_base.show_cursor && cursorBuffer)*/
+    if(*time < 0.5f)
     {
         GLfloat line_w = 1.0f;
         GLfloat cursor_array[16];
@@ -434,7 +437,7 @@ static void Gui_DrawLabelInternal(gui_object_p root)
             if(root->flags.edit_text && (label->cursor_pos <= total_chars + n_sym) && ((label->cursor_pos > total_chars) || (label->cursor_pos == 0)))
             {
                 int cursor_x = glf_get_string_len(gl_font, begin, label->cursor_pos - total_chars) / 64;
-                Gui_DrawCursorInternal(real_x + cursor_x, real_y + line * dy, dy);
+                Gui_DrawCursorInternal(real_x + cursor_x, real_y + line * dy, dy, &label->cursor_time);
             }
             
             total_chars += n_sym;
@@ -737,6 +740,7 @@ void Gui_ApplyEditCommands(gui_object_p edit, int cmd, uint32_t key)
     if(edit && edit->label && edit->label->text && edit->label->text_size)
     {
         uint32_t oldLength = utf8_strlen(edit->label->text);
+        edit->label->cursor_time = 0.0f;
         switch(cmd)
         {
             case GUI_COMMAND_OPEN:

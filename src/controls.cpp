@@ -19,7 +19,6 @@ extern "C" {
 #include "script/script.h"
 #include "render/camera.h"
 #include "physics/physics.h"
-#include "gui/gui_obj.h"
 #include "gui/gui_inventory.h"
 #include "audio/audio.h"
 #include "engine.h"
@@ -112,11 +111,11 @@ void Controls_Key(int32_t button, int state)
 
 void Controls_JoyAxis(int axis, Sint16 axisValue)
 {
-    for(int i = 0; i < AXIS_LASTINDEX; i++)            // Compare with ALL mapped axes.
+    for(int i = 0; i < AXIS_LASTINDEX; i++)
     {
-        if(axis == control_settings.joy_axis_map[i])      // If mapped = current...
+        if(axis == control_settings.joy_axis_map[i])
         {
-            switch(i)                                   // ...Choose corresponding action.
+            switch(i)
             {
                 case AXIS_LOOK_X:
                     if((axisValue < -control_settings.joy_look_deadzone) || (axisValue > control_settings.joy_look_deadzone))

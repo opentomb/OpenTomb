@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 #include "../core/gl_text.h"
-#include "gui_obj.h"
+#include "../core/gui/gui_obj.h"
 
 struct inventory_node_s;
 

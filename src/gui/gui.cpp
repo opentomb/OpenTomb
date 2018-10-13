@@ -9,6 +9,8 @@
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/vmath.h"
+#include "../core/gui/gui_obj.h"
+#include "../core/gui/gui_console.h"
 
 #include "../render/camera.h"
 #include "../render/render.h"
@@ -27,8 +29,6 @@
 #include "../world.h"
 #include "gui.h"
 #include "gui_menu.h"
-#include "gui_obj.h"
-#include "gui_console.h"
 #include "gui_inventory.h"
 
 gui_ProgressBar         Bar[BAR_LASTINDEX];
@@ -240,6 +240,8 @@ void Gui_Render()
     qglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     qglDisable(GL_ALPHA_TEST);
 
+    Gui_SetFrameTime(engine_frame_time);
+    
     if(g_main_menu && g_main_menu->handlers.do_command && (World_GetVersion() < 0))
     {
         control_action_p act = control_states.actions;
@@ -326,7 +328,7 @@ void Gui_ConShow(int value)
         Engine_SetTextInputHandler(Gui_HandleEditConsole, g_console_menu);
         g_console_menu->flags.hide = 0x00;
     }
-    else
+    else if(g_console_menu)
     {
         Engine_SetTextInputHandler(NULL, NULL);
         g_console_menu->flags.hide = 0x01;

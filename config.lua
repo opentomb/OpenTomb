@@ -2,9 +2,9 @@
 screen =
 {
     x = 6;
-    y = 30;
-    width = 1200;
-    height = 800;
+    y = 31;
+    width = 1230;
+    height = 710;
     fov = 75.0;
     debug_view_state = 0;
     fullscreen = 0;
@@ -61,7 +61,7 @@ console =
 {
     background_color = {r = 0, g = 0, b = 0, a = 200};
     commands_count = 128;
-    lines_count = 128;
+    lines_count = 18;
     height = 320;
     spacing = 0.50;
 }

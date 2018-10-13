@@ -35,6 +35,10 @@ add_subdirectory(extern/bullet)
 add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
+    src/core/gui/gui_obj.c
+    src/core/gui/gui_obj.h
+    src/core/gui/gui_console.c
+    src/core/gui/gui_console.h
     src/core/avl.c
     src/core/avl.h
     src/core/base_types.c
@@ -59,10 +63,6 @@ set(OPENTOMB_SRCS
     src/core/vmath.h
     src/gui/gui.cpp
     src/gui/gui.h
-    src/gui/gui_obj.c
-    src/gui/gui_obj.h
-    src/gui/gui_console.c
-    src/gui/gui_console.h
     src/gui/gui_menu.cpp
     src/gui/gui_menu.h
     src/gui/gui_inventory.cpp

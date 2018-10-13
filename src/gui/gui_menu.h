@@ -2,7 +2,7 @@
 #ifndef ENGINE_GUI_MENU_H
 #define ENGINE_GUI_MENU_H
 
-#include "gui_obj.h"
+#include "../core/gui/gui_obj.h"
 
 gui_object_p Gui_BuildMainMenu();
 gui_object_p Gui_BuildLoadGameMenu();

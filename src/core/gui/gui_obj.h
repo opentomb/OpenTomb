@@ -8,8 +8,8 @@
 extern "C" {
 #endif
 
-#include "../core/gl_util.h"
-#include "../core/gl_font.h"
+#include "../gl_util.h"
+#include "../gl_font.h"
 
 #define GUI_ALIGN_NONE      (0)
 #define GUI_ALIGN_CENTER    (1)
@@ -70,6 +70,7 @@ typedef struct gui_object_text_s
 {
     char                       *text;
     float                       line_height;
+    float                       cursor_time;
     uint16_t                    font_id;
     uint16_t                    style_id;
     uint16_t                    text_size;
@@ -109,6 +110,7 @@ typedef struct gui_object_s
     struct gui_object_s        *childs;
 } gui_object_t, *gui_object_p;
 
+void Gui_SetFrameTime(float time);
 
 gui_object_p Gui_CreateObject();
 void Gui_DeleteObject(gui_object_p obj);

@@ -4,11 +4,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-#include "../core/gl_util.h"
-#include "../core/gl_font.h"
-#include "../core/gl_text.h"
-#include "../core/vmath.h"
-#include "../core/console.h"
+#include "../gl_util.h"
+#include "../gl_font.h"
+#include "../gl_text.h"
+#include "../vmath.h"
+#include "../console.h"
 #include "gui_obj.h"
 
 
