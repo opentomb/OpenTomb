@@ -1,10 +1,10 @@
 -- LUA config file
 screen =
 {
-    x = 6;
-    y = 31;
-    width = 1230;
-    height = 710;
+    x = 0;
+    y = 23;
+    width = 1920;
+    height = 1017;
     fov = 75.0;
     debug_view_state = 0;
     fullscreen = 0;

@@ -143,6 +143,9 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_LEFT;
+    obj->flags.v_content_align = GUI_ALIGN_TOP;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align left, cursor 20", 2, 2);
     obj->label->cursor_pos = 20;
     
@@ -151,6 +154,9 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align center, cursor 5", 2, 2);
     obj->label->cursor_pos = 5;
 
@@ -159,6 +165,7 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
     Gui_SetObjectLabel(obj, "Align center, cursor 0", 2, 2);
     obj->label->cursor_pos = 0;
     
@@ -167,6 +174,7 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
     Gui_SetObjectLabel(obj, "Align center, cursor 23", 2, 2);
     obj->label->cursor_pos = 22;
     
@@ -175,6 +183,9 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_RIGHT;
+    obj->flags.v_content_align = GUI_ALIGN_BOTTOM;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align right, cursor 0", 2, 2);
     obj->label->cursor_pos = 0;
     
@@ -472,7 +483,7 @@ gui_object_p Gui_BuildMainMenu()
     // fill menu
     /*gui_object_p obj = Gui_CreateChildObject(title);
     obj->data = Gui_AddTestContainer(cont);
-    title->data = obj;
+    ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "TEST", 1, 1);
     obj->w = 172;
     obj->label->line_height = 0.8;
@@ -485,7 +496,6 @@ gui_object_p Gui_BuildMainMenu()
     
     gui_object_p obj = Gui_CreateChildObject(title);
     obj->data = Gui_AddNewGameContainer(cont);
-    //((gui_object_p)obj->data)->flags.hide = 0x01;
     title->data = obj;
     Gui_SetObjectLabel(obj, "New Game", 1, 1);
     obj->w = 172;
