@@ -31,12 +31,11 @@ struct engine_control_state_s           control_states = {0};
 struct control_settings_s               control_settings = {0};
 
 
-void Controls_Key(int32_t button, int state)
+void Controls_Key(int32_t button, int state, int memu_mode)
 {
     int action = Controls_MapKey(button);
-    int is_con_show = Gui_ConIsShown();
     
-    if(is_con_show && (action != ACT_CONSOLE))
+    if((memu_mode == 0x02) || ((memu_mode == 0x01) && (action != ACT_CONSOLE)))
     {
         return;
     }
@@ -54,8 +53,8 @@ void Controls_Key(int32_t button, int state)
         case ACT_CONSOLE:
             if(!state)
             {
-                Gui_ConShow(!is_con_show);
-                if(!is_con_show)
+                Gui_ConShow(!memu_mode);
+                if(!memu_mode)
                 {
                     Audio_PauseStreams();
                     //Audio_Send(lua_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
@@ -243,27 +242,27 @@ void Controls_JoyAxis(int axis, Sint16 axisValue)
     } // end for(int i = 0; i < AXIS_LASTINDEX; i++)
 }
 
-void Controls_JoyHat(int value)
+void Controls_JoyHat(int value, int menu_mode)
 {
     // NOTE: Hat movements emulate keypresses
     // with HAT direction + JOY_HAT_MASK (1100) index.
 
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_RELEASED);     // Reset all directions.
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_RELEASED);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_RELEASED);
-    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_RELEASED);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_RELEASED, menu_mode);     // Reset all directions.
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_RELEASED, menu_mode);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_RELEASED, menu_mode);
+    Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_RELEASED, menu_mode);
 
     if(value & SDL_HAT_UP)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_UP,    SDL_PRESSED, menu_mode);
     if(value & SDL_HAT_DOWN)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN,  SDL_PRESSED, menu_mode);
     if(value & SDL_HAT_LEFT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT,  SDL_PRESSED, menu_mode);
     if(value & SDL_HAT_RIGHT)
-        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_PRESSED);
+        Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, SDL_PRESSED, menu_mode);
 }
 
-void Controls_WrapGameControllerKey(int button, int state)
+void Controls_WrapGameControllerKey(int button, int state, int menu_mode)
 {
     // SDL2 Game Controller interface doesn't operate with HAT directions,
     // instead it treats them as button pushes. So, HAT doesn't return
@@ -275,24 +274,24 @@ void Controls_WrapGameControllerKey(int button, int state)
     switch(button)
     {
         case SDL_CONTROLLER_BUTTON_DPAD_UP:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, state);
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_UP, state, menu_mode);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, state);
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_DOWN, state, menu_mode);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, state);
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_LEFT, state, menu_mode);
             break;
         case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-            Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, state);
+            Controls_Key(JOY_HAT_MASK + SDL_HAT_RIGHT, state, menu_mode);
             break;
         default:
-            Controls_Key((JOY_BUTTON_MASK + button), state);
+            Controls_Key((JOY_BUTTON_MASK + button), state, menu_mode);
             break;
     }
 }
 
-void Controls_WrapGameControllerAxis(int axis, Sint16 value)
+void Controls_WrapGameControllerAxis(int axis, Sint16 value, int menu_mode)
 {
     // Since left/right triggers on X360-like controllers are actually axes,
     // and we still need them as buttons, we remap these axes to button events.
@@ -304,11 +303,11 @@ void Controls_WrapGameControllerAxis(int axis, Sint16 value)
     {
         if(value >= JOY_TRIGGER_DEADZONE)
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_PRESSED);
+            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_PRESSED, menu_mode);
         }
         else
         {
-            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_RELEASED);
+            Controls_Key((axis + JOY_TRIGGER_MASK), SDL_RELEASED, menu_mode);
         }
     }
     else

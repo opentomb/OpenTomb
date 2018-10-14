@@ -147,11 +147,11 @@ enum ACTIONS Controls_MapKey(uint32_t key);
 void Controls_ActionToStr(char buff[128], enum ACTIONS act);
 void Controls_KeyToStr(char buff[128], int key);
 
-void Controls_Key(int32_t button, int state);
-void Controls_WrapGameControllerKey(int button, int state);
-void Controls_WrapGameControllerAxis(int axis, Sint16 value);
+void Controls_Key(int32_t button, int state, int menu_mode);
+void Controls_WrapGameControllerKey(int button, int state, int menu_mode);
+void Controls_WrapGameControllerAxis(int axis, Sint16 value, int menu_mode);
 void Controls_JoyAxis(int axis, Sint16 value);
-void Controls_JoyHat(int value);
+void Controls_JoyHat(int value, int menu_mode);
 void Controls_InitGlobals();
 
 #endif /* CONTROLS_H */
