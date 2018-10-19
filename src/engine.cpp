@@ -59,6 +59,7 @@ static stream_codec_t           engine_video;
 
 static char                     base_path[1024] = {0};
 static volatile int             engine_done   = 0;
+static int                      g_menu_mode = 0x00;
 static int                      engine_set_zero_time = 0;
 float                           time_scale = 1.0f;
 float                           engine_frame_time = 0.0;
@@ -587,7 +588,7 @@ void Engine_PollSDLEvents()
     static int mouse_setup = 0;
     const float color[3] = {1.0f, 0.0f, 0.0f};
     static float from[3], to[3];
-
+    
     for(int i = 0; i < ACT_LASTINDEX; i++)
     {
         control_states.actions[i].prev_state = control_states.actions[i].state;
@@ -596,10 +597,11 @@ void Engine_PollSDLEvents()
 
     while(SDL_PollEvent(&event))
     {
+        g_menu_mode = g_text_handler ? ((Gui_ConIsShown()) ? (0x01) : (0x02)) : 0x00;
         switch(event.type)
         {
             case SDL_MOUSEMOTION:
-                if(!Gui_ConIsShown() && (control_states.mouse_look != 0) &&
+                if(!g_menu_mode && (control_states.mouse_look != 0) &&
                     ((event.motion.x != (screen_info.w / 2)) ||
                      (event.motion.y != (screen_info.h / 2))))
                 {
@@ -641,12 +643,12 @@ void Engine_PollSDLEvents()
             // Controller events are only invoked when joystick is initialized as
             // game controller, otherwise, generic joystick event will be used.
             case SDL_CONTROLLERAXISMOTION:
-                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value);
+                Controls_WrapGameControllerAxis(event.caxis.axis, event.caxis.value, g_menu_mode);
                 break;
 
             case SDL_CONTROLLERBUTTONDOWN:
             case SDL_CONTROLLERBUTTONUP:
-                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state);
+                Controls_WrapGameControllerKey(event.cbutton.button, event.cbutton.state, g_menu_mode);
                 break;
 
             // Joystick events are still invoked, even if joystick is initialized as game
@@ -663,7 +665,7 @@ void Engine_PollSDLEvents()
             case SDL_JOYHATMOTION:
                 if(sdl_joystick)
                 {
-                    Controls_JoyHat(event.jhat.value);
+                    Controls_JoyHat(event.jhat.value, g_menu_mode);
                 }
                 break;
 
@@ -672,7 +674,7 @@ void Engine_PollSDLEvents()
                 // NOTE: Joystick button numbers are passed with added JOY_BUTTON_MASK (1000).
                 if(sdl_joystick)
                 {
-                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state);
+                    Controls_Key((event.jbutton.button + JOY_BUTTON_MASK), event.jbutton.state, g_menu_mode);
                 }
                 break;
 
@@ -755,7 +757,7 @@ void Engine_PollSDLEvents()
                         TestModelApplyKey(event.key.keysym.scancode);
                     }
                 }
-                Controls_Key(event.key.keysym.scancode, event.key.state);
+                Controls_Key(event.key.keysym.scancode, event.key.state, g_menu_mode);
                 break;
 
             case SDL_QUIT:
@@ -777,6 +779,7 @@ void Engine_PollSDLEvents()
             default:
                 break;
         }
+        g_menu_mode = g_text_handler ? ((Gui_ConIsShown()) ? (0x01) : (0x02)) : 0x00;
     }
     renderer.debugDrawer->DrawLine(from, to, color, color);
 }
@@ -831,7 +834,7 @@ void Engine_MainLoop()
         else
         {
             screen_info.fps = ((float)max_cycles / time_cycl);
-            snprintf(fps_str, 32, "%.1f", screen_info.fps);
+            snprintf(fps_str, sizeof(fps_str), "%.1f", screen_info.fps);
             cycles = 0;
             time_cycl = 0.0f;
         }
@@ -859,7 +862,7 @@ void Engine_MainLoop()
 
         if(codec_end_state >= 0)
         {
-            if(Gui_ConIsShown && (screen_info.debug_view_state != debug_view_state_e::model_view))
+            if(!g_menu_mode && (screen_info.debug_view_state != debug_view_state_e::model_view))
             {
                 Game_Frame(time);
                 Gameflow_ProcessCommands();
