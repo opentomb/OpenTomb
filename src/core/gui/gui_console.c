@@ -68,6 +68,7 @@ static void Gui_FillConsoleLog(gui_object_p log, console_params_p cp, gui_consol
             (*line)->prev = prev;
             (*line)->parent = log;
             (*line)->flags.word_wrap = 0x01;
+            (*line)->flags.autoheight = 0x01;
         }
         
         Gui_SetExternalObjectLabel(*line, lines_buff[i], FONT_CONSOLE, lines_styles[i]);
@@ -122,6 +123,7 @@ void Gui_RefreshConsole(gui_object_p *con_root, int w, int h)
         edit->flags.fixed_h = 0x01;
         edit->flags.edit_text = 0x01;
         edit->flags.word_wrap = 0x01;
+        edit->flags.autoheight = 0x01;
         edit->flags.h_content_align = GUI_ALIGN_LEFT;
         edit->margin_left = 8;
         edit->margin_right = 8;

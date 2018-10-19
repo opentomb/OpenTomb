@@ -160,7 +160,7 @@ void Gui_SetObjectLabel(gui_object_p obj, const char *text, uint16_t font_id, ui
     if(!obj->label)
     {
         obj->label = (gui_object_text_p)calloc(1, sizeof(gui_object_text_t));
-        obj->label->line_height = 1.0f;
+        obj->label->line_height = 1.50f;
     }
     obj->label->font_id = font_id;
     obj->label->style_id = style_id;
@@ -195,7 +195,7 @@ void Gui_SetExternalObjectLabel(gui_object_p obj, const char *text, uint16_t fon
     if(!obj->label)
     {
         obj->label = (gui_object_text_p)calloc(1, sizeof(gui_object_text_t));
-        obj->label->line_height = 1.0f;
+        obj->label->line_height = 1.50f;
     }
     obj->label->font_id = font_id;
     obj->label->style_id = style_id;
@@ -385,17 +385,17 @@ static void Gui_DrawLabelInternal(gui_object_p root)
                 begin = ch;
             }
             begin = label->text;
-            x1 = x0 + w_pt;
-            y1 = y0 + n_lines * dy * 64;
+            x1 = w_pt;
+            y1 = n_lines * dy * 64;
         }
 
         switch(root->flags.v_content_align)
         {
             case GUI_ALIGN_TOP:
-                real_y = root->y - root->margin_top - ascender - dy * (n_lines - 1);
+                real_y = root->y + root->h - root->margin_top - ascender - dy * (n_lines - 1);
                 break;
             case GUI_ALIGN_CENTER:
-                real_y = root->y + root->margin_bottom - descender + (root->h - dy * n_lines) / 2;
+                real_y = root->y + (root->margin_bottom - root->margin_top) / 2 - descender + (root->h - dy * n_lines) / 2;
                 break;
             default:
                 real_y = root->y + root->margin_bottom - descender;
@@ -554,8 +554,10 @@ void Gui_LayoutVertical(gui_object_p root)
                 obj->x = root->margin_left;
             }
             
-            Gui_HeightForWidth(obj);
-            
+            if(obj->flags.autoheight)
+            {
+                Gui_HeightForWidth(obj);
+            }
             content_h += obj->h + root->spacing;
             
             if(root->flags.fit_inside)

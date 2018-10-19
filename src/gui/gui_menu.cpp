@@ -82,7 +82,7 @@ static gui_object_p Gui_AddListItem(gui_object_p cont)
     obj->flags.v_content_align = GUI_ALIGN_CENTER;
     obj->flags.fixed_h = 0x01;
     Gui_SetObjectLabel(obj, "", 0, 0);
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.28;
     return obj;
 }
 
@@ -143,14 +143,20 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_LEFT;
+    obj->flags.v_content_align = GUI_ALIGN_TOP;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align left, cursor 20", 2, 2);
     obj->label->cursor_pos = 20;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x01;
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->flags.v_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align center, cursor 5", 2, 2);
     obj->label->cursor_pos = 5;
 
@@ -159,25 +165,30 @@ static gui_object_p Gui_AddTestContainer(gui_object_p root)
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
     Gui_SetObjectLabel(obj, "Align center, cursor 0", 2, 2);
     obj->label->cursor_pos = 0;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x01;
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
     Gui_SetObjectLabel(obj, "Align center, cursor 23", 2, 2);
     obj->label->cursor_pos = 22;
-    
+
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x01;
     obj->flags.edit_text = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_RIGHT;
+    obj->flags.v_content_align = GUI_ALIGN_BOTTOM;
+    obj->margin_left = obj->margin_right = obj->margin_top = obj->margin_bottom = 3;
+    obj->h = 64;
     Gui_SetObjectLabel(obj, "Align right, cursor 0", 2, 2);
     obj->label->cursor_pos = 0;
-    
+
     return cont;
 }
 
@@ -356,7 +367,7 @@ static void Gui_AddControlsHObj(gui_object_p cont, int ctrl)
         Controls_ActionToStr(buff, (enum ACTIONS)ctrl);
         Gui_SetObjectLabel(name, buff, 2, 2);
         name->flags.draw_label = 0x01;
-        name->label->line_height = 0.8f;
+        name->label->line_height = 1.25f;
         name->weight_x = 1;
         name->flags.v_content_align = GUI_ALIGN_CENTER;
         name->flags.h_content_align = GUI_ALIGN_CENTER;
@@ -365,7 +376,7 @@ static void Gui_AddControlsHObj(gui_object_p cont, int ctrl)
         Gui_SetObjectLabel(value, buff, 2, 2);
         value->flags.draw_label = 0x01;
         value->border_width = 2;
-        value->label->line_height = 0.8f;
+        value->label->line_height = 1.25f;
         value->weight_x = 1;
         value->flags.v_content_align = GUI_ALIGN_CENTER;
         value->flags.h_content_align = GUI_ALIGN_CENTER;
@@ -374,7 +385,7 @@ static void Gui_AddControlsHObj(gui_object_p cont, int ctrl)
         Gui_SetObjectLabel(value, buff, 2, 2);
         value->flags.draw_label = 0x01;
         value->border_width = 2;
-        value->label->line_height = 0.8f;
+        value->label->line_height = 1.25f;
         value->weight_x = 1;
         value->flags.v_content_align = GUI_ALIGN_CENTER;
         value->flags.h_content_align = GUI_ALIGN_CENTER;
@@ -472,24 +483,23 @@ gui_object_p Gui_BuildMainMenu()
     // fill menu
     /*gui_object_p obj = Gui_CreateChildObject(title);
     obj->data = Gui_AddTestContainer(cont);
-    title->data = obj;
+    ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "TEST", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 4;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.draw_label = 0x01;
     obj->flags.h_content_align = GUI_ALIGN_CENTER;
     obj->flags.v_content_align = GUI_ALIGN_CENTER;*/
-    
+
     gui_object_p obj = Gui_CreateChildObject(title);
     obj->data = Gui_AddNewGameContainer(cont);
-    //((gui_object_p)obj->data)->flags.hide = 0x01;
     title->data = obj;
     Gui_SetObjectLabel(obj, "New Game", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 4;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
@@ -502,7 +512,7 @@ gui_object_p Gui_BuildMainMenu()
     ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Load Game", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 2;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
@@ -515,7 +525,7 @@ gui_object_p Gui_BuildMainMenu()
     ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Home", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 2;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
@@ -528,7 +538,7 @@ gui_object_p Gui_BuildMainMenu()
     ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Graphics", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 2;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
@@ -541,7 +551,7 @@ gui_object_p Gui_BuildMainMenu()
     ((gui_object_p)obj->data)->flags.hide = 0x01;
     Gui_SetObjectLabel(obj, "Controls", 1, 1);
     obj->w = 172;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
     obj->border_width = 2;
     obj->flags.fixed_w = 0x01;
     obj->flags.draw_border = 0x01;
@@ -570,7 +580,7 @@ gui_object_p Gui_BuildLoadGameMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.fixed_h = 0x01;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
 
     Gui_AddLoadGameContainer(root);
     handle_screen_resized_inv(root, screen_info.w, screen_info.h);
@@ -595,7 +605,7 @@ gui_object_p Gui_BuildSaveGameMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.fixed_h = 0x01;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
 
     Gui_AddSaveGameContainer(root);
     handle_screen_resized_inv(root, screen_info.w, screen_info.h);
@@ -620,7 +630,7 @@ gui_object_p Gui_BuildNewGameMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.fixed_h = 0x01;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
 
     Gui_AddNewGameContainer(root);
     handle_screen_resized_inv(root, screen_info.w, screen_info.h);
@@ -645,7 +655,7 @@ gui_object_p Gui_BuildControlsMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.fixed_h = 0x01;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
 
     Gui_AddControlsContainer(root);
     handle_screen_resized_inv(root, screen_info.w, screen_info.h);
@@ -689,7 +699,7 @@ gui_object_p Gui_BuildStatisticsMenu()
     obj->flags.draw_label = 0x01;
     obj->flags.draw_border = 0x01;
     obj->flags.fixed_h = 0x01;
-    obj->label->line_height = 0.8;
+    obj->label->line_height = 1.25f;
 
     gui_object_p cont = Gui_CreateChildObject(root);
     cont->handlers.do_command = handle_new_game_cont;
@@ -1128,13 +1138,13 @@ extern "C" int handle_save_name_edit_complete(struct gui_object_s *obj, int cmd)
                 obj->flags.edit_text = 0x00;
             }
             break;
-            
+
         case GUI_COMMAND_CLOSE:
             Engine_SetTextInputHandler(NULL, NULL);
             obj->handlers.do_command = NULL;
             obj->flags.edit_text = 0x00;
             break;
-            
+
         default:
             return 0;
     }

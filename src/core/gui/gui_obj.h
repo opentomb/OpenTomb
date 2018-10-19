@@ -57,6 +57,7 @@ typedef struct gui_object_flags_s
     uint32_t    layout : 2;
     uint32_t    clip_children : 1;
     uint32_t    edit_text : 1;
+    uint32_t    autoheight : 1;
 }gui_object_flags_t, *gui_object_flags_p;
 
 typedef struct gui_handlers_s

@@ -63,7 +63,7 @@ console =
     commands_count = 128;
     lines_count = 18;
     height = 320;
-    spacing = 0.50;
+    spacing = 1.50;
 }
 
 -- Keys binding

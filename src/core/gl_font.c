@@ -369,21 +369,21 @@ void glf_resize(gl_tex_font_p glf, uint16_t font_size)
 
 int32_t glf_get_ascender(gl_tex_font_p glf)
 {
-    return ((FT_Face)glf->ft_face)->ascender;
+    return ((FT_Face)glf->ft_face)->size->metrics.ascender;
 }
 
 
 int32_t glf_get_descender(gl_tex_font_p glf)
 {
-    return ((FT_Face)glf->ft_face)->descender;
+    return ((FT_Face)glf->ft_face)->size->metrics.descender;
 }
 
 
-uint16_t glf_get_font_size(gl_tex_font_p glf)
+uint32_t glf_get_font_height(gl_tex_font_p glf)
 {
-    if((glf != NULL) && (glf->ft_face != NULL))
+    if(glf && glf->ft_face)
     {
-        return glf->font_size;
+        return ((FT_Face)glf->ft_face)->size->metrics.height;
     }
     else
     {
