@@ -18,6 +18,7 @@ extern struct camera_state_s                 engine_camera_state;
 void Engine_Start(int argc, char **argv);
 void Engine_Shutdown(int val) __attribute__((noreturn));
 const char *Engine_GetBasePath();
+const char *Engine_GetSDLError(const char* message);
 void Engine_SetDone();
 void Engine_JoyRumble(float power, int time);
 
