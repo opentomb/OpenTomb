@@ -260,7 +260,6 @@ const char *Engine_GetBasePath()
 const char *Engine_GetSDLError(const char* message)
 {
     const char *sdlMessage = SDL_GetError();
-//    char message[] = "Could not create SDL window: ";
     char *errorMessage = new char[strlen(message) + strlen(sdlMessage)];
     strcpy(errorMessage, message);
     strcat(errorMessage, sdlMessage);
