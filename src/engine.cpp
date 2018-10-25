@@ -257,17 +257,6 @@ const char *Engine_GetBasePath()
 }
 
 
-const char *Engine_GetSDLError(const char* message)
-{
-    const char *sdlMessage = SDL_GetError();
-    char *errorMessage = new char[strlen(message) + strlen(sdlMessage)];
-    strcpy(errorMessage, message);
-    strcat(errorMessage, sdlMessage);
-    return errorMessage;
-}
-
-
-
 void Engine_SetDone()
 {
     engine_done = 1;
@@ -365,7 +354,7 @@ void Engine_InitSDLVideo()
 
     if(SDL_GL_LoadLibrary(NULL) < 0)
     {
-        Sys_Error(Engine_GetSDLError("Could not init OpenGL driver: "));
+        Sys_Error("Could not init OpenGL driver: %s", SDL_GetError());
     }
 
     if(renderer.settings.antialias)
@@ -392,12 +381,12 @@ void Engine_InitSDLVideo()
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     if(!sdl_window)
     {
-        Sys_Error(Engine_GetSDLError("Could not create SDL window: "));
+        Sys_Error("Could not create SDL window: %s", SDL_GetError());
     }
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     if(!sdl_gl_context)
     {
-        Sys_Error(Engine_GetSDLError("Could not create GL context: "));
+        Sys_Error("Could not create GL context: %s", SDL_GetError());
     }
 
     lglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
