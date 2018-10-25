@@ -355,7 +355,7 @@ void Engine_InitSDLVideo()
 
     if(SDL_GL_LoadLibrary(NULL) < 0)
     {
-        Sys_Error("Could not init OpenGL driver");
+        Sys_Error("Could not init OpenGL driver: %s", SDL_GetError());
     }
 
     if(renderer.settings.antialias)
@@ -382,12 +382,12 @@ void Engine_InitSDLVideo()
     sdl_window = SDL_CreateWindow("OpenTomb", screen_info.x, screen_info.y, screen_info.w, screen_info.h, video_flags);
     if(!sdl_window)
     {
-        Sys_Error("Could not create SDL window");
+        Sys_Error("Could not create SDL window: %s", SDL_GetError());
     }
     sdl_gl_context = SDL_GL_CreateContext(sdl_window);
     if(!sdl_gl_context)
     {
-        Sys_Error("Could not create GL context");
+        Sys_Error("Could not create GL context: %s", SDL_GetError());
     }
 
     lglGetString = (PFNGLGETSTRINGPROC)SDL_GL_GetProcAddress("glGetString");
