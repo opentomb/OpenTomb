@@ -225,7 +225,7 @@ void ShowModelView(float time)
         for(int i = 0; i < g_test_model.bone_tag_count; ++i)
         {
             ss_bone_tag_p bf = g_test_model.bone_tags + i;
-            Mat4_vec3_mul_macro(tr.M4x4, bf->full_transform, bf->mesh_base->centre);
+            Mat4_vec3_mul_macro(tr.M4x4, bf->current_transform, bf->mesh_base->centre);
             renderer.OutTextXYZ(tr.M4x4[0], tr.M4x4[1], tr.M4x4[2], "%d", i);
         }
 

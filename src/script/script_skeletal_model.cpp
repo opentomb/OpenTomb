@@ -822,10 +822,10 @@ int lua_EntitySSAnimSetCurrentRotation(lua_State *lua)
         if(ent && (ind >= 0) && (ind < ent->bf->bone_tag_count))
         {
             ss_bone_tag_p b_tag = ent->bf->bone_tags + ind;
-            b_tag->mod.current[0] = lua_tonumber(lua, 3);
-            b_tag->mod.current[1] = lua_tonumber(lua, 4);
-            b_tag->mod.current[2] = lua_tonumber(lua, 5);
-            b_tag->mod.current[3] = lua_tonumber(lua, 6);
+            b_tag->mod.current_q[0] = lua_tonumber(lua, 3);
+            b_tag->mod.current_q[1] = lua_tonumber(lua, 4);
+            b_tag->mod.current_q[2] = lua_tonumber(lua, 5);
+            b_tag->mod.current_q[3] = lua_tonumber(lua, 6);
         }
         else
         {

@@ -82,7 +82,7 @@ static gui_object_p Gui_AddListItem(gui_object_p cont)
     obj->flags.v_content_align = GUI_ALIGN_CENTER;
     obj->flags.fixed_h = 0x01;
     Gui_SetObjectLabel(obj, "", 0, 0);
-    obj->label->line_height = 1.28;
+    obj->label->line_height = 1.25;
     return obj;
 }
 

@@ -498,7 +498,7 @@ void Character_UpdateCurrentHeight(struct entity_s *ent)
     float from[3], *v;
     height_info_p hi = &ent->character->height_info;
 
-    v = ent->bf->bone_tags[0].transform + 12;
+    v = ent->bf->bone_tags[0].local_transform + 12;
     Mat4_vec3_mul_macro(from, ent->transform.M4x4, v);
     from[2] -= ent->speed[2] * engine_frame_time;
     from[0] = ent->transform.M4x4[12 + 0];
@@ -721,8 +721,8 @@ int Character_HasStopSlant(struct entity_s *ent, height_info_p next_fc)
 void Character_GetMiddleHandsPos(const struct entity_s *ent, float pos[3])
 {
     float temp[3];
-    const float *v1 = ent->bf->bone_tags[ent->character->bone_l_hand_end].full_transform + 12;
-    const float *v2 = ent->bf->bone_tags[ent->character->bone_r_hand_end].full_transform + 12;
+    const float *v1 = ent->bf->bone_tags[ent->character->bone_l_hand_end].current_transform + 12;
+    const float *v2 = ent->bf->bone_tags[ent->character->bone_r_hand_end].current_transform + 12;
 
     temp[0] = 0.0f;
     temp[1] = 0.5f * (v1[1] + v2[1]);
@@ -1218,7 +1218,7 @@ void Character_LookAtTarget(struct entity_s *ent, struct entity_s *target)
         float pos[3];
         if(target->character)
         {
-            float *v = target->bf->bone_tags[target->character->bone_head].full_transform + 12;
+            float *v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
             Mat4_vec3_mul_macro(pos, target->transform.M4x4, v);
         }
         else

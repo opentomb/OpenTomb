@@ -137,7 +137,7 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
     }
     else
     {
-        Mat4_vec3_mul(cam_pos, ent->transform.M4x4, ent->bf->bone_tags->full_transform + 12);
+        Mat4_vec3_mul(cam_pos, ent->transform.M4x4, ent->bf->bone_tags->current_transform + 12);
     }
 
     //Code to manage screen shaking effects

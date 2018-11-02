@@ -197,7 +197,7 @@ void Entity_UpdateRoomPos(entity_p ent)
 
     if(ent->character)
     {
-        Mat4_vec3_mul(pos, ent->transform.M4x4, ent->bf->bone_tags->full_transform + 12);
+        Mat4_vec3_mul(pos, ent->transform.M4x4, ent->bf->bone_tags->current_transform + 12);
         pos[0] = ent->transform.M4x4[12 + 0];
         pos[1] = ent->transform.M4x4[12 + 1];
     }
@@ -289,14 +289,14 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                 }
                 return;
         };
-        Mat4_E(ent->bf->bone_tags[0].full_transform);
+        Mat4_E(ent->bf->bone_tags[0].current_transform);
         Physics_GetBodyWorldTransform(ent->physics, tr, 0);
         Physics_SetGhostWorldTransform(ent->physics, tr, 0);
         for(uint16_t i = 1; i < ent->bf->bone_tag_count; i++)
         {
             Physics_GetBodyWorldTransform(ent->physics, tr, i);
             Physics_SetGhostWorldTransform(ent->physics, tr, i);
-            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].full_transform, ent->transform.M4x4, tr);
+            Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].current_transform, ent->transform.M4x4, tr);
         }
 
         // fill bone frame transformation matrices;
@@ -304,11 +304,11 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
         {
             if(ent->bf->bone_tags[i].parent != NULL)
             {
-                Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].parent->full_transform, ent->bf->bone_tags[i].full_transform);
+                Mat4_inv_Mat4_affine_mul(ent->bf->bone_tags[i].local_transform, ent->bf->bone_tags[i].parent->current_transform, ent->bf->bone_tags[i].current_transform);
             }
             else
             {
-                Mat4_Copy(ent->bf->bone_tags[i].transform, ent->bf->bone_tags[i].full_transform);
+                Mat4_Copy(ent->bf->bone_tags[i].local_transform, ent->bf->bone_tags[i].current_transform);
             }
         }
 
@@ -324,7 +324,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
             vec3_copy(ent->bf->bb_max, ent->bf->bone_tags[0].mesh_base->bb_max);
             for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
             {
-                float *pos = ent->bf->bone_tags[i].full_transform + 12;
+                float *pos = ent->bf->bone_tags[i].current_transform + 12;
                 float *bb_min = ent->bf->bone_tags[i].mesh_base->bb_min;
                 float *bb_max = ent->bf->bone_tags[i].mesh_base->bb_max;
                 float r = bb_max[0] - bb_min[0];
@@ -398,7 +398,7 @@ void Entity_UpdateRigidBody(struct entity_s *ent, int force)
                         float tr[16];
                         for(uint16_t i = 0; i < ent->bf->bone_tag_count; i++)
                         {
-                            Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].full_transform);
+                            Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].current_transform);
                             Physics_SetBodyWorldTransform(ent->physics, tr, i);
                             Physics_SetGhostWorldTransform(ent->physics, tr, i);
                         }
@@ -438,7 +438,7 @@ void Entity_GhostUpdate(struct entity_s *ent)
                     uint16_t max_index = Physics_GetBodiesCount(ent->physics);
                     for(uint16_t i = 0; i < max_index; i++)
                     {
-                        Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].full_transform);
+                        Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[i].current_transform);
                         Physics_SetGhostWorldTransform(ent->physics, tr, i);
                     }
                 }
@@ -471,7 +471,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             {
                 if(callback)
                 {
-                    Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
+                    Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->current_transform);
                     Physics_SetGhostWorldTransform(ent->physics, tr, m);
                     cn = Physics_GetGhostCurrentCollision(ent->physics, m, filter);
                     callback(ent, cn);
@@ -479,7 +479,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
                 continue;
             }
 
-            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->current_transform);
             // antitunneling condition for main body parts, needs only in move case
             if(btag->parent == NULL)
             {
@@ -496,7 +496,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             else
             {
                 ghost_shape_p parent_info = Physics_GetGhostShapeInfo(ent->physics, btag->parent->index);
-                Mat4_vec3_mul(offset, btag->parent->full_transform, parent_info->offset);
+                Mat4_vec3_mul(offset, btag->parent->current_transform, parent_info->offset);
                 Mat4_vec3_mul(from_parent, ent->transform.M4x4, offset);
 
                 offset[0] = -ghost_info->offset[0];
@@ -548,7 +548,7 @@ int Entity_GetPenetrationFixVector(struct entity_s *ent, collision_callback_t ca
             ss_bone_tag_p btag = ent->bf->bone_tags + 0;
             ghost_shape_p ghost_info = Physics_GetGhostShapeInfo(ent->physics, 0);
 
-            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->full_transform);
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, btag->current_transform);
 
             from[0] = tr[12 + 0] - reaction[0];
             from[1] = tr[12 + 1] - reaction[1];
@@ -1078,12 +1078,12 @@ void Entity_SetAnimation(entity_p entity, int anim_type, int animation, int fram
                 if(!entity->no_anim_pos_autocorrection)
                 {
                     float move[3], r0[3], r1[3];
-                    vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
+                    vec3_copy(move, entity->bf->bone_tags->current_transform + 12);
                     Mat4_vec3_rot_macro(r0, entity->transform.M4x4, move);
 
                     Anim_SetAnimation(ss_anim, animation, frame);
                     SSBoneFrame_Update(entity->bf, 0.0f);
-                    vec3_copy(move, entity->bf->bone_tags->full_transform + 12);
+                    vec3_copy(move, entity->bf->bone_tags->current_transform + 12);
                     if(new_transform)
                     {
                         Mat4_Copy(entity->transform.M4x4, new_transform);
@@ -1295,7 +1295,7 @@ void Entity_RotateToTrigger(entity_p activator, entity_p trigger, int bone_to)
         {
             if((0 <= bone_to) && (bone_to < trigger->bf->bone_tag_count))
             {
-                Mat4_vec3_mul(dir, trigger->transform.M4x4, trigger->bf->bone_tags[bone_to].full_transform + 12);
+                Mat4_vec3_mul(dir, trigger->transform.M4x4, trigger->bf->bone_tags[bone_to].current_transform + 12);
                 vec3_sub(dir, dir, activator->transform.M4x4 + 12);
             }
             else

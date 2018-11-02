@@ -54,16 +54,17 @@ struct base_mesh_s;
 typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
+    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
     uint16_t                index;
     uint16_t                is_hidden : 1;
     uint16_t                is_targeted : 1;
     uint16_t                is_axis_modded : 1;
     struct
     {
-        float               direction[3];
-        float               target[3];
+        float               bone_local_direction[3];
+        float               target_pos[3];
         float               limit[4];                                           // x, y, z, cos(alpha_limit)
-        float               current[4];
+        float               current_q[4];
         float               axis_mod[3];
     }                       mod;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
@@ -75,11 +76,8 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-    float                   transform[16]      __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for stack usage
-    float                   full_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
-    float                   orig_transform[16] __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage (no targeting modifications)
-    
-    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+    float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
+    float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 typedef struct ss_animation_s

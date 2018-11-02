@@ -1,10 +1,10 @@
 -- LUA config file
 screen =
 {
-    x = 0;
-    y = 23;
-    width = 1920;
-    height = 1017;
+    x = 47;
+    y = 74;
+    width = 1027;
+    height = 768;
     fov = 75.0;
     debug_view_state = 0;
     fullscreen = 0;
@@ -30,7 +30,7 @@ render =
     z_depth = 24;
     texture_border = 16;
     fog_color = {r = 255, g = 255, b = 255};
-    show_fps = 0;
+    show_fps = 1;
 }
 
 controls =

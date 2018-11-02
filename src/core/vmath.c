@@ -273,14 +273,14 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
     Rt[1] = 0.0;
     Rt[2] = 0.0;
     Rt[3] = cosf(t);
-    vec4_mul(T, R, Rt)
+    vec4_mul(T, R, Rt);
 
     t = ang[1] / 2.0;                                                           // YAW
     Rt[0] = 0.0;                                                                // OY
     Rt[1] = sinf(t);
     Rt[2] = 0.0;
     Rt[3] = cosf(t);
-    vec4_mul(R, T, Rt)
+    vec4_mul(R, T, Rt);
 }
 
 

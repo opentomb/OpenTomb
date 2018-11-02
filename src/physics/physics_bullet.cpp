@@ -2151,12 +2151,12 @@ bool Ragdoll_Create(struct physics_data_s *physics, struct ss_bone_frame_s *bf, 
             break;
         }
 #if 0
-        localA.setFromOpenGLMatrix(btB->transform);
+        localA.setFromOpenGLMatrix(btB->local_transform);
         localB.setIdentity();
 #else
         localA.getBasis().setEulerZYX(setup->joint_setup[i].body1_angle[0], setup->joint_setup[i].body1_angle[1], setup->joint_setup[i].body1_angle[2]);
         //localA.setOrigin(setup->joint_setup[i].body1_offset);
-        localA.setOrigin(btVector3(btB->transform[12 + 0], btB->transform[12 + 1], btB->transform[12 + 2]));
+        localA.setOrigin(btVector3(btB->local_transform[12 + 0], btB->local_transform[12 + 1], btB->local_transform[12 + 2]));
 
         localB.getBasis().setEulerZYX(setup->joint_setup[i].body2_angle[0], setup->joint_setup[i].body2_angle[1], setup->joint_setup[i].body2_angle[2]);
         //localB.setOrigin(setup->joint_setup[i].body2_offset);

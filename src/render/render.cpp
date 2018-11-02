@@ -391,7 +391,7 @@ void CRender::DrawList()
                         {
                             if(ent->bf->bone_tags[j].mesh_base->transparency_polygons != NULL)
                             {
-                                Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[j].full_transform);
+                                Mat4_Mat4_mul(tr, ent->transform.M4x4, ent->bf->bone_tags[j].current_transform);
                                 dynamicBSP->AddNewPolygonList(ent->bf->bone_tags[j].mesh_base->transparency_polygons, tr, m_camera->frustum);
                             }
                         }
@@ -874,10 +874,10 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
     {
         if(!btag->is_hidden)
         {
-            Mat4_Mat4_mul(mvTransform, mvMatrix, btag->full_transform);
+            Mat4_Mat4_mul(mvTransform, mvMatrix, btag->current_transform);
             qglUniformMatrix4fvARB(shader->model_view, 1, false, mvTransform);
 
-            Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->full_transform);
+            Mat4_Mat4_mul(mvpTransform, mvpMatrix, btag->current_transform);
             qglUniformMatrix4fvARB(shader->model_view_projection, 1, false, mvpTransform);
 
             this->DrawMesh((btag->mesh_replace) ? (btag->mesh_replace) : (btag->mesh_base), NULL, NULL);
@@ -887,7 +887,7 @@ void CRender::DrawSkeletalModel(const lit_shader_description *shader, struct ss_
             }
             if(btag->mesh_skin && btag->parent)
             {
-                this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->skin_map, btag->transform);
+                this->DrawSkinMesh(btag->mesh_skin, btag->parent->mesh_base, btag->skin_map, btag->local_transform);
             }
         }
     }
@@ -1768,7 +1768,7 @@ void CRenderDebugDrawer::DrawSkeletalModelDebugLines(struct ss_bone_frame_s *bfr
         ss_bone_tag_p btag = bframe->bone_tags;
         for(uint16_t i = 0; i < bframe->bone_tag_count; i++, btag++)
         {
-            Mat4_Mat4_mul(tr, transform, btag->full_transform);
+            Mat4_Mat4_mul(tr, transform, btag->current_transform);
             this->DrawMeshDebugLines(btag->mesh_base, tr, NULL, NULL);
         }
     }

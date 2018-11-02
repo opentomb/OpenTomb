@@ -57,7 +57,7 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
         entity_p target = World_GetEntityByID(ent->character->target_id);
         if(target && Room_IsInNearRoomsList(ent->self->room, target->self->room))
         {
-            float pos[3], *v = ent->bf->bone_tags[ent->character->bone_head].full_transform + 12;
+            float pos[3], *v = ent->bf->bone_tags[ent->character->bone_head].current_transform + 12;
             Mat4_vec3_mul_macro(pos, ent->transform.M4x4, v);
             pos[0] -= target->obb->centre[0];
             pos[1] -= target->obb->centre[1];
