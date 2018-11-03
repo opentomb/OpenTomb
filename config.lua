@@ -1,8 +1,8 @@
 -- LUA config file
 screen =
 {
-    x = 47;
-    y = 74;
+    x = 310;
+    y = 117;
     width = 1027;
     height = 768;
     fov = 75.0;
@@ -35,8 +35,8 @@ render =
 
 controls =
 {
-    mouse_sensitivity_x = 0.25;
-    mouse_sensitivity_y = 0.25;
+    mouse_sensitivity_x = 0.50;
+    mouse_sensitivity_y = 0.50;
 
     use_joy = 0;
     joy_number = 0;

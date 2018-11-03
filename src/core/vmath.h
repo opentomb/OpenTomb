@@ -139,14 +139,14 @@ void vec3_RotateZ(float res[3], float src[3], float ang);
 void vec4_rev(float rev[4], float src[4]);
 void vec4_div(float ret[4], float a[4], float b[4]);
 void vec4_rotate(float rot[4], float vec[4], float angle);
-void vec4_GetEilerOrientationTransform(float R[4], float ang[3]);
-void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3]);
+void vec4_GetEilerOrientationTransform(float R[4], const float ang[3]);
+void vec4_GetQuaternionRotation(float q[4], const float v0[3], const float v1[3]);
 void vec4_ClampQuaternionRotation(float q[4], float cos_abs);
 void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float ang);
-void vec4_slerp(float ret[4], float q1[4], float q2[4], float t);
-void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad);
+void vec4_slerp(float ret[4], const float q1[4], const float q2[4], float t);
+float vec4_slerp_to(float ret[4], const float q1[4], const float q2[4], float max_step_rad);
 void vec4_clampw(float q[4], float w);
-void vec4_SetZXYRotations(float v[4], float rot[3]);
+void vec4_SetZXYRotations(float v[4], const float rot[3]);
 
 
 /*
@@ -244,8 +244,8 @@ void Mat4_Scale(float mat[16], float x, float y, float z);
 void Mat4_RotateX_SinCos(float mat[16], float sina, float cosa);
 void Mat4_RotateY_SinCos(float mat[16], float sina, float cosa);
 void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa);
-void Mat4_RotateAxis(float mat[16], float axis[3], float ang);
-void Mat4_RotateQuaternion(float mat[16], float q[4]);
+void Mat4_RotateAxis(float mat[16], const float axis[3], float ang);
+void Mat4_RotateRByQuaternion(float mat[16], const float q[4]);
 void Mat4_T(float mat[16]);
 void Mat4_affine_inv(float mat[16]);
 int  Mat4_inv(float mat[16], float inv[16]);
@@ -254,8 +254,8 @@ void Mat4_inv_Mat4_affine_mul(float result[16], float src1[16], float src2[16]);
 void Mat4_vec3_mul(float v[3], const float mat[16], const float src[3]);
 void Mat4_vec3_mul_inv(float v[3], float mat[16], float src[3]);
 void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3]);
-void Mat4_SetAnglesZXY(float mat[16], float ang[3]);
-void Mat4_GetAnglesZXY(float ang[3], float mat[16]);
+void Mat4_SetAnglesZXY(float mat[16], const float ang[3]);
+void Mat4_GetAnglesZXY(float ang[3], const float mat[16]);
 
 int ThreePlanesIntersection(float v[3], float n0[4], float n1[4], float n2[4]);
 #define ThreePlanesIntersection_macro(v, n0, n1, n2, d)\

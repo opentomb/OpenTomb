@@ -253,6 +253,7 @@ void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model)
             b_tag->mod.limit[1] = 1.0f;
             b_tag->mod.limit[2] = 0.0f;
             b_tag->mod.limit[3] =-1.0f;
+            b_tag->mod.current_slerp = 1.0f;
             vec3_set_one(b_tag->mod.axis_mod);
             
             if(i > 0)
@@ -420,21 +421,19 @@ void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time)
 
 void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone)
 {
-    float tr[16], q[4];
     ss_bone_tag_p b_tag = b_tag = bf->bone_tags + bone;
-    
-    vec4_copy(q, q_rotate);
-    Mat4_E(tr);
-    Mat4_RotateQuaternion(tr, q);
-    vec4_copy(q, b_tag->local_transform + 12);
-    Mat4_Mat4_mul(b_tag->local_transform, tr, b_tag->local_transform);
-    vec4_copy(b_tag->local_transform + 12, q);
+
+    Mat4_RotateRByQuaternion(b_tag->local_transform, q_rotate);
     for(uint16_t i = bone; i < bf->bone_tag_count; i++)
     {
         ss_bone_tag_p btag = bf->bone_tags + i;
         if(btag->parent)
         {
             Mat4_Mat4_mul(btag->current_transform, btag->parent->current_transform, btag->local_transform);
+            if(btag->parent->index < bone)
+            {
+                break;
+            }
         }
         else
         {
@@ -469,6 +468,7 @@ int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_bone
 
 void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float time)
 {
+    b_tag->mod.current_slerp = 1.0f;
     if(b_tag->is_targeted)
     {
         float clamped_q[4], q[4], target_dir[3], target_local[3], bone_dir[3];
@@ -494,7 +494,7 @@ void SSBoneFrame_TargetBoneToSlerp(struct ss_bone_frame_s *bf, struct ss_bone_ta
             q[3] = 1.0f - vec3_sqabs(q);
             q[3] = sqrtf(q[3]);
         }
-        vec4_slerp_to(clamped_q, b_tag->mod.current_q, q, time * M_PI / 1.3f);
+        b_tag->mod.current_slerp = vec4_slerp_to(clamped_q, b_tag->mod.current_q, q, time * M_PI / 1.3f);
         vec4_copy(b_tag->mod.current_q, clamped_q);
         SSBoneFrame_RotateBone(bf, b_tag->mod.current_q, b_tag->index);
     }

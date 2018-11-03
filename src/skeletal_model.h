@@ -66,6 +66,7 @@ typedef struct ss_bone_tag_s
         float               limit[4];                                           // x, y, z, cos(alpha_limit)
         float               current_q[4];
         float               axis_mod[3];
+        float               current_slerp;
     }                       mod;
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_replace;

@@ -3218,14 +3218,14 @@ static void StateControl_SetWeaponMeshOff(ss_bone_frame_p bf, int bone)
     bf->bone_tags[bone].mesh_slot = NULL;
 }
 
-#include "../render/render.h"
+//#include "../render/render.h"
 
 int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
 {
-    static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
     static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
     if(ss_anim->model->animation_count == 4)
     {
@@ -3344,26 +3344,31 @@ int StateControl_LaraDoOneHandWeponFrame(struct entity_s *ent, struct  ss_animat
                     {
                         Anim_SetAnimation(ss_anim, 3, 0);
                         ss_anim->frame_changing_state = 0x01;
-                        Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        /*if(target)
-                        {
-                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
-                        }
-                        else*/
+
                         {
                             collision_result_t cs;
-                            float from[3], to[3], /*dir[3], */tr[16];
+                            float from[3], to[3], tr[16];
                             ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_start;
                             Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
                             Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
-                            vec3_add_mul(to, from, tr + 8, -32768.0f);
-                            vec3_copy(d_from, from);
-                            vec3_copy(d_to, to);
+                            if(target && (bt->mod.current_slerp > 0.99))
+                            {
+                                vec3_copy(to, bt->mod.target_pos);
+                            }
+                            else
+                            {
+                                vec3_add_mul(to, from, tr + 8, -32768.0f);
+                            }
+                            /*vec3_copy(d_from, from);
+                            vec3_copy(d_to, to);*/
+                            shot_snd = 10;
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
+                                shot_snd = 8;
                                 target = (entity_p)cs.obj->object;
                                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                             }
+                            Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
                         }
                     }
                     else
@@ -3383,10 +3388,10 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 {
    /* anims (TR_I - TR_V):
     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
-    static float d_from[3] = {0.0f, 0.0f, 0.0f};
+    /*static float d_from[3] = {0.0f, 0.0f, 0.0f};
     static float d_to[3] = {0.0f, 0.0f, 0.0f};
     static float color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);
+    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
     if(ss_anim->model->animation_count > 4)
     {
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
@@ -3493,20 +3498,20 @@ int StateControl_LaraDoTwoHandWeponFrame(struct entity_s *ent, struct  ss_animat
 
                         Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
                         vec3_copy(from, tr + 12);
-                        /*if(target)
+                        if(target && (bt->mod.current_slerp > 0.99))
                         {
                             vec3_sub(dir, target_pos, from);
                             vec3_norm(dir, t);
                         }
-                        else*/
+                        else
                         {
                             vec3_copy_inv(dir, tr + 8);
                         }
                         vec3_add_mul(to, from, dir, range);
                         for(int i = 1; i <= num_shots; ++i)
                         {
-                            vec3_copy(d_from, from);
-                            vec3_copy(d_to, to);
+                            /*vec3_copy(d_from, from);
+                            vec3_copy(d_to, to);*/
                             if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                             {
                                 target = (entity_p)cs.obj->object;

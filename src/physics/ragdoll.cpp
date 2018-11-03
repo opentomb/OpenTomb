@@ -322,7 +322,7 @@ struct rd_setup_s *Ragdoll_AutoCreateSetup(struct skeletal_model_s *model, uint1
                 js->body1_angle[1] = 0.0f;
                 js->body1_angle[2] = 0.0f;
                 Mat4_E_macro(tr);
-                Mat4_RotateQuaternion(tr, b_tag->qrotate);
+                Mat4_RotateRByQuaternion(tr, b_tag->qrotate);
                 Mat4_GetAnglesZXY(js->body2_angle, tr);
                 SWAPT(js->body2_angle[1], js->body2_angle[2], t);
                 

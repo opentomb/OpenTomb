@@ -258,7 +258,7 @@ void vec4_rotate(float rot[4], float vec[4], float angle)
 }
 
 
-void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
+void vec4_GetEilerOrientationTransform(float R[4], const float ang[3])
 {
     float t, Rt[4], T[4];
 
@@ -284,7 +284,7 @@ void vec4_GetEilerOrientationTransform(float R[4], float ang[3])
 }
 
 
-void vec4_GetQuaternionRotation(float q[4], float v0[3], float v1[3])
+void vec4_GetQuaternionRotation(float q[4], const float v0[3], const float v1[3])
 {
     float t;
 
@@ -402,7 +402,7 @@ void vec4_GetRotationOperators(float t1[4], float t2[4], const float v[3], float
 }
 
 
-void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
+void vec4_slerp(float ret[4], const float q1[4], const float q2[4], float t)
 {
     float cos_fi, sin_fi, fi, k1, k2, sign;
     cos_fi = q1[3] * q2[3] + q1[0] * q2[0] + q1[1] * q2[1] + q1[2] * q2[2];
@@ -434,7 +434,7 @@ void vec4_slerp(float ret[4], float q1[4], float q2[4], float t)
 }
 
 
-void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad)
+float vec4_slerp_to(float ret[4], const float q1[4], const float q2[4], float max_step_rad)
 {
     float cos_fi, sin_fi, fi, k1, k2, sign;
     float t = 1.0f;
@@ -474,6 +474,8 @@ void vec4_slerp_to(float ret[4], float q1[4], float q2[4], float max_step_rad)
     ret[1] *= fi;
     ret[2] *= fi;
     ret[3] *= fi;
+    
+    return t;
 }
 
 
@@ -496,7 +498,7 @@ void vec4_clampw(float q[4], float w)
 }
 
 
-void vec4_SetZXYRotations(float v[4], float rot[3])
+void vec4_SetZXYRotations(float v[4], const float rot[3])
 {
     float angle, sin_t2, cos_t2, qt[4], qX[4], qY[4], qZ[4];
 
@@ -662,7 +664,7 @@ void Mat4_RotateZ_SinCos(float mat[16], float sina, float cosa)
 }
 
 
-void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
+void Mat4_RotateAxis(float mat[16], const float axis[3], float ang)
 {
     if(ang != 0.0)
     {
@@ -695,7 +697,7 @@ void Mat4_RotateAxis(float mat[16], float axis[3], float ang)
 }
 
 
-void Mat4_RotateQuaternion(float mat[16], float q[4])
+void Mat4_RotateRByQuaternion(float mat[16], const float q[4])
 {
     float qt[4], *v, buf[4];
     vec4_sop(qt, q);
@@ -940,7 +942,7 @@ void Mat4_vec3_mul_T(float v[3], float mat[16], float src[3])
 }
 
 
-void Mat4_SetAnglesZXY(float mat[16], float ang[3])
+void Mat4_SetAnglesZXY(float mat[16], const float ang[3])
 {
     float R[4], Rt[4], temp[4];
     float sin_t2, cos_t2, t;
@@ -1014,7 +1016,7 @@ void Mat4_SetAnglesZXY(float mat[16], float ang[3])
 }
 
 
-void Mat4_GetAnglesZXY(float ang[3], float mat[16])
+void Mat4_GetAnglesZXY(float ang[3], const float mat[16])
 {
     const float rad_to_deg = 180.0f / M_PI;
     
