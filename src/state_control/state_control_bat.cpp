@@ -79,7 +79,7 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             ent->dir_flag = ENT_STAY;
             ent->move_type = MOVE_FLY;
-            ss_anim->next_state = TR_STATE_BAT_FLY;
+            ss_anim->target_state = TR_STATE_BAT_FLY;
             break;
 
         case TR_STATE_BAT_ATTACK:
@@ -87,16 +87,16 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_BAT_FLY:
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_BAT_DROP;
+                ss_anim->target_state = TR_STATE_BAT_DROP;
                 ent->move_type = MOVE_FREE_FALLING;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_BAT_ATTACK;
+                ss_anim->target_state = TR_STATE_BAT_ATTACK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BAT_FLY;
+                ss_anim->target_state = TR_STATE_BAT_FLY;
             }
             break;
 
@@ -108,7 +108,7 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
 
             if(ent->move_type == MOVE_ON_FLOOR)
             {
-                ss_anim->next_state = TR_STATE_BAT_DEAD;
+                ss_anim->target_state = TR_STATE_BAT_DEAD;
             }
             break;
 

@@ -52,30 +52,30 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_LARSON_STAY:
             if(state->dead || cmd->action)
             {
-                ss_anim->next_state = TR_STATE_LARSON_AIM;
+                ss_anim->target_state = TR_STATE_LARSON_AIM;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY_QUEUED;
+                ss_anim->target_state = TR_STATE_LARSON_STAY_QUEUED;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_LARSON_WALK) : (TR_STATE_LARSON_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_LARSON_WALK) : (TR_STATE_LARSON_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY;
+                ss_anim->target_state = TR_STATE_LARSON_STAY;
             }
             break;
 
         case TR_STATE_LARSON_STAY_QUEUED:
             if(state->dead || cmd->action || (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY;
+                ss_anim->target_state = TR_STATE_LARSON_STAY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY_QUEUED;
+                ss_anim->target_state = TR_STATE_LARSON_STAY_QUEUED;
             }
             break;
 
@@ -83,11 +83,11 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_LARSON_WALK;
+                ss_anim->target_state = TR_STATE_LARSON_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY;
+                ss_anim->target_state = TR_STATE_LARSON_STAY;
             }
             break;
 
@@ -95,11 +95,11 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && !cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_LARSON_RUN;
+                ss_anim->target_state = TR_STATE_LARSON_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY;
+                ss_anim->target_state = TR_STATE_LARSON_STAY;
             }
             break;
 
@@ -110,11 +110,11 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_LARSON_SHOOT;
+                ss_anim->target_state = TR_STATE_LARSON_SHOOT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LARSON_STAY;
+                ss_anim->target_state = TR_STATE_LARSON_STAY;
             }
             break;
 
@@ -125,7 +125,7 @@ int StateControl_Larson(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_LARSON_SHOOT;
+                ss_anim->target_state = TR_STATE_LARSON_SHOOT;
                 entity_p target = World_GetEntityByID(ent->character->target_id);
                 if((ss_anim->frame_changing_state >= 0x02) && target && Character_IsTargetAccessible(ent, target))
                 {

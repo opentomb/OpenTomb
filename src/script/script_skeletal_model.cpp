@@ -248,17 +248,23 @@ int lua_CopyModelAnimations(lua_State *lua)
 
 int lua_SetEntityAnimState(lua_State *lua)
 {
-    if(lua_gettop(lua) >= 3)
+    int top = lua_gettop(lua);
+    if(top >= 3)
     {
         entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
         if(ent)
         {
             int anim_type_id = lua_tointeger(lua, 2);
+            bool is_heavy = (top >= 4) && lua_toboolean(lua, 4);
             for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
             {
                 if(ss_anim->type == anim_type_id)
                 {
-                    ss_anim->next_state = lua_tointeger(lua, 3);
+                    ss_anim->target_state = lua_tointeger(lua, 3);
+                    if (is_heavy)
+                    {
+                        ss_anim->heavy_state = 0x01;
+                    }
                     break;
                 }
             }
@@ -270,39 +276,7 @@ int lua_SetEntityAnimState(lua_State *lua)
     }
     else
     {
-        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state)");
-    }
-
-    return 0;
-}
-
-
-int lua_SetEntityAnimStateHeavy(lua_State *lua)
-{
-    if(lua_gettop(lua) >= 3)
-    {
-        entity_p ent = World_GetEntityByID(lua_tointeger(lua, 1));
-        if(ent)
-        {
-            int anim_type_id = lua_tointeger(lua, 2);
-            for(ss_animation_p ss_anim = &ent->bf->animations; ss_anim; ss_anim = ss_anim->next)
-            {
-                if(ss_anim->type == anim_type_id)
-                {
-                    ss_anim->next_state_heavy = lua_tointeger(lua, 3);
-                    ss_anim->next_state = ss_anim->next_state_heavy;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            Con_Warning("no entity with id = %d", lua_tointeger(lua, 1));
-        }
-    }
-    else
-    {
-        Con_Warning("setEntityAnimStateHeavy: expecting arguments (entity_id, anim_type_id, next_state)");
+        Con_Warning("setEntityAnimState: expecting arguments (entity_id, anim_type_id, next_state, (is_heavy))");
     }
 
     return 0;
@@ -937,7 +911,6 @@ void Script_LuaRegisterAnimFuncs(lua_State *lua)
     lua_register(lua, "getEntityModelID", lua_GetEntityModelID);
     lua_register(lua, "getEntityAnimState", lua_GetEntityAnimState);
     lua_register(lua, "setEntityAnimState", lua_SetEntityAnimState);
-    lua_register(lua, "setEntityAnimStateHeavy", lua_SetEntityAnimStateHeavy);
     lua_register(lua, "getModelMeshCount", lua_GetModelMeshCount);
     lua_register(lua, "getEntityMeshCount", lua_GetEntityMeshCount);
     lua_register(lua, "setEntityMeshes", lua_SetEntityMeshes);

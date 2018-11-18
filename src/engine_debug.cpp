@@ -341,7 +341,7 @@ void ShowDebugInfo()
                 if(ent && ent->character)
                 {
                     animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.prev_animation;
-                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.next_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.target_state);
                     GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.prev_animation, ent->bf->animations.prev_frame, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
                     GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform.M4x4[12], ent->transform.M4x4[13], ent->transform.M4x4[14]);

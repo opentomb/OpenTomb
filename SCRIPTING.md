@@ -389,8 +389,7 @@ parameters inside brackets are optional;
     - `setEntityBaseAnimModel(entity_id, model_id)` - .
     - `setModelBodyPartFlag(model_id, bone_id, body_part_flag)` - .
     - `copyModelAnimations(model_dst_id, model_src_id)` - .
-    - `setEntityAnimState(entity_id, anim_type_id, next_state)` - .
-    - `setEntityAnimStateHeavy(entity_id, anim_type_id, next_state)` - .
+    - `setEntityAnimState(entity_id, anim_type_id, next_state, (is_heavy))` - .
     - `getModelMeshCount(model_id)` - .
     - `getEntityMeshCount(entity_id)` - .
     - `setEntityMeshes(dest_entity_id, src_model_id)` - .

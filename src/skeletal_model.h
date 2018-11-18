@@ -86,9 +86,9 @@ typedef struct ss_animation_s
     uint16_t                    type;
     uint16_t                    enabled : 1;
     uint16_t                    do_jump_anim : 1;
-    uint16_t                    frame_changing_state : 14;
-    int16_t                     next_state;
-    int16_t                     next_state_heavy;
+    uint16_t                    heavy_state : 1;
+    uint16_t                    frame_changing_state : 13;
+    int16_t                     target_state;
     int16_t                     prev_animation;
     int16_t                     prev_frame;
     int16_t                     current_animation;

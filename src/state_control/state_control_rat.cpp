@@ -104,11 +104,11 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_OW_ATTACK;
+                    ss_anim->target_state = TR_STATE_RAT_OW_ATTACK;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_RAT_OW_FLOW;
+                    ss_anim->target_state = TR_STATE_RAT_OW_FLOW;
                 }
                 break;
 
@@ -134,19 +134,19 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_ATTACK;
+                    ss_anim->target_state = TR_STATE_RAT_ATTACK;
                 }
                 else if(cmd->move[0] > 0)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_RUN;
+                    ss_anim->target_state = TR_STATE_RAT_RUN;
                 }
                 else if(cmd->move[0] < 0)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_STAY_HIGH;
+                    ss_anim->target_state = TR_STATE_RAT_STAY_HIGH;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_RAT_STAY;
+                    ss_anim->target_state = TR_STATE_RAT_STAY;
                 }
                 break;
 
@@ -154,11 +154,11 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 cmd->rot[0] = 0;
                 if(state->dead || cmd->move[0] > 0)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_STAY;
+                    ss_anim->target_state = TR_STATE_RAT_STAY;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_RAT_STAY_HIGH;
+                    ss_anim->target_state = TR_STATE_RAT_STAY_HIGH;
                 }
                 break;
 
@@ -170,15 +170,15 @@ int StateControl_Rat(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 if(cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_RUN_ATTACK;
+                    ss_anim->target_state = TR_STATE_RAT_RUN_ATTACK;
                 }
                 else if(cmd->move[0] > 0)
                 {
-                    ss_anim->next_state = TR_STATE_RAT_RUN;
+                    ss_anim->target_state = TR_STATE_RAT_RUN;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_RAT_STAY;
+                    ss_anim->target_state = TR_STATE_RAT_STAY;
                 }
                 break;
 

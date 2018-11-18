@@ -50,52 +50,52 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_BEAR_STAY:    // -> 0 -> 3 -> 4 -> 5 -> 8 -> 9
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_BEAR_DEAD;
+                ss_anim->target_state = TR_STATE_BEAR_DEAD;
             }
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_BEAR_WALK) : (TR_STATE_BEAR_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_BEAR_WALK) : (TR_STATE_BEAR_RUN);
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY_HIGH;
+                ss_anim->target_state = TR_STATE_BEAR_STAY_HIGH;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_BEAR_ATTACK;
+                ss_anim->target_state = TR_STATE_BEAR_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_BEAR_EAT;
+                ss_anim->target_state = TR_STATE_BEAR_EAT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY;
+                ss_anim->target_state = TR_STATE_BEAR_STAY;
             }
             break;
 
         case TR_STATE_BEAR_STAY_HIGH: // -> 1 -> 2 -> 5 -> 7 -> 9
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_BEAR_DEAD;
+                ss_anim->target_state = TR_STATE_BEAR_DEAD;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY;
+                ss_anim->target_state = TR_STATE_BEAR_STAY;
             }
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_BEAR_WALK_HIGH;
+                ss_anim->target_state = TR_STATE_BEAR_WALK_HIGH;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = (cmd->jump) ? (TR_STATE_BEAR_ATTACK_HIGH) : (TR_STATE_BEAR_ATTACK);
+                ss_anim->target_state = (cmd->jump) ? (TR_STATE_BEAR_ATTACK_HIGH) : (TR_STATE_BEAR_ATTACK);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY_HIGH;
+                ss_anim->target_state = TR_STATE_BEAR_STAY_HIGH;
             }
             break;
 
@@ -103,11 +103,11 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_BEAR_WALK;
+                ss_anim->target_state = TR_STATE_BEAR_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY;
+                ss_anim->target_state = TR_STATE_BEAR_STAY;
             }
             break;
 
@@ -115,11 +115,11 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_BEAR_WALK_HIGH;
+                ss_anim->target_state = TR_STATE_BEAR_WALK_HIGH;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY_HIGH;
+                ss_anim->target_state = TR_STATE_BEAR_STAY_HIGH;
             }
             break;
 
@@ -127,19 +127,19 @@ int StateControl_Bear(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY;
+                ss_anim->target_state = TR_STATE_BEAR_STAY;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_BEAR_RUN_ATTACK;
+                ss_anim->target_state = TR_STATE_BEAR_RUN_ATTACK;
             }
             else if(!cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_BEAR_RUN;
+                ss_anim->target_state = TR_STATE_BEAR_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_BEAR_STAY;
+                ss_anim->target_state = TR_STATE_BEAR_STAY;
             }
             break;
 

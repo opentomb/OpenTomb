@@ -66,46 +66,46 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
         case TR_STATE_WINGED_MUTANT_STAY_INIT:
             if(cmd->action || (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY_INIT;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY_INIT;
             }
             break;
 
         case TR_STATE_WINGED_MUTANT_STAY: // -> 3' -> 4' -> 6' -> 8' -> 9' -> 10' -> 13'
             if(cmd->action)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_AIM) : (TR_STATE_WINGED_MUTANT_STAY_FAST_SHOOT);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_AIM) : (TR_STATE_WINGED_MUTANT_STAY_FAST_SHOOT);
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ATTACK) : (TR_STATE_WINGED_MUTANT_JUMP_ATTACK);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ATTACK) : (TR_STATE_WINGED_MUTANT_JUMP_ATTACK);
             }
             else if(cmd->move[0] < 0)
             {
                 ent->move_type = MOVE_FLY;
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_FLY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_FLY;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ALERT) : (TR_STATE_WINGED_MUTANT_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ALERT) : (TR_STATE_WINGED_MUTANT_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             break;
 
         case TR_STATE_WINGED_MUTANT_STAY_ALERT: // -> 1 -> 2
             if(cmd->shift)
             {
-                ss_anim->next_state = (cmd->move[0] > 0) ? (TR_STATE_WINGED_MUTANT_WALK) : (TR_STATE_WINGED_MUTANT_STAY_ALERT);
+                ss_anim->target_state = (cmd->move[0] > 0) ? (TR_STATE_WINGED_MUTANT_WALK) : (TR_STATE_WINGED_MUTANT_STAY_ALERT);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             break;
 
@@ -113,15 +113,15 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_RUN_ATTACK;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_RUN_ATTACK;
             }
             else if(!cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_RUN;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             break;
 
@@ -129,11 +129,11 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_WALK;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_WALK;
             }
             else
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ALERT) : (TR_STATE_WINGED_MUTANT_STAY);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WINGED_MUTANT_STAY_ALERT) : (TR_STATE_WINGED_MUTANT_STAY);
             }
             break;
 
@@ -141,7 +141,7 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
         case TR_STATE_WINGED_MUTANT_STAY_AIM: // -> 1 -> 11
             if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY_SHOOT;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY_SHOOT;
                 entity_p target = World_GetEntityByID(ent->character->target_id);
                 if((ss_anim->frame_changing_state >= 0x02) && (!target || Character_IsTargetAccessible(ent, target)))
                 {
@@ -150,7 +150,7 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             break;
 
@@ -158,11 +158,11 @@ int StateControl_WingedMutant(struct entity_s *ent, struct ss_animation_s *ss_an
             if((ent->move_type != MOVE_FLY) || (cmd->crouch && hi->floor_hit.hit && (pos[2] < hi->floor_hit.point[2] + 256.0f)))
             {
                 ent->move_type = MOVE_ON_FLOOR;
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_STAY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_STAY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WINGED_MUTANT_FLY;
+                ss_anim->target_state = TR_STATE_WINGED_MUTANT_FLY;
             }
             break;
     };

@@ -29,10 +29,10 @@ function swapEntityState(object_id, state_1, state_2)
         end;
     else
         if(ns == state_1) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_2);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_2, true);
             return ENTITY_TRIGGERING_ACTIVATED;
         elseif(ns == state_2) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_1);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_1, true);
             return ENTITY_TRIGGERING_DEACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;

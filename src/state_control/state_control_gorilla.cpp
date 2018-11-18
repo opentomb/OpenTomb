@@ -111,15 +111,15 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action && (cmd->move[0] == 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STAY_ATTACK;
+                ss_anim->target_state = TR_STATE_GORILLA_STAY_ATTACK;
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_GORILLA_FORWARD_ATTACK;
+                ss_anim->target_state = TR_STATE_GORILLA_FORWARD_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_GORILLA_ARRRR;
+                ss_anim->target_state = TR_STATE_GORILLA_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
@@ -159,19 +159,19 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
                         }
                     }
                 }
-                ss_anim->next_state = TR_STATE_GORILLA_RUN;
+                ss_anim->target_state = TR_STATE_GORILLA_RUN;
             }
             else if(cmd->shift && (cmd->move[1] > 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STRAFE_RIGHT;
+                ss_anim->target_state = TR_STATE_GORILLA_STRAFE_RIGHT;
             }
             else if(cmd->shift && (cmd->move[1] < 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STRAFE_LEFT;
+                ss_anim->target_state = TR_STATE_GORILLA_STRAFE_LEFT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STAY;
+                ss_anim->target_state = TR_STATE_GORILLA_STAY;
             }
             break;
 
@@ -180,11 +180,11 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STRAFE_RIGHT;
+                ss_anim->target_state = TR_STATE_GORILLA_STRAFE_RIGHT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STAY;
+                ss_anim->target_state = TR_STATE_GORILLA_STAY;
             }
             break;
 
@@ -193,11 +193,11 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] < 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STRAFE_LEFT;
+                ss_anim->target_state = TR_STATE_GORILLA_STRAFE_LEFT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STAY;
+                ss_anim->target_state = TR_STATE_GORILLA_STAY;
             }
             break;
 
@@ -209,11 +209,11 @@ int StateControl_Gorilla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(!cmd->action && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_GORILLA_RUN;
+                ss_anim->target_state = TR_STATE_GORILLA_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_GORILLA_STAY;
+                ss_anim->target_state = TR_STATE_GORILLA_STAY;
             }
             break;
 

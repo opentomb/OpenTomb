@@ -53,23 +53,23 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_TREX_STAY: // -> 2 -> 3 -> 5 -> 6 -> 7
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_TREX_DEAD;
+                ss_anim->target_state = TR_STATE_TREX_DEAD;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_TREX_ATTACK;
+                ss_anim->target_state = TR_STATE_TREX_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_TREX_ARRRR;
+                ss_anim->target_state = TR_STATE_TREX_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_TREX_WALK) : (TR_STATE_TREX_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_TREX_WALK) : (TR_STATE_TREX_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TREX_STAY;
+                ss_anim->target_state = TR_STATE_TREX_STAY;
             }
             break;
 
@@ -77,11 +77,11 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_TREX_WALK;
+                ss_anim->target_state = TR_STATE_TREX_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TREX_STAY;
+                ss_anim->target_state = TR_STATE_TREX_STAY;
             }
             break;
 
@@ -89,11 +89,11 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && !cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_TREX_RUN;
+                ss_anim->target_state = TR_STATE_TREX_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TREX_STAY;
+                ss_anim->target_state = TR_STATE_TREX_STAY;
             }
             break;
 
@@ -106,7 +106,7 @@ int StateControl_TRex(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else*/
             {
-                ss_anim->next_state = TR_STATE_TREX_ATTACK;
+                ss_anim->target_state = TR_STATE_TREX_ATTACK;
             }
             break;
             

@@ -71,19 +71,19 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_NATLA_STAY:
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = TR_STATE_NATLA_DROPPED;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAY_AIM;
+                ss_anim->target_state = TR_STATE_NATLA_STAY_AIM;
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_NATLA_FLY;
+                ss_anim->target_state = TR_STATE_NATLA_FLY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAY;
+                ss_anim->target_state = TR_STATE_NATLA_STAY;
             }
             break;
 
@@ -91,26 +91,26 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->move_type = MOVE_ON_FLOOR;
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = TR_STATE_NATLA_DROPPED;
             }
             if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAY_SHOOT;
+                ss_anim->target_state = TR_STATE_NATLA_STAY_SHOOT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAY;
+                ss_anim->target_state = TR_STATE_NATLA_STAY;
             }
             break;
 
         case TR_STATE_NATLA_STAY_SHOOT: // -> 5
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = TR_STATE_NATLA_DROPPED;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAY_SHOOT;
+                ss_anim->target_state = TR_STATE_NATLA_STAY_SHOOT;
             }
             break;
 
@@ -119,15 +119,15 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_NATLA_STAND_UP: // -> 3 -> 9
             if(state->dead)
             {
-                ss_anim->next_state = TR_STATE_NATLA_DEAD;
+                ss_anim->target_state = TR_STATE_NATLA_DEAD;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_NATLA_RUN;
+                ss_anim->target_state = TR_STATE_NATLA_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAND_UP;
+                ss_anim->target_state = TR_STATE_NATLA_STAND_UP;
             }
             break;
 
@@ -135,11 +135,11 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             if(ent->move_type == MOVE_ON_FLOOR)
             {
-                ss_anim->next_state = TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = TR_STATE_NATLA_DROPPED;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_FALL;
+                ss_anim->target_state = TR_STATE_NATLA_FALL;
             }
             break;
 
@@ -147,11 +147,11 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 0;
             if(cmd->action || (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_NATLA_STAND_UP;
+                ss_anim->target_state = TR_STATE_NATLA_STAND_UP;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = TR_STATE_NATLA_DROPPED;
             }
             break;
 
@@ -160,16 +160,16 @@ int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim)
             if(state->dead)
             {
                 ent->move_type = MOVE_FREE_FALLING;
-                ss_anim->next_state = (ss_anim->prev_animation == TR_ANIMATION_NATLA_FLY) ? TR_STATE_NATLA_FALL : TR_STATE_NATLA_DROPPED;
+                ss_anim->target_state = (ss_anim->prev_animation == TR_ANIMATION_NATLA_FLY) ? TR_STATE_NATLA_FALL : TR_STATE_NATLA_DROPPED;
             }
             else if((ent->move_type != MOVE_FLY) || (cmd->crouch && hi->floor_hit.hit && (pos[2] < hi->floor_hit.point[2] + 256.0f)))
             {
                 ent->move_type = MOVE_ON_FLOOR;
-                ss_anim->next_state = TR_STATE_NATLA_STAY;
+                ss_anim->target_state = TR_STATE_NATLA_STAY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_NATLA_FLY;
+                ss_anim->target_state = TR_STATE_NATLA_FLY;
             }
             break;
             

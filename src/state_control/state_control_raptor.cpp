@@ -66,23 +66,23 @@ int StateControl_Raptor(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_STAY_ATTACK;
+                ss_anim->target_state = TR_STATE_RAPTOR_STAY_ATTACK;
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_RAPTOR_JUMP_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_ARRRR;
+                ss_anim->target_state = TR_STATE_RAPTOR_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_RAPTOR_WALK) : (TR_STATE_RAPTOR_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_RAPTOR_WALK) : (TR_STATE_RAPTOR_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_STAY;
+                ss_anim->target_state = TR_STATE_RAPTOR_STAY;
             }
             break;
 
@@ -90,11 +90,11 @@ int StateControl_Raptor(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_WALK;
+                ss_anim->target_state = TR_STATE_RAPTOR_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_STAY;
+                ss_anim->target_state = TR_STATE_RAPTOR_STAY;
             }
             break;
 
@@ -106,15 +106,15 @@ int StateControl_Raptor(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_RUN_ATTACK;
+                ss_anim->target_state = TR_STATE_RAPTOR_RUN_ATTACK;
             }
             else if(!cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_RUN;
+                ss_anim->target_state = TR_STATE_RAPTOR_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_RAPTOR_STAY;
+                ss_anim->target_state = TR_STATE_RAPTOR_STAY;
             }
             break;
 

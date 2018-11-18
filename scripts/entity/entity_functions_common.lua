@@ -32,7 +32,7 @@ function door_init(id)   -- NORMAL doors only!
 
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, entity_funcs[id].state_on);
+        setEntityAnimState(id, ANIM_TYPE_BASE, entity_funcs[id].state_on, true);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
         entity_funcs[id].state_on = 0;
         entity_funcs[id].state_off = 1;
@@ -40,20 +40,20 @@ function door_init(id)   -- NORMAL doors only!
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_on);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_on, true);
         setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on ~= 1);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off, true);
         setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if((tick_state == TICK_STOPPED) and (getEntityEvent(object_id) ~= 0)) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, entity_funcs[object_id].state_off, true);
             setEntityEvent(object_id, 0);
             setEntityMask(object_id, 0);
             setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
@@ -186,14 +186,14 @@ function anim_init(id)      -- Ordinary animatings
     local state_off = 0;
    
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on, true);
         setEntityActivity(object_id, true);
         enableEntity(object_id);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         setEntityActivity(object_id, false);
         disableEntity(object_id);
         return ENTITY_TRIGGERING_DEACTIVATED;
@@ -201,7 +201,7 @@ function anim_init(id)      -- Ordinary animatings
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
             setEntityActivity(object_id, false);
             -- disable entity?
         end;

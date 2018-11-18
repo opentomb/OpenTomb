@@ -56,19 +56,19 @@ int StateControl_Centaur(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_AIM;
+                ss_anim->target_state = TR_STATE_CENTAUR_AIM;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_ARRRR;
+                ss_anim->target_state = TR_STATE_CENTAUR_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_RUN;
+                ss_anim->target_state = TR_STATE_CENTAUR_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_STAY;
+                ss_anim->target_state = TR_STATE_CENTAUR_STAY;
             }
             break;
 
@@ -76,22 +76,22 @@ int StateControl_Centaur(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_RUN;
+                ss_anim->target_state = TR_STATE_CENTAUR_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_STAY;
+                ss_anim->target_state = TR_STATE_CENTAUR_STAY;
             }
             break;
 
         case TR_STATE_CENTAUR_AIM: // -> 1 -> 2
             if(!state->dead && cmd->action)
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_SHOOT;
+                ss_anim->target_state = TR_STATE_CENTAUR_SHOOT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_CENTAUR_STAY;
+                ss_anim->target_state = TR_STATE_CENTAUR_STAY;
             }
             break;
 

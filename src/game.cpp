@@ -309,8 +309,7 @@ int Save_Entity(entity_p ent, void *data)
             if(ss_anim->model)
             {
                 fprintf(*f, "\nsetEntityAnim(%d, %d, %d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->current_animation, ss_anim->current_frame, ss_anim->prev_animation, ss_anim->prev_frame);
-                fprintf(*f, "\nsetEntityAnimStateHeavy(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state_heavy);
-                fprintf(*f, "\nsetEntityAnimState(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->next_state);
+                fprintf(*f, "\nsetEntityAnimState(%d, %d, %d, %s);", ent->id, ss_anim->type, ss_anim->target_state, (ss_anim->heavy_state) ? ("true") : ("false"));
                 fprintf(*f, "\nentitySSAnimSetExtFlags(%d, %d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled, ss_anim->anim_ext_flags);
                 fprintf(*f, "\nentitySSAnimSetEnable(%d, %d, %d);", ent->id, ss_anim->type, ss_anim->enabled);
             }

@@ -66,23 +66,23 @@ int StateControl_Lion(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_LION_STAY_ATTACK;
+                ss_anim->target_state = TR_STATE_LION_STAY_ATTACK;
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_LION_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_LION_JUMP_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_LION_ARRRR;
+                ss_anim->target_state = TR_STATE_LION_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_LION_WALK) : (TR_STATE_LION_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_LION_WALK) : (TR_STATE_LION_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LION_STAY;
+                ss_anim->target_state = TR_STATE_LION_STAY;
             }
             break;
 
@@ -90,11 +90,11 @@ int StateControl_Lion(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_LION_WALK;
+                ss_anim->target_state = TR_STATE_LION_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LION_STAY;
+                ss_anim->target_state = TR_STATE_LION_STAY;
             }
             break;
 
@@ -106,11 +106,11 @@ int StateControl_Lion(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(!cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_LION_RUN;
+                ss_anim->target_state = TR_STATE_LION_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_LION_STAY;
+                ss_anim->target_state = TR_STATE_LION_STAY;
             }
             break;
 

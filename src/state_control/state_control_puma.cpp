@@ -66,23 +66,23 @@ int StateControl_Puma(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_PUMA_STAY_ATTACK;
+                ss_anim->target_state = TR_STATE_PUMA_STAY_ATTACK;
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_PUMA_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_PUMA_JUMP_ATTACK;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_PUMA_ARRRR;
+                ss_anim->target_state = TR_STATE_PUMA_ARRRR;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_PUMA_WALK) : (TR_STATE_PUMA_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_PUMA_WALK) : (TR_STATE_PUMA_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_PUMA_STAY;
+                ss_anim->target_state = TR_STATE_PUMA_STAY;
             }
             break;
 
@@ -90,11 +90,11 @@ int StateControl_Puma(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_PUMA_WALK;
+                ss_anim->target_state = TR_STATE_PUMA_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_PUMA_STAY;
+                ss_anim->target_state = TR_STATE_PUMA_STAY;
             }
             break;
 
@@ -106,11 +106,11 @@ int StateControl_Puma(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(!cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_PUMA_RUN;
+                ss_anim->target_state = TR_STATE_PUMA_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_PUMA_STAY;
+                ss_anim->target_state = TR_STATE_PUMA_STAY;
             }
             break;
 

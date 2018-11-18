@@ -56,19 +56,19 @@ int StateControl_Skateboardist(struct entity_s *ent, struct ss_animation_s *ss_a
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_SHOOTING2;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_SHOOTING2;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_RIDE;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_RIDE;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_STOP;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_STOP;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_INERTIA;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_INERTIA;
             }
             break;
 
@@ -80,11 +80,11 @@ int StateControl_Skateboardist(struct entity_s *ent, struct ss_animation_s *ss_a
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_RIDE;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_RIDE;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_INERTIA;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_INERTIA;
             }
             break;
 
@@ -95,15 +95,15 @@ int StateControl_Skateboardist(struct entity_s *ent, struct ss_animation_s *ss_a
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_SHOOTING1;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_SHOOTING1;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_INERTIA;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_INERTIA;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_SKATEBOARDIST_STOP;
+                ss_anim->target_state = TR_STATE_SKATEBOARDIST_STOP;
             }
             break;
 

@@ -104,11 +104,11 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_UW_ATTACK;
+                    ss_anim->target_state = TR_STATE_CROCODILE_UW_ATTACK;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_UW_FLOW;
+                    ss_anim->target_state = TR_STATE_CROCODILE_UW_FLOW;
                 }
                 break;
 
@@ -117,11 +117,11 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 if(!state->dead && cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_UW_ATTACK;
+                    ss_anim->target_state = TR_STATE_CROCODILE_UW_ATTACK;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_UW_FLOW;
+                    ss_anim->target_state = TR_STATE_CROCODILE_UW_FLOW;
                 }
                 break;
                 
@@ -141,19 +141,19 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 }
                 else if(cmd->action)
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_ATTACK;
+                    ss_anim->target_state = TR_STATE_CROCODILE_ATTACK;
                 }
                 else if(cmd->move[0] > 0)
                 {
-                    ss_anim->next_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
+                    ss_anim->target_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
                 }
                 else if(cmd->roll)
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_RUN_RIGHT;
+                    ss_anim->target_state = TR_STATE_CROCODILE_RUN_RIGHT;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_STAY;
+                    ss_anim->target_state = TR_STATE_CROCODILE_STAY;
                 }
                 break;
 
@@ -161,11 +161,11 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 if(!state->dead && (cmd->move[0] > 0))
                 {
-                    ss_anim->next_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
+                    ss_anim->target_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_STAY;
+                    ss_anim->target_state = TR_STATE_CROCODILE_STAY;
                 }
                 break;
 
@@ -173,11 +173,11 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 ent->dir_flag = ENT_MOVE_FORWARD;
                 if(!state->dead && (cmd->move[0] > 0))
                 {
-                    ss_anim->next_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
+                    ss_anim->target_state = (cmd->shift) ? (TR_STATE_CROCODILE_WALK) : (TR_STATE_CROCODILE_RUN);
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_STAY;
+                    ss_anim->target_state = TR_STATE_CROCODILE_STAY;
                 }
                 break;
 
@@ -186,11 +186,11 @@ int StateControl_Crocodile(struct entity_s *ent, struct ss_animation_s *ss_anim)
                 cmd->rot[0] = -1;
                 if(!state->dead && cmd->roll)
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_RUN_RIGHT;
+                    ss_anim->target_state = TR_STATE_CROCODILE_RUN_RIGHT;
                 }
                 else
                 {
-                    ss_anim->next_state = TR_STATE_CROCODILE_WALK;
+                    ss_anim->target_state = TR_STATE_CROCODILE_WALK;
                 }
                 break;
 

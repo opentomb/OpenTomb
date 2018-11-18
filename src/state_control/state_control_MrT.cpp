@@ -52,15 +52,15 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
         case TR_STATE_MRT_STAY:
             if(state->dead || cmd->action)
             {
-                ss_anim->next_state = TR_STATE_MRT_AIM;
+                ss_anim->target_state = TR_STATE_MRT_AIM;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_MRT_WALK) : (TR_STATE_MRT_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_MRT_WALK) : (TR_STATE_MRT_RUN);
             }
             else
             {
-                ss_anim->next_state = TR_STATE_MRT_STAY;
+                ss_anim->target_state = TR_STATE_MRT_STAY;
             }
             break;
 
@@ -68,11 +68,11 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_MRT_WALK;
+                ss_anim->target_state = TR_STATE_MRT_WALK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_MRT_STAY;
+                ss_anim->target_state = TR_STATE_MRT_STAY;
             }
             break;
 
@@ -80,11 +80,11 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
             ent->dir_flag = ENT_MOVE_FORWARD;
             if(!state->dead && !cmd->shift && (cmd->move[0] > 0))
             {
-                ss_anim->next_state = TR_STATE_MRT_RUN;
+                ss_anim->target_state = TR_STATE_MRT_RUN;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_MRT_STAY;
+                ss_anim->target_state = TR_STATE_MRT_STAY;
             }
             break;
 
@@ -95,11 +95,11 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_MRT_SHOOT;
+                ss_anim->target_state = TR_STATE_MRT_SHOOT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_MRT_STAY;
+                ss_anim->target_state = TR_STATE_MRT_STAY;
             }
             break;
 
@@ -110,7 +110,7 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_MRT_SHOOT;
+                ss_anim->target_state = TR_STATE_MRT_SHOOT;
                 entity_p target = World_GetEntityByID(ent->character->target_id);
                 if((ss_anim->frame_changing_state >= 0x02) && target && Character_IsTargetAccessible(ent, target))
                 {
@@ -119,7 +119,7 @@ int StateControl_MrT(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else
             {
-                ss_anim->next_state = TR_STATE_MRT_STAY;
+                ss_anim->target_state = TR_STATE_MRT_STAY;
             }
             break;
             

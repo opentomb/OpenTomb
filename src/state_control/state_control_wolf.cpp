@@ -80,20 +80,20 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_WOLF_WALK;
+                ss_anim->target_state = TR_STATE_WOLF_WALK;
                 ent->dir_flag = ENT_MOVE_FORWARD;
             }
             else if(cmd->shift)
             {
-                ss_anim->next_state = TR_STATE_WOLF_STAY_CROUCH;
+                ss_anim->target_state = TR_STATE_WOLF_STAY_CROUCH;
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_WOLF_WOOOO;
+                ss_anim->target_state = TR_STATE_WOLF_WOOOO;
             }
             else if(cmd->move[0] < 0)
             {
-                ss_anim->next_state = TR_STATE_WOLF_IDLE;
+                ss_anim->target_state = TR_STATE_WOLF_IDLE;
             }
             else
             {
@@ -109,26 +109,26 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WOLF_CROUCH) : (TR_STATE_WOLF_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WOLF_CROUCH) : (TR_STATE_WOLF_RUN);
             }
             else if(cmd->action)
             {
                 cmd->rot[0] = 0;
-                ss_anim->next_state = TR_STATE_WOLF_STAY_ATTACK;
+                ss_anim->target_state = TR_STATE_WOLF_STAY_ATTACK;
             }
             else if(cmd->jump)
             {
                 cmd->rot[0] = 0;
-                ss_anim->next_state = TR_STATE_WOLF_WOOOO;
+                ss_anim->target_state = TR_STATE_WOLF_WOOOO;
             }
             else if(cmd->shift)
             {
-                ss_anim->next_state = TR_STATE_WOLF_STAY_CROUCH;
+                ss_anim->target_state = TR_STATE_WOLF_STAY_CROUCH;
             }
             else
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_STAY;
+                ss_anim->target_state = TR_STATE_WOLF_STAY;
             }
             break;
 
@@ -140,12 +140,12 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WOLF_WALK) : (TR_STATE_WOLF_CROUCH);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WOLF_WALK) : (TR_STATE_WOLF_CROUCH);
             }
             else
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_STAY;
+                ss_anim->target_state = TR_STATE_WOLF_STAY;
             }
             break;
 
@@ -156,22 +156,22 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_WOLF_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_WOLF_JUMP_ATTACK;
             }
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WOLF_RUN) : (TR_STATE_WOLF_CROUCH);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WOLF_RUN) : (TR_STATE_WOLF_CROUCH);
             }
             else if(cmd->roll)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_RUN_RIGHT;
+                ss_anim->target_state = TR_STATE_WOLF_RUN_RIGHT;
             }
             else
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_STAY_CROUCH;
+                ss_anim->target_state = TR_STATE_WOLF_STAY_CROUCH;
             }
             break;
 
@@ -184,18 +184,18 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             {
                 cmd->rot[0] = 0;
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_WOLF_JUMP_ATTACK;
             }
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_WOLF_CROUCH) : (TR_STATE_WOLF_RUN);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_WOLF_CROUCH) : (TR_STATE_WOLF_RUN);
             }
             else
             {
                 cmd->rot[0] = 0;
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_STAY_CROUCH;
+                ss_anim->target_state = TR_STATE_WOLF_STAY_CROUCH;
             }
             break;
 
@@ -212,11 +212,11 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = TR_STATE_WOLF_JUMP_ATTACK;
+                ss_anim->target_state = TR_STATE_WOLF_JUMP_ATTACK;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WOLF_RUN;
+                ss_anim->target_state = TR_STATE_WOLF_RUN;
             }
             break;
 
@@ -234,11 +234,11 @@ int StateControl_Wolf(struct entity_s *ent, struct ss_animation_s *ss_anim)
             else if(cmd->move[0] > 0)
             {
                 ent->dir_flag = ENT_MOVE_FORWARD;
-                ss_anim->next_state = TR_STATE_WOLF_STAY;
+                ss_anim->target_state = TR_STATE_WOLF_STAY;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_WOLF_IDLE;
+                ss_anim->target_state = TR_STATE_WOLF_IDLE;
             }
             break;
 

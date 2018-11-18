@@ -11,25 +11,25 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
     local state_off = 0;
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(id, ANIM_TYPE_BASE, state_on, true);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
         state_on = 0;
         state_off = 1;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then 
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off) 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true) 
         end;
     end
     
@@ -83,27 +83,27 @@ function sethblade_init(id)      -- Seth blades (TR4)
     local state_off = 2;
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(id, ANIM_TYPE_BASE, state_on, true);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
         state_on = 2;
         state_off = 1;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on);
         state_on = state_off;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off)
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true)
             setEntityActivity(object_id, false);
         end;
     end
@@ -126,25 +126,25 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     local state_off = 0;
     local object_mask = getEntityMask(id);
     if(object_mask == 0x1F) then
-        setEntityAnimStateHeavy(id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(id, ANIM_TYPE_BASE, state_on, true);
         setEntityTriggerLayout(id, 0x00, 0, 0); -- Reset activation mask and event.
         state_on = 0;
         state_off = 2;
     end;
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_on);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on, true);
         return ENTITY_TRIGGERING_ACTIVATED;
     end    
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
-        setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off);
+        setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         return ENTITY_TRIGGERING_DEACTIVATED;
     end
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then 
-            setEntityAnimStateHeavy(object_id, ANIM_TYPE_BASE, state_off) 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true) 
         end;
     end
     

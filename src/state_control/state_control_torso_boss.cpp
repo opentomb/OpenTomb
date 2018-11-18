@@ -60,38 +60,38 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
             }
             else if(cmd->action)
             {
-                ss_anim->next_state = (cmd->shift) ? (TR_STATE_TORSO_BOSS_ATTACK_BIG) : (TR_STATE_TORSO_BOSS_ATTACK);
+                ss_anim->target_state = (cmd->shift) ? (TR_STATE_TORSO_BOSS_ATTACK_BIG) : (TR_STATE_TORSO_BOSS_ATTACK);
             }
             else if(cmd->jump)
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_ATTACK_KILL;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_ATTACK_KILL;
             }
             else if(cmd->move[1] < 0)
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_TURN_RIGHT;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_TURN_RIGHT;
             }
             else if(cmd->move[1] > 0)
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_TURN_LEFT;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_TURN_LEFT;
             }
             else if(cmd->move[0] > 0)
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_MOVE;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_MOVE;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_STAY;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_STAY;
             }
             break;
 
         case TR_STATE_TORSO_BOSS_MOVE: // -> 1
             if(!state->dead && (cmd->move[1] > 0))
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_MOVE;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_MOVE;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_STAY;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_STAY;
             }
             break;
 
@@ -99,11 +99,11 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = 1;
             if(!state->dead && (cmd->move[1] < 0))
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_TURN_RIGHT;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_TURN_RIGHT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_STAY;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_STAY;
             }
             break;
 
@@ -111,11 +111,11 @@ int StateControl_TorsoBoss(struct entity_s *ent, struct ss_animation_s *ss_anim)
             cmd->rot[0] = -1;
             if(!state->dead && (cmd->move[1] > 0))
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_TURN_LEFT;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_TURN_LEFT;
             }
             else
             {
-                ss_anim->next_state = TR_STATE_TORSO_BOSS_STAY;
+                ss_anim->target_state = TR_STATE_TORSO_BOSS_STAY;
             }
             break;
 
