@@ -44,9 +44,9 @@
          - `script_world` - Spawning objects, level transitions, level configuration functions, objects and effects generation.
 
     - `state_control` - Contains skeletal models state control handlers.
-         - `tate_control` - Main interface to state control module (binding special functions to the models).
-         - `tate_control_Lara` - Only Lara's state control control module.
-         - `tate_control_*` - All other objects control functions.
+         - `state_control` - Main interface to state control module (binding special functions to the models).
+         - `state_control_Lara` - Only Lara's state control control module.
+         - `state_control_*` - All other objects control functions.
     - `audio` - AL audio sources, soundtrack manipulation and a storage module.
          - `stb_vorbis.c` - Ogg vorbis format loader.
          - `audio` - Main audio routine handler and public interface.
