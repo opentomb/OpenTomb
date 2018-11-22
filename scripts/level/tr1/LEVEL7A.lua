@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL7A
-print("level/tr1/level7a->level_loaded !");
+print("level/tr1/level7a.the_cistern->level_loaded !");
 
 level_PostLoad = function()
     playStream(58);

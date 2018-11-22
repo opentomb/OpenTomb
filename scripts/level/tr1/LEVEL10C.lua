@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10C
-print("level/tr1/level10c->level_loaded !");
+print("level/tr1/level10c.the_great_pyramid->level_loaded !");
 
 level_PostLoad = function()
     playStream(60);

@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL8A
-print("level/tr1/level8a->level_loaded !");
+print("level/tr1/level8a.city_of_khamoon->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);

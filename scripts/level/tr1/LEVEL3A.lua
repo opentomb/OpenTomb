@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL3A (CAVES)
-print("level/tr1/caves.level3a->level_loaded !");
+print("level/tr1/level3a.lost_valley->level_loaded !");
 
 level_PostLoad = function()
 	--use it when you test hair for TR1 !!

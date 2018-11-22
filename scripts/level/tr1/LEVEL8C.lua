@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL8C
-print("level/tr1/level8c->level_loaded !");
+print("level/tr1/level8c.sanctuary_of_the_scion->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);

@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL8B
-print("level/tr1/level8b->level_loaded !");
+print("level/tr1/level8b.obelisk_of_khamoon->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);

@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10B
-print("level/tr1/level10b->level_loaded !");
+print("level/tr1/level10b.atlantis->level_loaded !");
 
 level_PostLoad = function()
     playStream(60);

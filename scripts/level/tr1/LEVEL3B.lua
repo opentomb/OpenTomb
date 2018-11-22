@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL3B (CAVES)
-print("level/tr1/caves.level3b->level_loaded !");
+print("level/tr1/level3b.tomb_of_qualopec->level_loaded !");
 
 level_PostLoad = function()
 end;

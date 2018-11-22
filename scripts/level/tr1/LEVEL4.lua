@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL4
-print("level/tr1/level4->level_loaded !");
+print("level/tr1/level4.st_francis_folly->level_loaded !");
 
 level_PostLoad = function()
 

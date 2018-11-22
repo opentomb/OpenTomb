@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL6
-print("level/tr1/level6->level_loaded !");
+print("level/tr1/level6.palace_midas->level_loaded !");
 
 level_PostLoad = function()
     moveEntityLocal(player, 0, 0, 256);

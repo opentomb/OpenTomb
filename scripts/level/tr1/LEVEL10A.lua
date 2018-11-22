@@ -1,6 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10A
-print("level/tr1/level10a->level_loaded !");
+print("level/tr1/level10a.natla_mines->level_loaded !");
 
 level_PreLoad = function()
     --------------------------------------------------------------------------------
