@@ -35,7 +35,7 @@ function entfuncs_Clear()
     for k,v in pairs(entity_funcs) do
         efuncs_EraseEntity(k);
     end;
-    print("entity_fonctions->entity_cleared !");
+    print("entity_functions->entity_cleared !");
 end;
 
 --------------------------------------------------------------------------------
