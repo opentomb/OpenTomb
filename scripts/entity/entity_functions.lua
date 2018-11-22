@@ -7,11 +7,11 @@
 -- includes some events executed on level start-up. Function itself is placed
 -- inside entity function array (entity_funcs).
 --------------------------------------------------------------------------------
+print("entity_functions->loaded !");
 
 entity_funcs = {};  -- Initialize entity function array.
 
 -- Erase single entity function.
-
 function efuncs_EraseEntity(index)
     if(entity_funcs[index] ~= nil) then
         if(entity_funcs[index].onDelete ~= nil) then    -- Entity-specific clean-up.
@@ -31,12 +31,11 @@ function efuncs_EraseEntity(index)
 end;
 
 -- Clear whole entity functions array. Must be called on each level loading.
-
 function entfuncs_Clear()
     for k,v in pairs(entity_funcs) do
         efuncs_EraseEntity(k);
     end;
-    print("Entity function table cleaned");
+    print("entity_fonctions->entity_cleared !");
 end;
 
 --------------------------------------------------------------------------------
@@ -67,22 +66,22 @@ function gen_soundsource_init(id)    -- Generic sound source (continous)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         stopSound(entity_funcs[object_id].sound_id, object_id); -- Needed for deactivation cases.
         return swapEntityActivity(object_id);
-    end
+    end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         playSound(entity_funcs[object_id].sound_id, object_id);
         if(tick_state == TICK_STOPPED) then
-            setEntityActivity(object_id, false)
+            setEntityActivity(object_id, false);
             stopSound(entity_funcs[object_id].sound_id, object_id);
         end;
-    end
+    end;
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].sound_id = nil;
-    end
-end
+    end;
+end;
 
 
 function randomized_soundsource_init(id)    -- Randomized sound source
@@ -95,22 +94,25 @@ function randomized_soundsource_init(id)    -- Randomized sound source
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
         return swapEntityActivity(object_id);
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
-        if(tick_state == TICK_STOPPED) then setEntityActivity(object_id, 0) end;
+        if(tick_state == TICK_STOPPED) then
+			setEntityActivity(object_id, 0);
+		end;
+		
         if((math.random(1000) > (1000 - entity_funcs[object_id].chance)) and (getEntityDistance(player, object_id) < 8192.0)) then
             playSound(entity_funcs[object_id].sound_id, object_id);
         end;
-    end
+    end;
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].chance   = nil;
         entity_funcs[object_id].sound_id = nil;
-    end
+    end;
     
     prepareEntity(id);
-end
+end;
 
 
 function propeller_init(id)      -- Generic propeller (TR1-TR2)
@@ -131,13 +133,13 @@ function propeller_init(id)      -- Generic propeller (TR1-TR2)
     end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
-        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -6000.0 * frame_time) 
+        if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 0) then
+            changeCharacterParam(activator_id, PARAM_HEALTH, -6000.0 * frame_time);
         end;
     end;
     
     prepareEntity(id);
-end
+end;
 
 
 function fallblock_init(id)  -- Falling block (TR1-3)
@@ -167,7 +169,7 @@ function fallblock_init(id)  -- Falling block (TR1-3)
             end;
         end;
     end;
-end
+end;
 
 
 function fallceiling_init(id)  -- Falling ceiling (TR1-3)
@@ -210,4 +212,4 @@ function fallceiling_init(id)  -- Falling ceiling (TR1-3)
             setCharacterParam(activator_id, PARAM_HEALTH, 0);
         end;
     end;
-end
+end;

@@ -1,5 +1,6 @@
 -- OPENTOMB ITEM COMBINE MAPPINGS
 -- by Lwmte, Oct 2014
+print("item_combine->loaded !");
 
 --------------------------------------------------------------------------------
 -- Since OpenTomb uses internal item enumeration which is not related to local

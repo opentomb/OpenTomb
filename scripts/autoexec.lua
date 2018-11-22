@@ -25,6 +25,7 @@
 -- 0x02: add mesh to slot in armed state;
 -- 0x03: overriding mesh in disarmed state;
 -- 0x04: add mesh to slot in disarmed state;
+print("autoexec->lara_model loaded !");
 
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
@@ -34,7 +35,7 @@ function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 11, 0x01);
     setModelAnimReplaceFlag(m_id, 12, 0x01);
     setModelAnimReplaceFlag(m_id, 13, 0x01);
-end
+end;
 
 function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
     local meshes_count = getModelMeshCount(m_id);
@@ -47,7 +48,7 @@ function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
         end;
         m = m + 1;
     end;
-end
+end;
 
 if (getLevelVersion() < TR_II) then
     enableModelAnimReplaceFlags(5, false);
@@ -230,7 +231,7 @@ elseif (getLevelVersion() <= TR_V) then
     setModelAnimReplaceFlag(7, 12, 0x01);
     setModelAnimReplaceFlag(7, 13, 0x01);
     setModelMeshReplaceFlag(7, 13, 0x01);
-end
+end;
           
 setModelCollisionMap(0, 0, 0);              -- butt
 setModelCollisionMap(0, 1, 7);              -- body
@@ -261,7 +262,7 @@ elseif (getLevelVersion() == TR_V) then
     for i=410, 415, 1 do
         genUVRotateAnimation(i);
     end;
-end
+end;
 
 -- Add global level tasks
 addTask(checkDebugKeys);

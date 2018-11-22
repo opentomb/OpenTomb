@@ -1,5 +1,6 @@
 -- OPENTOMB ENTITY PROPERTIES CONFIGURATION
 -- By TeslaRus, Lwmte 2013-2014
+print("entity_properties->loaded !");
 
 --------------------------------------------------------------------------------
 -- [ hide ] flag values:
@@ -30,7 +31,7 @@
 
 --------------------------------------------------------------------------------
 
-print("Collide / visibility flags script loaded");
+print("entity_properties->collide / visibility flag loaded !");
 
 --------------------------------------------------------------------------------
 ----------------------------- TR_I, TR_I_DEMO, TR_I_UB -------------------------

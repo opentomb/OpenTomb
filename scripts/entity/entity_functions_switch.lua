@@ -7,6 +7,7 @@
 -- only switches, but also keyholes, puzzleholes and pickups. Also this script
 -- is used to assign puzzlehole meshswaps.
 --------------------------------------------------------------------------------
+print("entity_functions_switch->loaded !");
 
 tr1_switches = {};
 tr2_switches = {};
@@ -122,8 +123,6 @@ tr_anim_pickup_crawl =
     on  = {ready_anim = -1, trig_anim = 0, actor_anim = 292, switch_frame = 15 },    -- CHECK: TR3 possibly have less keyframes.
     off = {ready_anim =  0, trig_anim = 0, actor_anim = 0  }
 };
-
-
 
 tr1_puzzlehole_meshswap[118] = 122;
 tr1_puzzlehole_meshswap[119] = 123;
@@ -258,7 +257,7 @@ function set_activation_data(id)
     local m_id = getEntityModelID(id);
     if(m_id == nil or m_id < 0) then
         return 0;
-    end
+    end;
 
     entity_funcs[id].on  = {};
     entity_funcs[id].off = {};
@@ -273,7 +272,7 @@ function set_activation_data(id)
             entity_funcs[id].meshswap = tr1_puzzlehole_meshswap[m_id];
         else
             return 0;
-        end
+        end;
     elseif(getLevelVersion() < TR_III) then
         if(tr2_switches[m_id] ~= nil) then
             entity_funcs[id].on       = tr2_switches[m_id].on;
@@ -282,7 +281,7 @@ function set_activation_data(id)
             entity_funcs[id].meshswap = tr2_puzzlehole_meshswap[m_id];
         else
             return 0;
-        end
+        end;
     elseif(getLevelVersion() < TR_IV) then
         if(tr3_switches[m_id] ~= nil) then
             entity_funcs[id].on       = tr3_switches[m_id].on;
@@ -291,7 +290,7 @@ function set_activation_data(id)
             entity_funcs[id].meshswap = tr3_puzzlehole_meshswap[m_id];
         else
             return 0;
-        end
+        end;
     elseif(getLevelVersion() < TR_V) then
         if(tr4_switches[m_id] ~= nil) then
             entity_funcs[id].on       = tr4_switches[m_id].on;
@@ -300,7 +299,7 @@ function set_activation_data(id)
             entity_funcs[id].meshswap = tr4_puzzlehole_meshswap[m_id];
         else
             return 0;
-        end
+        end;
     else
         if(tr5_switches[m_id] == nil) then
             if(m_id >= 266 and m_id <= 274) then
@@ -329,16 +328,15 @@ function set_activation_data(id)
                 end
             else
                 return 0;
-            end
+            end;
         else
             entity_funcs[id].on       = tr5_switches[m_id].on;
             entity_funcs[id].off      = tr5_switches[m_id].off;
             entity_funcs[id].key      = tr5_key[m_id];
             entity_funcs[id].meshswap = tr5_puzzlehole_meshswap[m_id];
-        end
-    end
+        end;
+    end;
 end;
-
 
 function set_activation_offset(id)
     local model_id = getEntityModelID(id);
@@ -351,22 +349,21 @@ function set_activation_offset(id)
         if(model_id == 56) then
             dy = 64.0;
             r = 256.0;
-        end
+        end;
     elseif(getLevelVersion() < TR_III) then
         if(model_id == 105) then
             dy = 64.0;
             r = 256.0;
-        end
+        end;
     elseif(getLevelVersion() < TR_IV) then
         if(model_id == 130) then
             dy = 64.0;
             r = 256.0;
-        end
-    end
+        end;
+    end;
 
     setEntityActivationOffset(id, dx, dy, dz, r);
-end
-
+end;
 
 function keyhole_init(id)    -- Key and puzzle holes
 
@@ -387,7 +384,7 @@ function keyhole_init(id)    -- Key and puzzle holes
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (getEntityActivity(object_id))) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         local t = getEntityAnim(activator_id, ANIM_TYPE_BASE);
         if(entity_funcs[object_id].on.ready_anim < 0 or entity_funcs[object_id].on.ready_anim == t) then
@@ -434,7 +431,7 @@ function keyhole_init(id)    -- Key and puzzle holes
             end;
         end;
     end;
-end
+end;
 
 function switch_init(id)     -- Ordinary switches
 
@@ -451,7 +448,7 @@ function switch_init(id)     -- Ordinary switches
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (getEntityTimer(object_id) > 0.0) or (entity_funcs[object_id].state > 0)) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         local t = getEntityAnim(object_id, ANIM_TYPE_BASE);
         local ret = 0;
@@ -499,16 +496,15 @@ function switch_init(id)     -- Ordinary switches
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(entity_funcs[object_id].off.switch_frame ~= nil) then
                 c = entity_funcs[object_id].off.switch_frame;
-            end
+            end;
             if(f >= c - 1) then                             -- check the end of animation
                 setEntitySectorStatus(object_id, 1);        -- only for switches - turn off
                 setEntityEvent(object_id, 0);
                 entity_funcs[object_id].state = 0;
-            end
+            end;
         end;
     end;
-end
-
+end;
 
 function lever_switch_init(id)     -- Big switches (TR4) - lever
 
@@ -525,7 +521,7 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (getEntityTimer(object_id) > 0.0) or (entity_funcs[object_id].state > 0)) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         local t = getEntityAnim(object_id, ANIM_TYPE_BASE);
         local ret = 0;
@@ -575,14 +571,14 @@ function lever_switch_init(id)     -- Big switches (TR4) - lever
             local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(entity_funcs[object_id].off.switch_frame ~= nil) then
                 c = entity_funcs[object_id].off.switch_frame;
-            end
+            end;
             if(f >= c - 1) then                             -- check the end of animation
                 setEntitySectorStatus(object_id, 1);        -- only for switches - turn off
                 setEntityEvent(object_id, 0);
                 setEntityActivationDirection(object_id, 0.0, 1.0, 0.0);
                 setEntityActivationOffset(object_id, 0.0, -520.0, 0.0, 128);
                 entity_funcs[object_id].state = 0;
-            end
+            end;
         end;
     end;
-end
+end;

@@ -1,5 +1,6 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
+print("entity_functions_platforms->loaded !");
 
 -- Load up some extra entity scripts.
 
@@ -25,9 +26,9 @@ function twobp_init(id)        -- Two-block platform
     -- Only two classic modes are parsed from OCB, extra modes can be implemented through script.
     
     if(curr_OCB == 0) then 
-        entity_funcs[id].mode = 2 
+        entity_funcs[id].mode = 2;
     else 
-        entity_funcs[id].mode = 0 
+        entity_funcs[id].mode = 0;
     end;
     
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -38,9 +39,9 @@ function twobp_init(id)        -- Two-block platform
         if(getEntityActivity(object_id)) then
             if(entity_funcs[object_id].mode < 2) then
                 if(entity_funcs[object_id].mode == 0) then 
-                    entity_funcs[object_id].mode = 1 
+                    entity_funcs[object_id].mode = 1;
                 else 
-                    entity_funcs[object_id].mode = 0 
+                    entity_funcs[object_id].mode = 0;
                 end;
                 entity_funcs[object_id].current_height = entity_funcs[object_id].raise_height - entity_funcs[object_id].current_height;
             else
@@ -76,9 +77,9 @@ function twobp_init(id)        -- Two-block platform
                     entity_funcs[object_id].current_height = entity_funcs[object_id].current_height + dz;
                 else
                     if(entity_funcs[object_id].mode == 0) then 
-                        entity_funcs[object_id].mode = 1 
+                        entity_funcs[object_id].mode = 1;
                     else 
-                        entity_funcs[object_id].mode = 0 
+                        entity_funcs[object_id].mode = 0;
                     end;
                     entity_funcs[object_id].waiting = true;
                     entity_funcs[object_id].current_height = 0.0; -- Reset height counter.
@@ -123,11 +124,10 @@ function twobp_init(id)        -- Two-block platform
         entity_funcs[object_id].waiting         = nil;
         entity_funcs[object_id].mode            = nil;
         entity_funcs[object_id].current_height  = nil;
-    end
+    end;
     
     prepareEntity(id);
-end
-
+end;
 
 function rblock_init(id)        -- Raising block (generic)
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -151,7 +151,7 @@ function rblock_init(id)        -- Raising block (generic)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
@@ -187,19 +187,16 @@ function rblock_init(id)        -- Raising block (generic)
         entity_funcs[object_id].move_speed  = nil;
         entity_funcs[object_id].direction   = nil;
         entity_funcs[object_id].dummy       = nil;
-    end
+    end;
     
     prepareEntity(id);
-    
-end
-
+end;
 
 function rblock2_init(id)   -- Raising block x2 - same as RB1, only max height / speed is changed.
     rblock_init(id);
     entity_funcs[id].max_height = 2048.0;
     entity_funcs[id].move_speed = 16.0;
-end
-
+end;
 
 function expplatform_init(id)        -- Expanding platform
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -216,7 +213,7 @@ function expplatform_init(id)        -- Expanding platform
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
     
@@ -242,7 +239,6 @@ function expplatform_init(id)        -- Expanding platform
         end;
         
         setEntityScaling(object_id, 1.0, (entity_funcs[object_id].curr_width / entity_funcs[object_id].max_width), 1.0);
-        
     end;
     
     entity_funcs[id].onDelete = function(object_id)
@@ -250,7 +246,7 @@ function expplatform_init(id)        -- Expanding platform
         entity_funcs[object_id].max_width  = nil;
         entity_funcs[object_id].move_speed  = nil;
         entity_funcs[object_id].direction   = nil;
-    end
+    end;
     
     prepareEntity(id);
-end
+end;

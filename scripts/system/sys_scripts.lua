@@ -1,5 +1,6 @@
 -- OPENTOMB SYSTEM SCRIPT
 -- By TeslaRus, 2014
+print("sys_scripts->loaded !");
 
 --------------------------------------------------------------------------------
 -- This script defines some system-level functions, like task management.

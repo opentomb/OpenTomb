@@ -1,5 +1,6 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
+print("entity_functions_unique->loaded !");
 
 ----------------------------------------------
 -------------------    TR 1  -----------------
@@ -49,9 +50,8 @@ function scion_init(id)
                 disableEntity(object_id);
             end;
         end;
-    end
+    end;
 end;
-
 
 ----------------------------------------------
 -------------------    TR 2  -----------------
@@ -61,29 +61,24 @@ function venicebird_init(id)    -- Venice singing birds (TR2)
     randomized_soundsource_init(id);
     entity_funcs[id].chance   = 2;
     entity_funcs[id].sound_id = 316;
-end
+end;
 
 
 function drips_init(id)         -- Maria Doria drips (TR2)
     randomized_soundsource_init(id);
     entity_funcs[id].chance   = 5;
     entity_funcs[id].sound_id = 329;
-end
-
+end;
 
 function alarm_TR2_init(id)    -- Offshore Rig alarm (TR2)
-
     gen_soundsource_init(id);
     entity_funcs[id].sound_id = 332;
-end
-
+end;
 
 function alarmbell_init(id)    -- Home Sweet Home alarm (TR2)
-
     gen_soundsource_init(id);
     entity_funcs[id].sound_id = 335;
-end
-
+end;
 
 function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
@@ -92,7 +87,7 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         return swapEntityActivity(object_id);
-    end
+    end;
 
     entity_funcs[id].onDeactivate = entity_funcs[id].onActivate;
 
@@ -101,9 +96,8 @@ function doorbell_init(id)    -- Lara's Home doorbell (TR2)
             playSound(334, object_id);
             setEntityActivity(object_id, false);
         end;
-    end
-end
-
+    end;
+end;
 
 function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
 
@@ -115,7 +109,7 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
         setEntityActivity(object_id, true);
         setEntityVisibility(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityLock(object_id)) then
@@ -124,15 +118,14 @@ function heli_rig_TR2_init(id)    -- Helicopter in Offshore Rig (TR2)
             else
                 local anim, frame, count = getEntityAnim(object_id, ANIM_TYPE_BASE);
                 if(frame == count-1) then
-                    disableEntity(object_id)
+                    disableEntity(object_id);
                 end;
-            end
+            end;
         end;
-    end
+    end;
 
     prepareEntity(id);
-end
-
+end;
 
 function heli_TR2_init(id)    -- Helicopter (TR2)
 
@@ -149,12 +142,12 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
             playSound(297, object_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local dy = 40.0 * 60.0 * frame_time;
@@ -164,15 +157,14 @@ function heli_TR2_init(id)    -- Helicopter (TR2)
             stopSound(297, object_id);
             disableEntity(object_id);
         end;
-    end
+    end;
 
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
-    end
+    end;
 
     prepareEntity(id);
-end
-
+end;
 
 ----------------------------------------------
 -------------------    TR 3  -----------------
@@ -189,9 +181,8 @@ function crystal_TR3_init(id)   -- "Savegame" crystal (TR3 version)
             changeCharacterParam(player, PARAM_HEALTH, 200);
             disableEntity(object_id);
         end;
-    end
-end
-
+    end;
+end;
 
 function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
 
@@ -227,17 +218,17 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
 
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(not getEntityActivity(object_id)) then
-            enableEntity(object_id)
+            enableEntity(object_id);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         playSound(131, object_id);
         stopSound(191, object_id);
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local px,py,pz,ax = getEntityPos(object_id);
@@ -287,7 +278,9 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].y = py;
 
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
-                if(entity_funcs[object_id].move_count > 4) then entity_funcs[object_id].move_count = 1 end;
+                if(entity_funcs[object_id].move_count > 4) then 
+				    entity_funcs[object_id].move_count = 1;
+				end;
             else
                 local dy = entity_funcs[object_id].move_speed * frame_time;
                 moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
@@ -338,7 +331,7 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 end;
             end;
         end;
-    end
+    end;
 
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].rotating            = nil;
@@ -359,11 +352,8 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
         end;
 
         entity_funcs[object_id].loop_detector       = nil;
-    end
-end
-
-
-
+    end;
+end;
 
 ----------------------------------------------
 -------------------    TR 4  -----------------
@@ -407,24 +397,22 @@ function slicerdicer_init(id)      -- Slicer-dicer (TR4)
         end;
 
         moveEntityLocal(object_id, 0.0, math.cos(math.rad(entity_funcs[object_id].current_angle)) * entity_funcs[object_id].radius, -math.sin(math.rad(entity_funcs[object_id].current_angle)) * entity_funcs[object_id].radius);
-
-    end
+    end;
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time)
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * frame_time);
         end;
-    end
+    end;
 
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].current_angle = nil;
         entity_funcs[object_id].speed         = nil;
         entity_funcs[object_id].radius        = nil;
-    end
+    end;
 
     prepareEntity(id);
-end
-
+end;
 
 function plough_init(id)     -- Plough (TR4)
 
@@ -435,30 +423,28 @@ function plough_init(id)     -- Plough (TR4)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
-            setEntityActivity(object_id, false)
+            setEntityActivity(object_id, false);
         end;
-    end
+    end;
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then
             changeCharacterParam(activator_id, PARAM_HEALTH, -50 * 60.0 * frame_time);
         end;
-    end
+    end;
 
     prepareEntity(id);
-end
-
+end;
 
 ----------------------------------------------
 -------------------    TR 5  -----------------
 ----------------------------------------------
-

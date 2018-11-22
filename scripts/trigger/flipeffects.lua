@@ -1,5 +1,6 @@
 -- OPENTOMB FLIPEFFECT TRIGGER FUNCTION SCRIPT
 -- by Lwmte, April 2015
+print("flipeffects->loaded !");
 
 --------------------------------------------------------------------------------
 -- In this file you can put extra flipeffect functions which act in the same way
@@ -105,9 +106,7 @@ tr1_flipeffects[16].saveEffect = function()
     return ret;
 end;
 
-
 -- Does specified flipeffect.
-
 function doFlipEffect(effect_index, caller_id, parameter) -- extra parameter is usually the timer field
     print("flip effect[" .. effect_index .. "]doEffect(" .. parameter .. ")");
     
@@ -172,4 +171,4 @@ function onSaveFlipEffects()
     end;
 
     return ret;
-end
+end;
