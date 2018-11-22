@@ -1,13 +1,12 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 1, GYM
-
-print("Level script loaded (GYM.lua)");
+print("level/tr1/gym->level_loaded !");
 
 level_PostLoad = function()
-
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[00] = {coll = COLLISION_GROUP_STATIC_OBLECT, shape = COLLISION_SHAPE_TRIMESH};             -- Flower pot 1

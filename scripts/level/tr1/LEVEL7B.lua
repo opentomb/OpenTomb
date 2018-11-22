@@ -1,14 +1,13 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL7B
-
-print("Level script loaded (LEVEL7B.lua)");
-
+print("level/tr1/level7b->level_loaded !");
 
 level_PostLoad = function()
     -- to do something
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant
@@ -22,7 +21,6 @@ level_PreLoad = function()
     static_tbl[43] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Icicle
 end;
 
-
 function centaur_statue_init(id)
     setEntityActivity(id, false);
 
@@ -32,7 +30,7 @@ function centaur_statue_init(id)
             setEntityActivity(object_id, true);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local a, f, c = getEntityAnim(object_id, ANIM_TYPE_BASE);
@@ -49,5 +47,5 @@ function centaur_statue_init(id)
 
             entity_funcs[id].onLoop = nil;
         end;
-    end
-end
+    end;
+end;

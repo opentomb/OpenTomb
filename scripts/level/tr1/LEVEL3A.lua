@@ -1,10 +1,10 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL3A (CAVES)
-
-print("Level script loaded (LEVEL3A.lua)");
+print("level/tr1/caves.level3a->level_loaded !");
 
 level_PostLoad = function()
-    addCharacterHair(player, getHairSetup(HAIR_TR1));
+	--use it when you test hair for TR1 !!
+    --addCharacterHair(player, getHairSetup(HAIR_TR1));
 end;
 
 level_PreLoad = function()

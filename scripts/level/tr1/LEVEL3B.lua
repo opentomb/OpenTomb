@@ -1,13 +1,12 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL3B (CAVES)
-
-print("Level script loaded (LEVEL3B.lua)");
+print("level/tr1/caves.level3b->level_loaded !");
 
 level_PostLoad = function()
-
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant
@@ -40,7 +39,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
             return ENTITY_TRIGGERING_ACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
-    end
+    end;
 
 	entity_funcs[id].onDeactivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) ~= 0) then
@@ -49,7 +48,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
             return ENTITY_TRIGGERING_DEACTIVATED;
         end;
         return ENTITY_TRIGGERING_NOT_READY;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local move_dist = 32.0 * 60.0 * frame_time;
@@ -64,11 +63,11 @@ function tallblock_init(id)    -- Tall moving block (TR1)
             setEntityActivity(object_id, false);
             entity_funcs[object_id].distance_passed = 0;
         end;
-    end
+    end;
 
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].distance_passed = nil;
-    end
+    end;
 
     prepareEntity(id);
-end
+end;

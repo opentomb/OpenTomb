@@ -1,13 +1,12 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER UB, CAT
-
-print("Level script loaded (CAT.lua)");
+print("level/tr1/cat->level_loaded !");
 
 level_PostLoad = function()
-
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
 end;

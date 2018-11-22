@@ -1,13 +1,13 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10C
-
-print("Level script loaded (LEVEL10C.lua)");
+print("level/tr1/level10c->level_loaded !");
 
 level_PostLoad = function()
     playStream(60);
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, CUT3
-
-print("Level script loaded (CUT3.lua)");
+print("level/tr1/cut3->cutscene_loaded !");
 
 level_PostLoad = function()
     setGlobalFlipState(1);

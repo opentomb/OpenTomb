@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10B
-
-print("Level script loaded (LEVEL10B.lua)");
+print("level/tr1/level10b->level_loaded !");
 
 level_PostLoad = function()
     playStream(60);
@@ -12,6 +11,7 @@ level_PostLoad = function()
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant
@@ -34,7 +34,7 @@ function ScionHolder_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((activator_id == nil) or (not canTriggerEntity(activator_id, object_id))) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         if(0 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) then
             entity_funcs[id].activator_id = activator_id;
@@ -54,5 +54,5 @@ function ScionHolder_init(id)
                 gameflowSend(GF_OP_LEVELCOMPLETE, getLevel() + 1);
             end;
         end;
-    end
+    end;
 end;
