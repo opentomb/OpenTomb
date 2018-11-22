@@ -1,13 +1,13 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 2, VENICE.TR2
-
-print("Level script loaded (VENICE.lua)");
+print("level/tr2/venice->level_loaded !");
 
 level_PostLoad = function()
     addCharacterHair(player, getHairSetup(HAIR_TR2));
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[00] = {coll = COLLISION_GROUP_STATIC_OBLECT, shape = COLLISION_SHAPE_TRIMESH};   -- Pillar 1

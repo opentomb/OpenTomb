@@ -1,14 +1,14 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER 2, WALL.TR2
-
-print("Level script loaded (WALL.lua)");
+print("level/tr2/wall->level_loaded !");
 
 level_PostLoad = function()
     addCharacterHair(player, getHairSetup(HAIR_TR2));
     playStream(33);
 end;
 
-level_PreLoad = function() 
+level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[00] = {coll = COLLISION_GROUP_STATIC_OBLECT, shape = COLLISION_SHAPE_TRIMESH};        -- Bank rock
