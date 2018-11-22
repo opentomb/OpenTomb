@@ -181,8 +181,8 @@ tr1_sound[172] = {sample = 189, count = 001};
 tr_sound_info = {};
 
 tr_sound_info[0] = {
-	num_samples       = 195,
-	num_sounds        = 165,
+    num_samples       = 195,
+    num_sounds        = 165,
     sample_name_mask  = "data/tr1/samples/SFX_%04d.wav",
     sample_table      = tr1_sound
 };
