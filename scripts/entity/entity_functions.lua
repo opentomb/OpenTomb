@@ -98,8 +98,8 @@ function randomized_soundsource_init(id)    -- Randomized sound source
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
-			setEntityActivity(object_id, 0);
-		end;
+            setEntityActivity(object_id, 0);
+        end;
 		
         if((math.random(1000) > (1000 - entity_funcs[object_id].chance)) and (getEntityDistance(player, object_id) < 8192.0)) then
             playSound(entity_funcs[object_id].sound_id, object_id);
