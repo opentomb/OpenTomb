@@ -278,9 +278,10 @@ function cleaner_init(id)      -- Thames Wharf machine (aka cleaner)
                 entity_funcs[object_id].loop_detector[(entity_funcs[object_id].move_count)].y = py;
 
                 entity_funcs[object_id].move_count = entity_funcs[object_id].move_count + 1;
+                
                 if(entity_funcs[object_id].move_count > 4) then 
-				    entity_funcs[object_id].move_count = 1;
-				end;
+                    entity_funcs[object_id].move_count = 1;
+                end;
             else
                 local dy = entity_funcs[object_id].move_speed * frame_time;
                 moveEntityLocal(object_id, 0.0, dy, 0.0);  -- Move forward...
