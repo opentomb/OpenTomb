@@ -8,6 +8,12 @@
 debug_game = GAME_1;
 debug_level = 1;
 
+if (debug_level == 1) then
+	print("debug->loaded !");
+else
+	print("debug->desactivated !");
+end;
+
 function goToEntity(id)
     if(player ~= nil) then
         setEntityPos(player, getEntityPos(id));
@@ -91,4 +97,4 @@ function checkDebugKeys()
     end;
 
     return true;
-end
+end;

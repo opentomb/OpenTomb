@@ -1,14 +1,13 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL7A
-
-print("Level script loaded (LEVEL7A.lua)");
-
+print("level/tr1/level7a.the_cistern->level_loaded !");
 
 level_PostLoad = function()
     playStream(58);
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

@@ -7,34 +7,35 @@
 -- the same. Here, all these effects are explicitly defined, to ease out
 -- future scripting life.
 --------------------------------------------------------------------------------
+print("common_sounds->mapper_id loaded !");
 
-SOUND_NO          = 2
-SOUND_LANDING     = 4
-SOUND_HOLSTEROUT  = 6
-SOUND_HOLSTERIN   = 7
-SOUND_SHOTPISTOLS = 8
-SOUND_RELOAD      = 9
-SOUND_RICOCHET    = 10
-SOUND_LARASCREAM  = 30
-SOUND_LARAINJURY  = 31
-SOUND_SPLASH      = 33
-SOUND_FROMWATER   = 34
-SOUND_SWIM        = 35
-SOUND_LARABREATH  = 36
-SOUND_BUBBLE      = 37
-SOUND_USEKEY      = 39
-SOUND_GEN_DEATH   = 41
-SOUND_SHOTUZI     = 43
-SOUND_SHOTSHOTGUN = 45
-SOUND_UNDERWATER  = 60
-SOUND_MENUROTATE  = 108
-SOUND_MENUSELECT  = 109
-SOUND_MENUOPEN    = 111
-SOUND_MENUCLOSE   = 112  -- Only used in TR1-3.
-SOUND_MENUCLANG   = 114
-SOUND_MENUPAGE    = 115
-SOUND_MEDIPACK    = 116
-SOUND_IMPALE      = 145
+SOUND_NO          = 2;
+SOUND_LANDING     = 4;
+SOUND_HOLSTEROUT  = 6;
+SOUND_HOLSTERIN   = 7;
+SOUND_SHOTPISTOLS = 8;
+SOUND_RELOAD      = 9;
+SOUND_RICOCHET    = 10;
+SOUND_LARASCREAM  = 30;
+SOUND_LARAINJURY  = 31;
+SOUND_SPLASH      = 33;
+SOUND_FROMWATER   = 34;
+SOUND_SWIM        = 35;
+SOUND_LARABREATH  = 36;
+SOUND_BUBBLE      = 37;
+SOUND_USEKEY      = 39;
+SOUND_GEN_DEATH   = 41;
+SOUND_SHOTUZI     = 43;
+SOUND_SHOTSHOTGUN = 45;
+SOUND_UNDERWATER  = 60;
+SOUND_MENUROTATE  = 108;
+SOUND_MENUSELECT  = 109;
+SOUND_MENUOPEN    = 111;
+SOUND_MENUCLOSE   = 112;  -- Only used in TR1-3.
+SOUND_MENUCLANG   = 114;
+SOUND_MENUPAGE    = 115;
+SOUND_MEDIPACK    = 116;
+SOUND_IMPALE      = 145;
 
 --------------------------------------------------------------------------------
 -- Certain sound effect indexes were changed across different TR versions,
@@ -134,5 +135,9 @@ function getGlobalSound(ver, id)
         result = -1;
     end;
     
-    if(result ~= nil) then return result else return -1 end;
+    if(result ~= nil) then
+        return result;
+    else
+        return -1;
+    end;
 end;

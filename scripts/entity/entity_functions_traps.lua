@@ -1,5 +1,6 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
+print("entity_functions_traps->loaded !");
 
 function gen_trap_init(id)      -- Generic traps (TR1-TR2)
 
@@ -29,17 +30,16 @@ function gen_trap_init(id)      -- Generic traps (TR1-TR2)
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then 
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true) 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60.0 * frame_time) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60.0 * frame_time);
         end;
-    end
-end
-
+    end;
+end;
 
 function dart_emitter_init(id)
     setEntityActivity(id, false);
@@ -69,9 +69,8 @@ function dart_emitter_init(id)
         if(tick_state == TICK_STOPPED) then
             setEntityActivity(object_id, false);
         end;
-    end
-end
-
+    end;
+end;
 
 function sethblade_init(id)      -- Seth blades (TR4)
 
@@ -103,18 +102,17 @@ function sethblade_init(id)      -- Seth blades (TR4)
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true)
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
             setEntityActivity(object_id, false);
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityAnimState(object_id, ANIM_TYPE_BASE) == 1) then 
             setCharacterParam(activator_id, PARAM_HEALTH, 0) 
         end;
-    end
-end
-
+    end;
+end;
 
 function swingblade_init(id)        -- Swinging blades (TR1)
 
@@ -135,23 +133,23 @@ function swingblade_init(id)        -- Swinging blades (TR1)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityAnimState(object_id, ANIM_TYPE_BASE, state_on, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
+    end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(tick_state == TICK_STOPPED) then 
-            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true) 
+            setEntityAnimState(object_id, ANIM_TYPE_BASE, state_off, true); 
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         changeCharacterParam(activator_id, PARAM_HEALTH, -45.0 * 60 * frame_time);
-    end
-end
+    end;
+end;
 
 
 function wallblade_init(id)     -- Wall blade (TR1-TR3)
@@ -195,8 +193,7 @@ function wallblade_init(id)     -- Wall blade (TR1-TR3)
     entity_funcs[id].onCollide = function(object_id, activator_id)
         changeCharacterParam(activator_id, PARAM_HEALTH, -50.0 * 60.0 * frame_time);
     end;
-end
-
+end;
 
 function oldspike_init(id)  -- Teeth spikes
 
@@ -223,9 +220,8 @@ function oldspike_init(id)  -- Teeth spikes
                 changeCharacterParam(activator_id, PARAM_HEALTH, -(ls / 512.0));
             end;
         end;
-    end
-end
-
+    end;
+end;
 
 function newspike_init(id)  -- Teeth spikes (TR4-5)
 
@@ -271,7 +267,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         
         rotateEntity(object_id, 0.0, 0.0, (180.0 + rot_value * 45.0));
         if((curr_OCB & 0x08) ~= 0) then 
-            rotateEntity(object_id, 270.0) 
+            rotateEntity(object_id, 270.0);
         end;   -- Rotate horizontally.
         
         -- Fix teeth spikes position for right angles (except upwards case).
@@ -290,7 +286,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         entity_funcs[object_id].mode = ((curr_OCB & 0x30) >> 4);
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
+    end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) == 0) then
@@ -305,7 +301,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         setEntityActivity(object_id, true);
         entity_funcs[object_id].mode = 2;
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
     
@@ -365,7 +361,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         end;
         
         entity_funcs[object_id].curr_timer = entity_funcs[object_id].curr_timer + 1.0 * time_coef;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if((getEntityModelID(activator_id) == 0) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
@@ -404,7 +400,7 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
                 changeCharacterParam(activator_id, PARAM_HEALTH, -4 * 60 * frame_time);
             end;
         end;
-    end
+    end;
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].interval        = nil;
@@ -413,11 +409,10 @@ function newspike_init(id)  -- Teeth spikes (TR4-5)
         entity_funcs[object_id].curr_subscaling = nil;
         entity_funcs[object_id].waiting         = nil;
         entity_funcs[object_id].mode            = nil;
-    end
+    end;
     
     prepareEntity(id);
-end
-
+end;
 
 function spikewall_init(id)      -- Spike wall
 
@@ -429,18 +424,20 @@ function spikewall_init(id)      -- Spike wall
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
+    end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local ver = getLevelVersion();
         local scan_distance = 32.0;
-        if(ver < TR_II) then scan_distance = 1536.0 end; -- TR1's lava mass has different floor scan distance.
+        if(ver < TR_II) then
+			scan_distance = 1536.0;
+		end; -- TR1's lava mass has different floor scan distance.
         
         if(similarSector(object_id, 0.0, scan_distance, 0.0, false)) then
             moveEntityLocal(object_id, 0.0, 8.0 * 60.0 * frame_time, 0.0);
@@ -449,7 +446,7 @@ function spikewall_init(id)      -- Spike wall
             setEntityActivity(object_id, false);    -- Stop
             stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(activator_id) == 0) then
@@ -475,9 +472,8 @@ function spikewall_init(id)      -- Spike wall
                 end;
             end;
         end;
-    end
-end
-
+    end;
+end;
 
 function spikeceiling_init(id)
 
@@ -489,13 +485,13 @@ function spikeceiling_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end    
+    end;
     
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
     
     entity_funcs[id].onLoop = function(object_id, tick_state)
         local px, py, pz = getEntityPos(object_id);
@@ -507,7 +503,7 @@ function spikeceiling_init(id)
             setEntityActivity(object_id, false);    -- Stop
             stopSound(getGlobalSound(getLevelVersion(), GLOBALID_MOVINGWALL), object_id);
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityModelID(activator_id) == 0) then
@@ -542,9 +538,8 @@ function spikeceiling_init(id)
                 end;
             end;
         end;
-    end
-end
-
+    end;
+end;
 
 function lasersweep_init(id)      -- Laser sweeper (TR3)
 
@@ -605,11 +600,11 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
                 end;
             end;
         end;
-    end
+    end;
     
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then changeCharacterParam(activator_id, PARAM_HEALTH, -15.0) end;
-    end
+    end;
     
     entity_funcs[id].onDelete = function(object_id)
         entity_funcs[object_id].current_phase = nil;
@@ -618,13 +613,7 @@ function lasersweep_init(id)      -- Laser sweeper (TR3)
         entity_funcs[object_id].stopping      = nil;
         entity_funcs[object_id].current_wait  = nil;
         entity_funcs[object_id].max_wait      = nil;
-    end
+    end;
     
     prepareEntity(id);
-end
-
-
-
-
-
-
+end;

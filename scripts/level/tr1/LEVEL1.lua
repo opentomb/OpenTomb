@@ -1,10 +1,8 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL1 (CAVES)
-
-print("Level script loaded (LEVEL1.lua)");
+print("level/tr1/level1.peru->level_loaded !");
 
 level_PostLoad = function()
-
 end;
 
 level_PreLoad = function()

@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, CUT2
-
-print("Level script loaded (CUT2.lua)");
+print("level/tr1/cut2->cutscene_loaded !");
 
 level_PostLoad = function()
     playStream(25);

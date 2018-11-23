@@ -1,9 +1,9 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL10A
-
-print("Level script loaded (LEVEL10A.lua)");
+print("level/tr1/level10a.natla_mines->level_loaded !");
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant
@@ -26,7 +26,7 @@ function natla_cabin_init(id)
         setEntityAnim(object_id, ANIM_TYPE_BASE, a, c - 1, c - 1);  -- force it to avoid broken state change
         setEntityAnimState(object_id, ANIM_TYPE_BASE, st + 1);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityEnability(object_id)) then
@@ -40,8 +40,8 @@ function natla_cabin_init(id)
         else
             entity_funcs[id].onLoop = nil;
         end;
-    end
-end
+    end;
+end;
 
 
 function anim_rotor_init(id)      -- Ordinary one way animatings
@@ -73,8 +73,7 @@ function anim_rotor_init(id)      -- Ordinary one way animatings
             entity_funcs[id].onLoop = nil;
         end;
     end;
-end
-
+end;
 
 function anim_boat_init(id)      -- Ordinary one way animatings
 
@@ -116,8 +115,7 @@ function anim_boat_init(id)      -- Ordinary one way animatings
             setRoomStaticEnability(3, 11, true);
         end;
     end;
-end
-
+end;
 
 level_PostLoad = function()
     anim_boat_init(2);

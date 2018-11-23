@@ -1,5 +1,6 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
+print("entity_functions_enemies->loaded !");
 
 function setHumanoidBodyParts(id)
     setEntityBodyPartFlag(id,  0, BODY_PART_BODY_LOW);
@@ -19,17 +20,16 @@ function setHumanoidBodyParts(id)
     setEntityBodyPartFlag(id,  4, BODY_PART_RIGHT_LEG_1);
     setEntityBodyPartFlag(id,  5, BODY_PART_RIGHT_LEG_2);
     setEntityBodyPartFlag(id,  6, BODY_PART_RIGHT_LEG_3);
-end
+end;
 
-
+print("entity_functions_enemies->lara loaded !");
 function Lara_init(id)
-    print("LARA INIT");
     if(getLevelVersion() < TR_II) then
         if(getLevel() == 0) then
             setEntityMeshes(id, 5, 0, 13);
         end;
     elseif(getLevelVersion() < TR_III) then
-        print("TR 2");
+        print("entity_functions_enemies->tr2 selected for tr3 (similar) !");
     elseif(getLevelVersion() < TR_IV) then
         setEntityMeshes(id, 315, 0, 14);
     else
@@ -106,8 +106,7 @@ function Lara_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
     end;
-end
-
+end;
 
 function baddie_init(id)    -- INVALID!
     if(entity_funcs[id] == nil) then
@@ -138,7 +137,6 @@ function baddie_init(id)    -- INVALID!
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
 
-
     entity_funcs[id].onHit = function(object_id, activator_id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
@@ -157,8 +155,7 @@ function baddie_init(id)    -- INVALID!
             end;
         end;
     end;
-end
-
+end;
 
 function Doppelgagner_init(id)
     if(entity_funcs[id] == nil) then
@@ -263,7 +260,8 @@ function bat_init(id)
             enableEntity(object_id);
             setCharacterTarget(object_id, player);
             local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 1024, 0, 0, -512);
-            if(hit) then
+            
+			if(hit) then
                 local x, y, z = getEntityPos(object_id);
                 z = hz - 320;
                 print("bat fix");
@@ -286,7 +284,6 @@ function bat_init(id)
             entity_funcs[activator_id].onHit(activator_id, object_id);
         end;
     end;
-
 end;
 
 
@@ -355,7 +352,6 @@ function wolf_init(id)
     entity_funcs[id].onLoop = nil;
 end;
 
-
 function bear_init(id)
     baddie_init(id);
 
@@ -390,7 +386,6 @@ function bear_init(id)
         end;
     end;
 end;
-
 
 function raptor_init(id)
     baddie_init(id);
@@ -432,7 +427,6 @@ function raptor_init(id)
     end;
 end;
 
-
 function lion_init(id)
     baddie_init(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
@@ -473,7 +467,6 @@ function lion_init(id)
     end;
 end;
 
-
 function puma_init(id)
     baddie_init(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
@@ -513,7 +506,6 @@ function puma_init(id)
         end;
     end;
 end;
-
 
 function winged_mutant_init(id)
     baddie_init(id);
@@ -573,7 +565,6 @@ function winged_mutant_init(id)
     end;
 end;
 
-
 function trex_init(id)
     baddie_init(id);
     setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
@@ -623,7 +614,6 @@ function trex_init(id)
     end;
 end;
 
-
 function gorilla_init(id)
     baddie_init(id);
 
@@ -666,7 +656,6 @@ function gorilla_init(id)
     end;
 end;
 
-
 function crocodile_init(id)
     baddie_init(id);
 
@@ -707,7 +696,6 @@ function crocodile_init(id)
     end;
 end;
 
-
 function rat_init(id)
     baddie_init(id);
 
@@ -747,7 +735,6 @@ function rat_init(id)
     end;
 end;
 
-
 function centaur_init(id)
     baddie_init(id);
 
@@ -786,7 +773,6 @@ function centaur_init(id)
     end;
 end;
 
-
 function Larson_init(id)
     baddie_init(id);
 
@@ -816,7 +802,7 @@ function Larson_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->larson not have onShoot implemented ! (lign: 805)");
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
@@ -836,7 +822,6 @@ function Larson_init(id)
         end;
     end;
 end;
-
 
 function Pierre_init(id)
     baddie_init(id);
@@ -873,7 +858,7 @@ function Pierre_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->pierre not have onShoot implemented ! (lign: 861)");
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
@@ -891,11 +876,10 @@ function Pierre_init(id)
                 entity_funcs[object_id].onLoop = nil;
             end;
         elseif((hp == 1) and entity_funcs[object_id].is_flee) then
-
+			
         end;
     end;
 end;
-
 
 function cowboy_init(id)
     baddie_init(id);
@@ -919,7 +903,7 @@ function cowboy_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->cowboy not have onShoot implemented ! (lign: 906)");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -928,8 +912,7 @@ function cowboy_init(id)
             setEntityCollision(object_id, false);
         end;
     end;
-end
-
+end;
 
 function MrT_init(id)
     baddie_init(id);
@@ -953,7 +936,7 @@ function MrT_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->MrT not have onShoot implemented ! (lign: 861)");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -962,7 +945,7 @@ function MrT_init(id)
             setEntityCollision(object_id, false);
         end;
     end;
-end
+end;
 
 
 function skateboardist_init(id)
@@ -1006,7 +989,7 @@ function skateboardist_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->skateboard_kid not have onShoot implemented ! (lign: 861)");
     end;
 
     entity_funcs[id].onHit = function(object_id, activator_id)
@@ -1025,8 +1008,7 @@ function skateboardist_init(id)
             setEntityActivity(object_id, false);
         end;
     end;
-end
-
+end;
 
 function TorsoBoss_init(id)
     baddie_init(id);
@@ -1079,7 +1061,6 @@ function TorsoBoss_init(id)
     end;
 end;
 
-
 function Natla_init(id)
     baddie_init(id);
     setCharacterParam(id, PARAM_HEALTH, 600, 600);
@@ -1107,7 +1088,7 @@ function Natla_init(id)
     end;
 
     entity_funcs[id].onShoot = function(object_id, activator_id)
-        print("peu");
+        print("entity_functions_enemies->natla not have onShoot implemented ! (lign: 861)");
     end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
@@ -1117,8 +1098,7 @@ function Natla_init(id)
             setCharacterParam(object_id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         end;
     end;
-end
-
+end;
 
 function mummy_init(id)
     winged_mutant_init(id);
@@ -1134,8 +1114,7 @@ function mummy_init(id)
             return "mummy_init(" .. id .. ");\n";
         end;
     end;
-end
-
+end;
 
 function mummy_spawner_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -1147,8 +1126,7 @@ function mummy_spawner_init(id)
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
-end
-
+end;
 
 function mutant_spawner_init(id)
     entity_funcs[id].onActivate = function(object_id, activator_id)
@@ -1160,8 +1138,7 @@ function mutant_spawner_init(id)
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
     end;
-end
-
+end;
 
 function mutant_egg_init(id)
     setEntityActivity(id, false);
@@ -1197,7 +1174,6 @@ function mutant_egg_init(id)
         end;
     end;
 end;
-
 
 function mutant_boss_egg_init(id)
     if(getLevel() == 19) then
@@ -1235,10 +1211,8 @@ function mutant_boss_egg_init(id)
     end;
 end;
 
-
---                          TR_II
-
+-- TR_II
 function MaskedGoon_init(id)
     baddie_init(id);
     setEntityBaseAnimModel(id, 16);
-end
+end;

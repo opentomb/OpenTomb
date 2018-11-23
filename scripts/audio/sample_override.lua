@@ -8,8 +8,7 @@
 -- used low-quality samples. You won't need to replace samples for late games
 -- (like TR3, TR4 or TR5), since they already have high-quality samples.
 --------------------------------------------------------------------------------
-
-print("Sample remapper script loaded");
+print("sample_override->mapper_sound loaded !");
 
 tr1_sound      = {};
 
@@ -181,10 +180,12 @@ tr1_sound[172] = {sample = 189, count = 001};
 
 tr_sound_info = {};
 
-tr_sound_info[0] = { num_samples       = 195,
-                     num_sounds        = 165,
-                     sample_name_mask  = "data/tr1/samples/SFX_%04d.wav",
-                     sample_table      = tr1_sound };
+tr_sound_info[0] = {
+    num_samples       = 195,
+    num_sounds        = 165,
+    sample_name_mask  = "data/tr1/samples/SFX_%04d.wav",
+    sample_table      = tr1_sound
+};
 
 
 function getOverridedSample(ver, level_id, sound_id)
@@ -192,7 +193,7 @@ function getOverridedSample(ver, level_id, sound_id)
         return tr_sound_info[ver].sample_table[sound_id].sample, tr_sound_info[ver].sample_table[sound_id].count;
     else
         return -1, -1;
-    end
+    end;
 end;
 
 function getOverridedSamplesInfo(ver)

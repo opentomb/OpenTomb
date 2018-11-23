@@ -45,5 +45,5 @@ gameflow_params[GAME_1].fmv[4] =  { name = "Core", filepath = "data/tr1/fmv/LIFT
 gameflow_params[GAME_1].fmv[5] =  { name = "Core", filepath = "data/tr1/fmv/VISION.RPL" };  -- start EP3
 gameflow_params[GAME_1].fmv[6] =  { name = "Core", filepath = "data/tr1/fmv/PRISON.RPL" };  -- end EP3
 gameflow_params[GAME_1].fmv[7] =  { name = "Core", filepath = "data/tr1/fmv/CANYON.RPL" };  -- start EP4
-gameflow_params[GAME_1].fmv[8] =  { name = "Core", filepath = "data/tr1/fmv/PYRAMID.RPL" }  -- start Pyramid
+gameflow_params[GAME_1].fmv[8] =  { name = "Core", filepath = "data/tr1/fmv/PYRAMID.RPL" };  -- start Pyramid
 gameflow_params[GAME_1].fmv[9] =  { name = "Core", filepath = "data/tr1/fmv/END.RPL" };     -- end game

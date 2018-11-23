@@ -1,5 +1,6 @@
 -- OPENTOMB FONT GENERATION SCRIPT
 -- by Lwmte, Jan 2015
+print("fonts->loaded !");
 
 --------------------------------------------------------------------------------
 -- In this script, we define all in-game fonts and styles. You can define as

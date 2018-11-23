@@ -1,5 +1,6 @@
 -- OPENTOMB HELPER TRIGGER FUNCTION SCRIPT
 -- by Lwmte, May 2015
+print("helper_functions->loaded !");
 
 --------------------------------------------------------------------------------
 -- This script contains various helper functions which are used in entity

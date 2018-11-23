@@ -1,11 +1,10 @@
 -- OPENTOMB ENTITY FUNCTIONS SCRIPT
 -- By TeslaRus, Lwmte, 2014-2016
-
+print("entity_functions_common->loaded !");
 
 function save_crystal_init(id)
     disableEntity(id);
-end
-
+end;
 
 function getDoorBox(id)
     box, blockable = getEntityBoxID(id, 0, 0);
@@ -18,7 +17,7 @@ function getDoorBox(id)
     else
         return -1;
     end;
-end
+end;
 
 function door_init(id)   -- NORMAL doors only!
 
@@ -58,9 +57,8 @@ function door_init(id)   -- NORMAL doors only!
             setEntityMask(object_id, 0);
             setBoxBlocked(entity_funcs[object_id].box, entity_funcs[object_id].state_on == 1);
         end;
-    end
-end
-
+    end;
+end;
 
 function pushdoor_init(id)   -- Pushdoors (TR4)
 
@@ -88,8 +86,7 @@ function pushdoor_init(id)   -- Pushdoors (TR4)
         end;
         return ENTITY_TRIGGERING_NOT_READY;
     end;
-end
-
+end;
 
 function WheelKnob_init(id)   -- Bulkdoors (TR2)
 
@@ -148,8 +145,7 @@ function WheelKnob_init(id)   -- Bulkdoors (TR2)
             setEntityActivity(object_id, false);
         end;
     end;
-end
-
+end;
 
 function anim_single_init(id)      -- Ordinary one way animatings
 
@@ -173,8 +169,7 @@ function anim_single_init(id)      -- Ordinary one way animatings
             setEntityActivity(object_id, false);
         end;
     end;
-end
-
+end;
 
 function anim_init(id)      -- Ordinary animatings
 
@@ -205,9 +200,8 @@ function anim_init(id)      -- Ordinary animatings
             setEntityActivity(object_id, false);
             -- disable entity?
         end;
-    end
-end
-
+    end;
+end;
 
 function pushable_init(id)
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR, 1);
@@ -219,7 +213,6 @@ function pushable_init(id)
     setEntityCollisionFlags(id, COLLISION_GROUP_STATIC_ROOM, nil, nil);
     setEntityCollisionGroupAndMask(id, COLLISION_GROUP_STATIC_ROOM, COLLISION_MASK_ALL);
 end
-
 
 function pickable_init(id)    -- Pick-ups
 
@@ -269,7 +262,7 @@ function pickable_init(id)    -- Pick-ups
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if((object_id == nil) or (entity_funcs[object_id].activator_id ~= nil)) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         enableEntity(object_id);
         setEntityCollision(object_id, false);
@@ -344,7 +337,6 @@ function pickable_init(id)    -- Pick-ups
     end;
 end;
 
-
 function boulder_init(id)
 
     setEntityTypeFlag(id, ENTITY_TYPE_HEAVYTRIGGER_ACTIVATOR);
@@ -362,10 +354,8 @@ function boulder_init(id)
             end;
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
-
-end
-
+    end;
+end;
 
 function boulder_heavy_init(id)
 
@@ -388,13 +378,13 @@ function boulder_heavy_init(id)
             setEntityAnimState(object_id, ANIM_TYPE_BASE, 1);
         end;
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityPos(object_id, entity_funcs[object_id].x, entity_funcs[object_id].y, entity_funcs[object_id].z);
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         if(getEntityActivity(object_id)) then
@@ -404,6 +394,7 @@ function boulder_heavy_init(id)
             local test_y = R - r + dy;
             local lim = dy / test_y;
             local is_stopped, t = getEntitySphereTest(object_id, mask, r, 0.0, test_y, 0.0);
+			
             if(is_stopped) then
                 dy = t * test_y - (R - r);
                 is_stopped = dy < 16.0;
@@ -426,12 +417,10 @@ function boulder_heavy_init(id)
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id)) then 
-            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60 * frame_time) 
+            changeCharacterParam(activator_id, PARAM_HEALTH, -35.0 * 60 * frame_time);
         end;
     end;
-
 end;
-
 
 function projectile_init(id, speed, damage)
     if(entity_funcs[id] == nil) then
@@ -465,8 +454,7 @@ function projectile_init(id, speed, damage)
         setEntityStateFlag(object_id, ENTITY_STATE_DELETED, 1);
         print("projectile character hit: " .. object_id);
     end;
-end
-
+end;
 
 function zipline_init(id)
     setEntityActivity(id, false);
@@ -480,6 +468,7 @@ function zipline_init(id)
     entity_funcs[id].x0, entity_funcs[id].y0, entity_funcs[id].z0 = getEntityPos(id); 
     local anim_grab = 215;
     local anim_drop = 217;
+	
     if(getLevelVersion() >= TR_III) then
         anim_grab = 214;
         anim_drop = 216;
@@ -528,6 +517,7 @@ function zipline_init(id)
             local dy = 3072.0 * frame_time;
             local dz = 0.0 - dy / 4.0;
             local hit = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, dx, dy + 128.0, dz, 0, 0, 0);
+			
             if(hit) then
                 if(entity_funcs[object_id].activator_id ~= nil) then
                     setEntityAnim(entity_funcs[object_id].activator_id, ANIM_TYPE_BASE, anim_drop, 0);
@@ -548,7 +538,6 @@ function zipline_init(id)
         end;
     end;
 end;
-
 
 function breakable_window_init(id)
     setEntityActivity(id, false);

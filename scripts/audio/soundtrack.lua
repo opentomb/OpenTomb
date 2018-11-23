@@ -47,7 +47,7 @@ SECRET_TR4  = 5  ;
 SECRET_TR5  = 6  ;
 
 
-print("Soundtrack mapper script loaded");
+print("soundtrack->mapper_soundtrack loaded !");
 
 --------------------------------------------------------------------------------
 -------------------------------- TOMB RAIDER 1 ---------------------------------
@@ -727,7 +727,7 @@ function getTrackInfo(ver, id)
             tbl  = tr3_new_track_tbl;    -- TR_III (REMASTERED)
         else
             tbl  = tr3_old_track_tbl;    -- TR_III (OLD)
-        end
+        end;
         path   = "data/tr3/audio/";
         method = OGG;
     elseif(ver < 8) then                -- TR_IV, TR_IV_DEMO

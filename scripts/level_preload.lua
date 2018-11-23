@@ -1,5 +1,6 @@
 -- OPENTOMB LEVEL PRELOAD SCRIPT
 -- By Lwmte, Apr 2015
+print("level_preload->loaded !");
 
 --------------------------------------------------------------------------------
 -- This script defines static mesh property table, as well as functions related
@@ -34,7 +35,7 @@
 --------------------------------------------------------------------------------
 
 dofile(base_path .. "scripts/entity/entity_properties.lua");
-dofile(base_path .. "scripts/entity/entity_model_ID_override.lua");
+dofile(base_path .. "scripts/entity/entity_model_id_override.lua");
 
 static_tbl = {};    -- Define static mesh property table.
 

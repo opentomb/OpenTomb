@@ -1,5 +1,6 @@
 -- OPENTOMB INVENTORY ITEM DESCRIPTOR
 -- by TeslaRus, Sep 2014
+print("items->loaded !");
 
 --------------------------------------------------------------------------------
 -- Assigns global pickups for each game version.

@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL2 (CAVES)
-
-print("Level script loaded (LEVEL2.lua)");
+print("level/tr1/level2.city_of_vilcabamba->level_loaded !");
 
 level_PostLoad = function()
     -- overlapped list generates correctly

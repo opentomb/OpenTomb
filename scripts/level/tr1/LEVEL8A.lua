@@ -1,13 +1,13 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL8A
-
-print("Level script loaded (LEVEL8A.lua)");
+print("level/tr1/level8a.city_of_khamoon->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL6
-
-print("Level script loaded (LEVEL6.lua)");
+print("level/tr1/level6.palace_midas->level_loaded !");
 
 level_PostLoad = function()
     moveEntityLocal(player, 0, 0, 256);
@@ -10,6 +9,7 @@ level_PostLoad = function()
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant
@@ -22,7 +22,6 @@ level_PreLoad = function()
     static_tbl[39] = {coll = COLLISION_GROUP_STATIC_OBLECT, shape = COLLISION_SHAPE_TRIMESH};       -- Wall bricks
     static_tbl[43] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Icicle
 end;
-
 
 function midastouch_init(id)    -- Midas gold touch
     --enable Midas death anim
@@ -43,7 +42,7 @@ function midastouch_init(id)    -- Midas gold touch
     entity_funcs[id].onActivate = function(object_id, activator_id)
         if(activator_id == nil) then
             return ENTITY_TRIGGERING_NOT_READY;
-        end
+        end;
 
         if((0 == getEntityModelID(activator_id, ANIM_TYPE_BASE)) and (getItemsCount(activator_id, 100) > 0)) then
             entity_funcs[object_id].activator_id = activator_id;
@@ -80,5 +79,5 @@ function midastouch_init(id)    -- Midas gold touch
                 disableEntity(object_id);
             end;
         end;
-    end
-end
+    end;
+end;

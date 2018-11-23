@@ -1,7 +1,6 @@
 -- OPENTOMB LEVEL SCRIPT
 -- FOR TOMB RAIDER, LEVEL4
-
-print("Level script loaded (LEVEL4.lua)");
+print("level/tr1/level4.st_francis_folly->level_loaded !");
 
 level_PostLoad = function()
 
@@ -20,7 +19,6 @@ level_PreLoad = function()
     static_tbl[43] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Icicle
 end;
 
-
 function damocles_init(id)      -- Sword of Damocles
 
     setEntityTypeFlag(id, ENTITY_TYPE_GENERIC);
@@ -32,12 +30,12 @@ function damocles_init(id)      -- Sword of Damocles
     entity_funcs[id].onActivate = function(object_id, activator_id)
         setEntityActivity(object_id, true);
         return ENTITY_TRIGGERING_ACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onDeactivate = function(object_id, activator_id)
         setEntityActivity(object_id, false);
         return ENTITY_TRIGGERING_DEACTIVATED;
-    end
+    end;
 
     entity_funcs[id].onLoop = function(object_id, tick_state)
         rotateEntity(object_id, rot_speed * frame_time);
@@ -53,8 +51,8 @@ function damocles_init(id)      -- Sword of Damocles
                     entity_funcs[id].onLoop = nil;
                 end;
             end;
-        end
-    end
+        end;
+    end;
 
     entity_funcs[id].onCollide = function(object_id, activator_id)
         if(getEntityActivity(object_id) and (activator_id == player) and (getCharacterParam(activator_id, PARAM_HEALTH) > 0)) then
@@ -64,8 +62,7 @@ function damocles_init(id)      -- Sword of Damocles
             setCharacterRagdollActivity(activator_id, true);
         end;
     end;
-end
-
+end;
 
 function Thor_hummer_init(id)      -- map 5
 
@@ -125,4 +122,4 @@ function Thor_hummer_init(id)      -- map 5
             end;
         end;
     end;
-end
+end;

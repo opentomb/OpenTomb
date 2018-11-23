@@ -3,6 +3,7 @@
 -- Version: 1.2
 -- By: Lwmte
 -- Rewritten by: TeslaRus
+print("gameflow->path loaded !");
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 -- 1 - Define global constants
@@ -66,5 +67,3 @@ function setgamef(game_id, level_id)
         setGame(GAME_5, level_id);
     end;
 end;
-
-print("Gameflow path script loaded");
