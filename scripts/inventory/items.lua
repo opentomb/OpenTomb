@@ -9,7 +9,6 @@ print("items->loaded !");
 --------------------------------------------------------------------------------
 
 function genBaseItems()
-
     local ver = getLevelVersion();
 
     if(ver < TR_II) then
@@ -287,9 +286,8 @@ function genBaseItems()
         createBaseItem(ITEM_FLARES, 355, 355, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_FLARES);
         createBaseItem(ITEM_SINGLE_FLARE, 354, 354, ITEM_TYPE_SUPPLY, 1);
         createBaseItem(ITEM_TORCH, 241, 241, ITEM_TYPE_SUPPLY, 1);
-
-    end
-end
+    end;
+end;
 
 
 items_funcs = {};
@@ -351,4 +349,4 @@ items_funcs[ITEM_UZI].onUse = function(id)
     return 0;
 end;
 
-print("Items script loaded");
+print("items->items_funcs loaded !");

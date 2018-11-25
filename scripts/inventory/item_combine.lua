@@ -240,8 +240,7 @@ function combineItems(a, b, oneway)
     end;
     
     print("Combine: no items combined. Wrong combo or item name(s)?");
-    
-end
+end;
 
 function separateItems(a)
     
@@ -277,5 +276,4 @@ function separateItems(a)
     end;
     
     print("Separate: no items separated. Wrong item name(s)?");
-    
-end
+end;
