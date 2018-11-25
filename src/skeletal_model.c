@@ -731,27 +731,6 @@ void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p eff
 }
 
 
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
-{
-    if(state_change_anim >= 0)
-    {
-        state_change_p ret = anim->state_change;
-        for(uint16_t i = 0; i < anim->state_change_count; i++, ret++)
-        {
-            for(uint16_t j = 0; j < ret->anim_dispatch_count; j++)
-            {
-                if(ret->anim_dispatch[j].next_anim == state_change_anim)
-                {
-                    return ret;
-                }
-            }
-        }
-    }
-
-    return NULL;
-}
-
-
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id)
 {
     state_change_p ret = anim->state_change;
