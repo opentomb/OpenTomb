@@ -9,6 +9,7 @@ print("items->loaded !");
 --------------------------------------------------------------------------------
 
 function genBaseItems()
+
     local ver = getLevelVersion();
 
     if(ver < TR_II) then
@@ -136,37 +137,28 @@ function genBaseItems()
         createBaseItem(ITEM_PUZZLE_4, 208, 208, ITEM_TYPE_QUEST, 1);
 
     elseif(ver < TR_V) then
-        createBaseItem(ITEM_COMPASS, 375, 375, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_COMPASS);
-        createBaseItem(ITEM_LOAD, 376, 376, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LOAD);
-        createBaseItem(ITEM_SAVE, 377, 377, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_SAVE);
-
+        createBaseItem(ITEM_PASSPORT, 527, 527, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
+        createBaseItem(ITEM_VIDEO, 528, 528, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_VIDEO);
+        createBaseItem(ITEM_AUDIO, 529, 529, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_AUDIO);
+        createBaseItem(ITEM_CONTROLS, 530, 530, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_CONTROLS);
+		createBaseItem(ITEM_COMPASS, 528, 528, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_COMPASS);
+		
         createBaseItem(ITEM_PISTOL, 349, 349, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_PISTOLS);
         createBaseItem(ITEM_MAGNUM, 366, 366, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_REVOLVER);
         createBaseItem(ITEM_UZI, 351, 351, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_UZIS);
         createBaseItem(ITEM_SHOTGUN, 353, 353, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_SHOTGUN);
         createBaseItem(ITEM_CROSSBOW, 356, 356, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_CROSSBOW);
         createBaseItem(ITEM_GRENADEGUN, 361, 361, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_GRENADEGUN);
-
-        createBaseItem(ITEM_PISTOL_AMMO, 350, 350, ITEM_TYPE_SUPPLY, 40, ITEM_NAME_PISTOL_AMMO);
-        createBaseItem(ITEM_MAGNUM_AMMO, 367, 367, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_REVOLVER_AMMO);
-        createBaseItem(ITEM_UZI_AMMO, 352, 352, ITEM_TYPE_SUPPLY, 30, ITEM_NAME_UZI_AMMO);
-        createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 354, 354, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_SHOTGUN_NORMAL_AMMO);
-        createBaseItem(ITEM_SHOTGUN_WIDESHOT_AMMO, 355, 355, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_SHOTGUN_WIDESHOT_AMMO);
-        createBaseItem(ITEM_CROSSBOW_NORMAL_AMMO, 357, 357, ITEM_TYPE_SUPPLY, 10, ITEM_NAME_CROSSBOW_NORMAL_AMMO);
-        createBaseItem(ITEM_CROSSBOW_POISON_AMMO, 358, 358, ITEM_TYPE_SUPPLY, 10, ITEM_NAME_CROSSBOW_POISON_AMMO);
-        createBaseItem(ITEM_CROSSBOW_EXPLOSIVE_AMMO, 359, 359, ITEM_TYPE_SUPPLY, 10, ITEM_NAME_CROSSBOW_EXPLOSIVE_AMMO);
-        createBaseItem(ITEM_GRENADEGUN_NORMAL_AMMO, 362, 362, ITEM_TYPE_SUPPLY, 4, ITEM_NAME_GRENADEGUN_NORMAL_AMMO);
-        createBaseItem(ITEM_GRENADEGUN_SUPER_AMMO, 363, 363, ITEM_TYPE_SUPPLY, 4, ITEM_NAME_GRENADEGUN_SUPER_AMMO);
-        createBaseItem(ITEM_GRENADEGUN_FLASH_AMMO, 364, 364, ITEM_TYPE_SUPPLY, 4, ITEM_NAME_GRENADEGUN_FLASH_AMMO);
-
+		
         createBaseItem(ITEM_MAGNUM_LASERSIGHT, 366, 366, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_REVOLVER_LASERSIGHT);
         createBaseItem(ITEM_CROSSBOW_LASERSIGHT, 356, 356, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_CROSSBOW_LASERSIGHT);
 
         createBaseItem(ITEM_LASERSIGHT, 370, 370, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_LASERSIGHT);
         createBaseItem(ITEM_BINOCULARS, 371, 371, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_BINOCULARS);
 
-        createBaseItem(ITEM_LARGE_MEDIPACK, 368, 368, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_LARGE_MEDIPACK);
-        createBaseItem(ITEM_SMALL_MEDIPACK, 369, 369, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_SMALL_MEDIPACK);
+		createBaseItem(ITEM_SMALL_MEDIPACK, 533, 533, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_SMALL_MEDIPACK);
+        createBaseItem(ITEM_LARGE_MEDIPACK, 534, 534, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_LARGE_MEDIPACK);
+        
         createBaseItem(ITEM_FLARES, 373, 373, ITEM_TYPE_SUPPLY, 12, ITEM_NAME_FLARES);
         createBaseItem(ITEM_SINGLE_FLARE, 372, 372, ITEM_TYPE_SUPPLY, 1);
         createBaseItem(ITEM_TORCH, 247, 247, ITEM_TYPE_SUPPLY, 1);
@@ -294,22 +286,36 @@ items_funcs = {};
 
 items_funcs[ITEM_SMALL_MEDIPACK] = {}; 
 items_funcs[ITEM_SMALL_MEDIPACK].onUse = function(id)
-    changeCharacterParam(id, PARAM_HEALTH, 250);
-    removeItem(id, ITEM_SMALL_MEDIPACK, 1);
-    if(player == id) then
-        playSound(SOUND_MEDIPACK);
+    if (getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
+        if (player == id) then
+            playSound(SOUND_NO);
+        end;
+        return 0;
+    else
+        changeCharacterParam(player, PARAM_HEALTH, 250);
+        removeItem(id, ITEM_SMALL_MEDIPACK, 1);
+        if (player == id) then
+            playSound(SOUND_MEDIPACK);
+        end;
+        return 1;
     end;
-    return 1;
 end;
 
 items_funcs[ITEM_LARGE_MEDIPACK] = {};
 items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
-    setCharacterParam(id, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
-    removeItem(id, ITEM_LARGE_MEDIPACK, 1);
-    if(player == id) then
-        playSound(SOUND_MEDIPACK);
+	if (getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
+        if (player == id) then
+            playSound(SOUND_NO);
+        end;
+        return 0;
+    else
+        changeCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
+        removeItem(id, ITEM_LARGE_MEDIPACK, 1);
+        if (player == id) then
+            playSound(SOUND_MEDIPACK);
+        end;
+        return 1;
     end;
-    return 1;
 end;
 
 items_funcs[ITEM_PISTOL] = {};
@@ -323,8 +329,8 @@ items_funcs[ITEM_SHOTGUN].onUse = function(id)
     if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) then
         if(getLevelVersion() < TR_II) then
             setCharacterCurrentWeapon(id, 2);
-        else
-            setCharacterCurrentWeapon(id, 3);
+		else
+			setCharacterCurrentWeapon(id, 3);
         end;
         return 1;
     end;
