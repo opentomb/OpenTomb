@@ -2,7 +2,7 @@
 #ifndef SKELETAL_MODEL_H
 #define SKELETAL_MODEL_H
 
-#ifdef	__cplusplus
+#ifdef    __cplusplus
 extern "C" {
 #endif
 
@@ -54,11 +54,12 @@ struct base_mesh_s;
 typedef struct ss_bone_tag_s
 {
     struct ss_bone_tag_s   *parent;
-    uint32_t                body_part;                                          // flag: BODY, LEFT_LEG_1, RIGHT_HAND_2, HEAD...
+    uint32_t                body_part;
     uint16_t                index;
     uint16_t                is_hidden : 1;
     uint16_t                is_targeted : 1;
     uint16_t                is_axis_modded : 1;
+
     struct
     {
         float               bone_local_direction[3];
@@ -66,8 +67,9 @@ typedef struct ss_bone_tag_s
         float               limit[4];                                           // x, y, z, cos(alpha_limit)
         float               current_q[4];
         float               axis_mod[3];
-        float               current_slerp;
+        float                current_slerp;
     }                       mod;
+
     struct base_mesh_s     *mesh_base;                                          // base mesh - pointer to the first mesh in array
     struct base_mesh_s     *mesh_replace;
     struct base_mesh_s     *mesh_skin;                                          // base skinned mesh for ТР4+
@@ -77,8 +79,8 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-    float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
-    float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+    float                    local_transform[16];
+    float                    current_transform[16];
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 typedef struct ss_animation_s
@@ -88,7 +90,7 @@ typedef struct ss_animation_s
     uint16_t                    do_jump_anim : 1;
     uint16_t                    heavy_state : 1;
     uint16_t                    frame_changing_state : 13;
-    int16_t                     target_state;
+    int16_t                        target_state;
     int16_t                     prev_animation;
     int16_t                     prev_frame;
     int16_t                     current_animation;
@@ -272,9 +274,10 @@ void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p model);
 
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
 void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
+struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
-void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
+int  Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
 int  Anim_IncTime(struct ss_animation_s *ss_anim, float time);
 inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)
@@ -282,7 +285,7 @@ inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)
     return ss_anim->model->animations[ss_anim->current_animation].state_id;
 }
 
-#ifdef	__cplusplus
+#ifdef    __cplusplus
 }
 #endif
 

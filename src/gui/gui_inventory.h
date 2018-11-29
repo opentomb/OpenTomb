@@ -144,6 +144,7 @@ private:
     float                       m_item_time;
     float                       m_item_angle_z;
     float                       m_item_angle_x;
+    float                       m_item_offset_y;
     float                       m_item_offset_z;
     float                       m_current_scale;
 
@@ -155,6 +156,7 @@ private:
     void handleCompass(struct base_item_s *bi, float time);
     void handleControls(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
+    bool restoreItemAngleIsEnd();
 };
 
 

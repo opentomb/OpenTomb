@@ -3,7 +3,8 @@
 #define STATE_CONTROL_LARA_H
 
 /// DEFAULT PISTOLS (ALL TR HAVE PISTOL IN SLOT 1)
-#define PISTOL        1
+#define PISTOL           1
+#define TR_GRENADEGUN    7
 
 /// TR1 Constants
 #define TR1_SHOTGUN   2
@@ -15,7 +16,6 @@
 #define TR2_AUTOPISTOL    4
 #define TR2_UZI           5
 #define TR2_M16           6
-#define TR2_GRENADEGUN    7
 #define TR2_HARPOONGUN    8
 
 /// TR3 Constants
@@ -40,7 +40,7 @@
 /// it's for my custom level (TR4)
 #define TRTS_PISTOL             3
 #define TRTS_SHOTGUN            4
-#define TRTS_AUTOPISTOL	        5
+#define TRTS_AUTOPISTOL            5
 #define TRTS_UZI                6
 #define TRTS_DESERT_EAGLE       7
 #define TRTS_M16                8
