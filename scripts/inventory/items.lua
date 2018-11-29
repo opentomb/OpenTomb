@@ -274,7 +274,7 @@ function genBaseItems()
 
         -- revolver slot is shared between Revolver and Desert Eagle in Rome/Russia levels,
         -- so we just left the name uninitialized until level script is used.
-		createBaseItem(ITEM_REVOLVER, 347, 347, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_REVOLVER);
+        createBaseItem(ITEM_REVOLVER, 347, 347, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_REVOLVER);
         createBaseItem(ITEM_REVOLVER_AMMO, 348, 348, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_REVOLVER_AMMO);
 
         createBaseItem(ITEM_LASERSIGHT, 351, 351, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_LASERSIGHT);
@@ -288,17 +288,17 @@ function genBaseItems()
         createBaseItem(ITEM_FLARES, 355, 355, ITEM_TYPE_SUPPLY, 6, ITEM_NAME_FLARES);
         createBaseItem(ITEM_SINGLE_FLARE, 354, 354, ITEM_TYPE_SUPPLY, 1);
         createBaseItem(ITEM_TORCH, 241, 241, ITEM_TYPE_SUPPLY, 1);
-		
-		createBaseItem(ITEM_KEY_1, 196, 196, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_2, 197, 197, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_3, 198, 198, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_4, 199, 199, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_5, 200, 200, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_6, 201, 201, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_7, 202, 202, ITEM_TYPE_QUEST, 1);
-		createBaseItem(ITEM_KEY_8, 203, 203, ITEM_TYPE_QUEST, 1);
-		
-		createBaseItem(ITEM_SECRET_1, 223, 223, ITEM_TYPE_QUEST, 1);
+        
+        createBaseItem(ITEM_KEY_1, 196, 196, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_2, 197, 197, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_3, 198, 198, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_4, 199, 199, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_5, 200, 200, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_6, 201, 201, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_7, 202, 202, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_KEY_8, 203, 203, ITEM_TYPE_QUEST, 1);
+        
+        createBaseItem(ITEM_SECRET_1, 223, 223, ITEM_TYPE_QUEST, 1);
     end;
 end;
 

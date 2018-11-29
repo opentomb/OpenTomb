@@ -48,7 +48,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 #ifdef _WIN32
     uint16_t* parents = malloc((uint16_t) model->mesh_count);
 #elif __linux__
-	uint16_t parents[model->mesh_count];
+    uint16_t parents[model->mesh_count];
 #endif
 
     parents[0] = 0;

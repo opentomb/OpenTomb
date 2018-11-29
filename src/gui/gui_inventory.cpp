@@ -720,8 +720,8 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
                         {
-							m_command = GUI_COMMAND_CLOSE;
-							m_current_state = INVENTORY_DEACTIVATING;
+                            m_command = GUI_COMMAND_CLOSE;
+                            m_current_state = INVENTORY_DEACTIVATING;
                         }
                         else
                         {

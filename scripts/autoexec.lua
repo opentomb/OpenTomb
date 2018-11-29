@@ -360,7 +360,7 @@ elseif (ver == TR_IV) then
 elseif (ver == TR_V) then
     print("autoexec->give_item: no system item for TR5 is implemented now !");
     print("autoexec->give_item: you can only have revolver in the starting level !");
-	
+    
     addItem(player, ITEM_REVOLVER, 1);
     addItem(player, ITEM_REVOLVER_AMMO, 1000);
 end;

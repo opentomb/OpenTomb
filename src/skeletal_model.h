@@ -80,11 +80,11 @@ typedef struct ss_bone_tag_s
 
     float                   qrotate[4];                                         // quaternion rotation
 #ifdef _WIN32
-	float                   local_transform[16];
-	float                   current_transform[16];
+    float                   local_transform[16];
+    float                   current_transform[16];
 #elif __linux__
-	float                   local_transform[16] __attribute__((packed, aligned(16)));
-	float                   current_transform[16] __attribute__((packed, aligned(16)));
+    float                   local_transform[16] __attribute__((packed, aligned(16)));
+    float                   current_transform[16] __attribute__((packed, aligned(16)));
 #endif
 }ss_bone_tag_t, *ss_bone_tag_p;
 
