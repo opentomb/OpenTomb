@@ -617,21 +617,23 @@ float SetPointOnBezierCurve(float p0, float p1, float p2, float p3, float t)
 void gui_InventoryManager::frameItems(float time)
 {
     int ring_item_index = 0;
+
     for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
         if(bi && (bi->type == m_current_items_type))
         {
-            Item_Frame(bi->bf, 0.0f);
-
             if(ring_item_index == m_selected_item)
             {
+                Item_Frame(bi->bf, 0.0f);
+
                 if(m_current_state == INVENTORY_ACTIVATING)
                 {
                     restoreItemAngle(time);
                     
                     if (restoreItemAngleIsEnd())
                     {
+                        ///@FIXME: need progressive curved move like in original TR (this move is correct but not original)
                         m_current_scale += time * 10.0f;
                         m_item_offset_y += SetPointOnBezierCurve(0.0f, 30.0f, 50.0f, 80.0f, time);
                         m_item_offset_z -= SetPointOnBezierCurve(0.0f, 5.0f, 10.0f, 80.0f, time);
@@ -642,7 +644,23 @@ void gui_InventoryManager::frameItems(float time)
                             m_item_offset_y = 80.0f;
                             m_item_offset_z = 80.0f;
                             m_item_time = 0.0f;
-                            m_current_state = INVENTORY_ACTIVATED;
+                            
+                            switch (bi->id)
+                            {
+                                case ITEM_SMALL_MEDIPACK:
+                                case ITEM_LARGE_MEDIPACK:
+                                case ITEM_PASSPORT:
+                                case ITEM_COMPASS:
+                                case ITEM_VIDEO:
+                                case ITEM_AUDIO:
+                                case ITEM_CONTROLS:
+                                    m_current_state = INVENTORY_ACTIVATED;
+                                    break;
+                                default:
+                                    m_current_state = INVENTORY_DEACTIVATING;
+                                    Item_Use(m_inventory, bi->id, m_owner_id);
+                                    break;
+                            }
                         }
 
                         m_command = GUI_COMMAND_NONE;
@@ -654,6 +672,7 @@ void gui_InventoryManager::frameItems(float time)
                     
                     if (restoreItemAngleIsEnd())
                     {
+                        ///@FIXME: need progressive curved move inverted like in original TR
                         m_current_scale -= time * 10.0f;
                         m_item_offset_y -= time * 90.0f;
                         m_item_offset_z -= time * 90.0f;
