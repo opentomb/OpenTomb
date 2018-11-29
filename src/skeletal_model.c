@@ -45,7 +45,11 @@ void SkeletalModel_Clear(skeletal_model_p model)
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
     int stack = 0;
+#ifdef _WIN32
     uint16_t* parents = malloc((uint16_t) model->mesh_count);
+#elif __linux__
+	uint16_t parents[model->mesh_count];
+#endif
 
     parents[0] = 0;
     model->mesh_tree[0].parent = 0;                                             // root
@@ -62,7 +66,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
         }
         if(model->mesh_tree[i].flag & 0x02)                                     // PUSH
         {
-            if(stack + 1 < (int16_t)model->mesh_count)
+            if(stack + 1 < (int16_t) model->mesh_count)
             {
                 stack++;
                 parents[stack] = model->mesh_tree[i].parent;
@@ -85,7 +89,9 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
         }
     }
 
+#ifdef _WIN32
     free(parents);
+#endif
 }
 
 
@@ -723,27 +729,6 @@ void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p eff
     *ptr = (animation_effect_p)malloc(sizeof(animation_effect_t));
     **ptr = *effect;
     (*ptr)->next = NULL;
-}
-
-
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim)
-{
-    if(state_change_anim >= 0)
-    {
-        state_change_p ret = anim->state_change;
-        for(uint16_t i = 0; i < anim->state_change_count; i++, ret++)
-        {
-            for(uint16_t j = 0; j < ret->anim_dispatch_count; j++)
-            {
-                if(ret->anim_dispatch[j].next_anim == state_change_anim)
-                {
-                    return ret;
-                }
-            }
-        }
-    }
-
-    return NULL;
 }
 
 

@@ -118,13 +118,13 @@ elseif (ver == TR_II) then
     setModelMeshReplaceFlag(5, 1, 0x01);
     setModelMeshReplaceFlag(5, 4, 0x01);
 
-    -- M16
+    -- m16
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
     setModelMeshReplaceFlag(6, 14, 0x02);
-    -- M16 override Model Anim (Movement)
-    setModelAnimReplaceFlag(6, 7,  0x01);  -- needed for animation
-    setModelAnimReplaceFlag(6, 14, 0x01);   -- needed for animation (weapon)
+    -- m16 override model anim (movement)
+    setModelAnimReplaceFlag(6, 7,  0x01);  -- needed for animation (weapon)
+    setModelAnimReplaceFlag(6, 14, 0x01);  -- needed for animation (weapon)
     
     -- grenade launcher
     setDefaultModelAnimReplaceFlag(7);
@@ -359,16 +359,8 @@ elseif (ver == TR_IV) then
     addItem(player, ITEM_REVOLVER_AMMO, 1000);
 elseif (ver == TR_V) then
     print("autoexec->give_item: no system item for TR5 is implemented now !");
-    
-    addItem(player, ITEM_UZI, 1);
-    addItem(player, ITEM_UZI_AMMO, 1000);
-    addItem(player, ITEM_SHOTGUN, 1);
-    addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
-    addItem(player, ITEM_SHOTGUN_WIDESHOT_AMMO, 1000);
-    addItem(player, ITEM_MP5, 1);
-    addItem(player, ITEM_MP5_AMMO, 1000);
-    addItem(player, ITEM_GRAPPLEGUN, 1);
-    addItem(player, ITEM_GRAPPLEGUN_AMMO, 1000);
+    print("autoexec->give_item: you can only have revolver in the starting level !");
+	
     addItem(player, ITEM_REVOLVER, 1);
     addItem(player, ITEM_REVOLVER_AMMO, 1000);
 end;

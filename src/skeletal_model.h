@@ -79,8 +79,13 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-    float                    local_transform[16];
-    float                    current_transform[16];
+#ifdef _WIN32
+	float                   local_transform[16];
+	float                   current_transform[16];
+#elif __linux__
+	float                   local_transform[16] __attribute__((packed, aligned(16)));
+	float                   current_transform[16] __attribute__((packed, aligned(16)));
+#endif
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 typedef struct ss_animation_s
@@ -274,7 +279,6 @@ void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p model);
 
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
 void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
-struct state_change_s *Anim_FindStateChangeByAnim(struct animation_frame_s *anim, int state_change_anim);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
 int  Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
