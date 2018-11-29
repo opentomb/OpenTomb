@@ -626,8 +626,6 @@ void gui_InventoryManager::frameItems(float time)
 
             if(ring_item_index == m_selected_item)
             {
-                Anim_SetNextFrame(&bi->bf->animations, 0.0f);
-                
                 if(m_current_state == INVENTORY_ACTIVATING)
                 {
                     restoreItemAngle(time);
@@ -722,16 +720,8 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
                         {
-                            if (0 < Item_Use(m_inventory, bi->id, m_owner_id))
-                            {
-                                m_command = GUI_COMMAND_CLOSE;
-                                m_current_state = INVENTORY_DEACTIVATING;
-                            }
-                            else
-                            {
-                                m_command = GUI_COMMAND_NONE;
-                                m_current_state = INVENTORY_DEACTIVATING;
-                            }
+							m_command = GUI_COMMAND_CLOSE;
+							m_current_state = INVENTORY_DEACTIVATING;
                         }
                         else
                         {
