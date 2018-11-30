@@ -3649,6 +3649,8 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                         shot_snd = 235;
                         reload_snd = 9;
                         num_shots = 1;
+						draw_snd = 6;
+						hide_snd = 7;
                         break;
 
                     case TR4C_GRENADEGUN:
@@ -3657,12 +3659,15 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                         /// grenade gun have a second reload sound !!!
                         reload_snd = 124;
                         num_shots = 1;
+						draw_snd = 6;
+						hide_snd = 7;
                         break;
                 }
                 break;
             case TR_V:
                 switch (ss_anim->model->id)
                 {
+					// cant be checked draw and hide sound
                 case TR4C_SHOTGUN:
                     range = 8192.0f;
                     shot_snd = 45;

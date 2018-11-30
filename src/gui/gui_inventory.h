@@ -161,7 +161,7 @@ private:
     void handleControls(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
     bool restoreItemAngleIsEnd();
-    void AnimateItem(struct base_item_s *bi, int itemMaxFrame, int endFrame, float time);
+    void AnimateItem(struct base_item_s *bi, int itemMaxFrame, int endFrame, float time, bool isMedikit);
 };
 
 
