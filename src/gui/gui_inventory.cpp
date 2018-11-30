@@ -591,8 +591,8 @@ void gui_InventoryManager::frameStates(float time)
                 m_command = GUI_COMMAND_NONE;
                 m_ring_vertical_angle = 180.0f;
                 m_ring_time = 0.0f;
-				m_label_title.show = 0;
-				m_label_item_name.show = 0; /// - required because label is showed after closing !
+                m_label_title.show = 0;
+                m_label_item_name.show = 0; /// - required because label is showed after closing !
                 m_ring_radius = m_base_ring_radius;
                 m_current_items_type = 1;
 
@@ -695,7 +695,7 @@ void gui_InventoryManager::frameItems(float time)
                                     if (ver == TR_IV || ver == TR_V)
                                     {
                                         m_current_state = INVENTORY_DEACTIVATING;
-										Item_Use(m_inventory, bi->id, m_owner_id);
+                                        Item_Use(m_inventory, bi->id, m_owner_id);
                                     }
                                     else
                                     {
@@ -706,12 +706,12 @@ void gui_InventoryManager::frameItems(float time)
                                     if (ver == TR_IV || ver == TR_V)
                                     {
                                         m_current_state = INVENTORY_DEACTIVATING;
-										Item_Use(m_inventory, bi->id, m_owner_id);
+                                        Item_Use(m_inventory, bi->id, m_owner_id);
                                     }
                                     else
                                     {
                                         m_current_state = INVENTORY_WEAPON_EXIT;
-										Item_Use(m_inventory, bi->id, m_owner_id);
+                                        Item_Use(m_inventory, bi->id, m_owner_id);
                                     }
                                     break;
                             }
@@ -851,11 +851,11 @@ void gui_InventoryManager::AnimateItem(base_item_s *bi, int itemMaxFrame, int en
             Item_Frame(bi->bf, 0.0f);
             m_current_state = INVENTORY_DEACTIVATING;
 
-			// to use medikit after animation !
-			if (isMedikit)
-			{
-				Item_Use(m_inventory, bi->id, m_owner_id);
-			}
+            // to use medikit after animation !
+            if (isMedikit)
+            {
+                Item_Use(m_inventory, bi->id, m_owner_id);
+            }
         }
     }
 
