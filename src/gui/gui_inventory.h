@@ -84,7 +84,10 @@ enum inventoryState
     INVENTORY_DOWN,
     INVENTORY_ACTIVATING,
     INVENTORY_DEACTIVATING,
-    INVENTORY_ACTIVATED
+    INVENTORY_ACTIVATED,
+    // enabled the animation when selected
+    INVENTORY_WEAPON_EXIT,
+    INVENTORY_MEDI_EXIT
 };
     
 public:   
@@ -112,6 +115,7 @@ public:
     void setTitle(int items_type);
     void frame(float time);
     void render();
+    uint32_t getItemIdActualView();
 
     gl_text_line_t              m_label_title;
     char                        m_label_title_text[GUI_LINE_DEFAULTSIZE];
@@ -157,6 +161,7 @@ private:
     void handleControls(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
     bool restoreItemAngleIsEnd();
+    void AnimateItem(struct base_item_s *bi, int itemMaxFrame, int endFrame, float time);
 };
 
 

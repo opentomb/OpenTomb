@@ -284,9 +284,6 @@ addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PISTOL, 1);
 
 if (ver == TR_I) then
-    --if (getLevel() == -1)
-    --    addItem(player, ITEM_LARAHOME, 1);
-    --end;
     addItem(player, ITEM_PASSPORT, 1);
     addItem(player, ITEM_CONTROLS, 1);
     addItem(player, ITEM_AUDIO, 1);
@@ -296,12 +293,9 @@ if (ver == TR_I) then
     addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
     addItem(player, ITEM_UZI, 1);
     addItem(player, ITEM_UZI_AMMO, 1000);
-    addItem(player, ITEM_MAGNUM, 1); -- magnum
+    addItem(player, ITEM_MAGNUM, 1);
     addItem(player, ITEM_MAGNUM_AMMO, 1000);
 elseif (ver == TR_II) then
-    --if (getLevel() == -1)
-    --    addItem(player, ITEM_LARAHOME, 1);
-    --end;
     addItem(player, ITEM_PASSPORT, 1);
     addItem(player, ITEM_CONTROLS, 1);
     addItem(player, ITEM_AUDIO, 1);
@@ -311,7 +305,7 @@ elseif (ver == TR_II) then
     addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
     addItem(player, ITEM_UZI, 1);
     addItem(player, ITEM_UZI_AMMO, 1000);
-    addItem(player, ITEM_AUTOMAGS, 1); -- autopistols tr2
+    addItem(player, ITEM_AUTOMAGS, 1);
     addItem(player, ITEM_AUTOMAGS_AMMO, 1000);
     addItem(player, ITEM_M16, 1);
     addItem(player, ITEM_M16_AMMO, 1000);
@@ -339,6 +333,11 @@ elseif (ver == TR_III) then
     addItem(player, ITEM_ROCKETGUN_AMMO, 1000);
     addItem(player, ITEM_GRENADEGUN, 1);
     addItem(player, ITEM_GRENADEGUN_AMMO, 1000);
+	
+	--addItem(player, ITEM_KEY_1, 1);
+	--addItem(player, ITEM_KEY_2, 1);
+	--addItem(player, ITEM_KEY_3, 1);
+	--addItem(player, ITEM_KEY_4, 1);
 elseif (ver == TR_IV) then
     print("autoexec->give_item: no system item for TR4 is implemented now !");
     
