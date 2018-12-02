@@ -2,6 +2,14 @@
 #ifndef STATE_CONTROL_LARA_H
 #define STATE_CONTROL_LARA_H
 
+/// Define Name. Just to see what sound is assigned !
+#define NO_PLAY (-1)
+#define SHOT 0
+#define DRAW 1
+#define HIDE 2
+#define ECHO 3
+#define RELOAD 4      // only for two hand
+
 /// DEFAULT PISTOLS (ALL TR HAVE PISTOL IN SLOT 1)
 #define PISTOL           1
 #define TR_GRENADEGUN    7
@@ -13,7 +21,7 @@
 
 /// TR2 Constants
 #define TR2_SHOTGUN       3
-#define TR2_AUTOPISTOL    4
+#define TR2_AUTOMAGS      4  // autopistols
 #define TR2_UZI           5
 #define TR2_M16           6
 #define TR2_HARPOONGUN    8
@@ -28,11 +36,11 @@
 #define TR3_HARPOONGUN    9
 
 /// TR4 & 5 Constants
-#define TR4C_UZI           2
-#define TR4C_SHOTGUN       3
-#define TR4C_CROSSBOW      4    // TR5: Grappling Gun
-#define TR4C_GRENADEGUN    5
-#define TR4C_REVOLVER      6
+#define TR4C_UZI           2    // TR4 - TR5
+#define TR4C_SHOTGUN       3    // TR4 - TR5
+#define TR4C_CROSSBOW      4    // TR4 - TR5
+#define TR4C_GRENADEGUN    5    // TR4 - TR5
+#define TR4C_REVOLVER      6    // TR4 - TR5
 
 /// TR5 Constants
 

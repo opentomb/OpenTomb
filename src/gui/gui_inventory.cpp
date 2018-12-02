@@ -267,16 +267,6 @@ void gui_InventoryManager::restoreItemAngle(float time)
     }
 }
 
-bool gui_InventoryManager::restoreItemAngleIsEnd()
-{
-    if (m_item_angle_z == 0.0f)
-    {
-        return true;
-    }
-
-    return false;
-}
-
 void gui_InventoryManager::send(int cmd)
 {
     m_command = cmd;
@@ -607,23 +597,6 @@ void gui_InventoryManager::frameStates(float time)
     }
 }
 
-float SetPointOnBezierCurve(float p0, float p1, float p2, float p3, float t)
-{
-    float u = 1.0f - t;
-    float t2 = t * t;
-    float u2 = u * u;
-    float u3 = u2 * u;
-    float t3 = t2 * t;
-
-    float result =
-        (u3)* p0 +
-        (3.0f * u2 * t) * p1 +
-        (3.0f * u * t2) * p2 +
-        (t3)* p3;
-
-    return result;
-}
-
 uint32_t gui_InventoryManager::getItemIdActualView()
 {
     int ring_item_index = 0;
@@ -665,14 +638,15 @@ void gui_InventoryManager::frameItems(float time)
                 {
                     restoreItemAngle(time);
                     
-                    if (restoreItemAngleIsEnd())
+                    if (m_item_angle_z == 0.0f)
                     {
                         ///@FIXME: need progressive curved move like in original TR (this move is correct but not original)
                         m_current_scale += time * 10.0f;
-                        m_item_offset_y += SetPointOnBezierCurve(0.0f, 5.0f, 10.0f, 70.0f, time);
-                        m_item_offset_z -= SetPointOnBezierCurve(0.0f, 50.0f, 60.0f, 80.0f, time);
+                        m_item_offset_y += time * 80.0f;
+                        m_item_offset_z -= time * 80.0f;
 
                         m_current_scale = (m_current_scale >= 2.0) ? (2.0f) : (m_current_scale);
+
                         if ((m_item_angle_z == 0.0f) && (m_current_scale >= 2.0f))
                         {
                             m_item_offset_y = 80.0f;
@@ -692,7 +666,7 @@ void gui_InventoryManager::frameItems(float time)
                                     break;
                                 case ITEM_SMALL_MEDIPACK:
                                 case ITEM_LARGE_MEDIPACK:
-                                    if (ver == TR_IV || ver == TR_V)
+                                    if ((ver == TR_IV || ver == TR_IV_DEMO) || (ver == TR_V))
                                     {
                                         m_current_state = INVENTORY_DEACTIVATING;
                                         Item_Use(m_inventory, bi->id, m_owner_id);
@@ -703,7 +677,7 @@ void gui_InventoryManager::frameItems(float time)
                                     }
                                     break;
                                 default:
-                                    if (ver == TR_IV || ver == TR_V)
+                                    if ((ver == TR_IV || ver == TR_IV_DEMO) || (ver == TR_V))
                                     {
                                         m_current_state = INVENTORY_DEACTIVATING;
                                         Item_Use(m_inventory, bi->id, m_owner_id);
@@ -749,12 +723,12 @@ void gui_InventoryManager::frameItems(float time)
                 {
                     restoreItemAngle(time);
                     
-                    if (restoreItemAngleIsEnd())
+                    if (m_item_angle_z == 0.0f)
                     {
                         ///@FIXME: need progressive curved move inverted like in original TR
                         m_current_scale -= time * 10.0f;
-                        m_item_offset_y -= time * 90.0f;
-                        m_item_offset_z -= time * 90.0f;
+                        m_item_offset_y -= time * 80.0f;
+                        m_item_offset_z -= time * 80.0f;
 
                         m_current_scale = (m_current_scale <= 1.0) ? (1.0f) : (m_current_scale);
 
@@ -841,7 +815,7 @@ void gui_InventoryManager::AnimateItem(base_item_s *bi, int itemMaxFrame, int en
 {
     restoreItemAngle(time); // just for safe (no rotate item)
 
-    if (restoreItemAngleIsEnd()) // for safe
+    if (m_item_angle_z == 0.0f) // for safe
     {
         Item_Frame(bi->bf, time);
 

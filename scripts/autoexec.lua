@@ -52,7 +52,7 @@ function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
     end;
 end;
 
-if (ver == TR_I) then
+if (ver == TR_I) or (ver == TR_I_DEMO) or (ver == TR_I_UB) then
     enableModelAnimReplaceFlags(5, false);
 
     -- pistols
@@ -85,7 +85,7 @@ if (ver == TR_I) then
     setModelMeshReplaceFlag(4, 1, 0x01);
     setModelMeshReplaceFlag(4, 4, 0x01);
 
-elseif (ver == TR_II) then
+elseif (ver == TR_II) or (ver == TR_II_DEMO) then
     enableModelAnimReplaceFlags(12, true);
     
     -- pistols
@@ -135,7 +135,7 @@ elseif (ver == TR_II) then
     setDefaultModelAnimReplaceFlag(8);
     setModelMeshReplaceFlag(8, 10, 0x01);
     setModelMeshReplaceFlag(8, 14, 0x02);      -- 0x02 slot mesh model: draws with original mesh
-
+	
     -- flare
     setModelAnimReplaceFlag(9, 11, 0x01);
     setModelAnimReplaceFlag(9, 12, 0x01);
@@ -196,7 +196,7 @@ elseif (ver == TR_III) then
     setModelAnimReplaceFlag(10, 13, 0x01);
     setModelMeshReplaceFlag(10, 13, 0x01);
 
-elseif (ver == TR_IV) or (ver == TR_V) then
+elseif (ver == TR_IV) or (ver == TR_IV_DEMO) or (ver == TR_V) then
     -- pistols
     copyMeshFromModelToModel(1, 14, 1, 4);
     copyMeshFromModelToModel(1, 14, 4, 8);
@@ -283,7 +283,7 @@ addTask(checkDebugKeys);
 addItem(player, ITEM_COMPASS, 1);
 addItem(player, ITEM_PISTOL, 1);
 
-if (ver == TR_I) then
+if (ver == TR_I) or (ver == TR_I_DEMO) or (ver == TR_I_UB) then
     addItem(player, ITEM_PASSPORT, 1);
     addItem(player, ITEM_CONTROLS, 1);
     addItem(player, ITEM_AUDIO, 1);
@@ -295,7 +295,7 @@ if (ver == TR_I) then
     addItem(player, ITEM_UZI_AMMO, 1000);
     addItem(player, ITEM_MAGNUM, 1);
     addItem(player, ITEM_MAGNUM_AMMO, 1000);
-elseif (ver == TR_II) then
+elseif (ver == TR_II) or (ver == TR_II_DEMO) then
     addItem(player, ITEM_PASSPORT, 1);
     addItem(player, ITEM_CONTROLS, 1);
     addItem(player, ITEM_AUDIO, 1);
@@ -333,13 +333,13 @@ elseif (ver == TR_III) then
     addItem(player, ITEM_ROCKETGUN_AMMO, 1000);
     addItem(player, ITEM_GRENADEGUN, 1);
     addItem(player, ITEM_GRENADEGUN_AMMO, 1000);
-	
-	--addItem(player, ITEM_KEY_1, 1);
-	--addItem(player, ITEM_KEY_2, 1);
-	--addItem(player, ITEM_KEY_3, 1);
-	--addItem(player, ITEM_KEY_4, 1);
-elseif (ver == TR_IV) then
-    print("autoexec->give_item: no system item for TR4 is implemented now !");
+    
+    --addItem(player, ITEM_KEY_1, 1);
+    --addItem(player, ITEM_KEY_2, 1);
+    --addItem(player, ITEM_KEY_3, 1);
+    --addItem(player, ITEM_KEY_4, 1); --first key in jungle level (need name now)
+elseif (ver == TR_IV) or (ver == TR_IV_DEMO) then
+    print("autoexec->give_item: no system item for TR4 and TR4 Demo is implemented now !");
     
     addItem(player, ITEM_UZI, 1);
     addItem(player, ITEM_UZI_AMMO, 1000);

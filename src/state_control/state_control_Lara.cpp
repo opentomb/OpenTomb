@@ -156,40 +156,47 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
+// get the weapon sfx like shot_snd, echo_snd, reload_snd etc...
+int *LaraGetWeaponSFX(struct ss_animation_s *ss_anim, int32_t ver);
 
 static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
 {
-    int ver;
+    int32_t ver;
     switch(Anim_GetCurrentState(&ent->bf->animations))
     {
         case TR_STATE_LARA_UNDERWATER_STOP:
         case TR_STATE_LARA_UNDERWATER_FORWARD:
         case TR_STATE_LARA_UNDERWATER_INERTIA:
         case TR_STATE_LARA_UNDERWATER_TURNAROUND:
+        case TR_STATE_LARA_UNDERWATER_DIVING: // new state for harpoon !
             ver = World_GetVersion();
-            if(ver == TR_I)
+
+            if(ver == TR_I || ver == TR_I_DEMO || ver == TR_I_UB)
             {
                 return false;
             }
 
-            if(ver < TR_III)
+            if((ver == TR_II || ver == TR_II_DEMO))
             {
-                if(weapon_model != 8)
+                // harpoon
+                if(weapon_model != TR2_HARPOONGUN)
                 {
-                    return false;
+                    return true;
                 }
             }
-            else if(ver < TR_IV)
+            else if(ver == TR_III)
             {
-                if(weapon_model != 9)
+                // harpoon
+                if(weapon_model != TR3_HARPOONGUN)
                 {
-                    return false;
+                    return true;
                 }
             }
             else
             {
                 return false;
             }
+
         case TR_STATE_LARA_WALK_FORWARD:
         case TR_STATE_LARA_RUN_FORWARD:
         case TR_STATE_LARA_STOP:
@@ -3223,9 +3230,9 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
     static float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
     renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
-    if(ss_anim->model->animation_count == 4)
+    if (ss_anim->model->animation_count == 4)
     {
-        const float bone_dir[] = {0.0f, 1.0f, 0.0f};
+        const float bone_dir[] = { 0.0f, 1.0f, 0.0f };
         uint16_t targeted_bone_start = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
         uint16_t targeted_bone_end = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_end) : (ent->character->bone_r_hand_end);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
@@ -3236,100 +3243,85 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
         int shot_snd = 0, draw_snd = 6, hide_snd = 7, echo_snd = 0; /// echo sound (TR2 -> TR5) // Default
         float fire_rate = 1.0f;
         int32_t ver = World_GetVersion();
+        // Sound Weapon
+        int *Sounds = LaraGetWeaponSFX(ss_anim, ver);
 
         // Universal Pistols Sound !
         if (ss_anim->model->id == PISTOL)
         {
-            shot_snd = 8;
             fire_rate = 1.0f;
         }
 
         switch (ver)
         {
-            case TR_I:
-                switch (ss_anim->model->id)
-                {
-                    case TR1_MAGNUM:
-                        shot_snd = 44;
-                        fire_rate = 0.9f;
-                        break;
-                    case TR1_UZI:
-                        shot_snd = 43;
-                        fire_rate = 3.5f;
-                        break;
-                }
-                break;
-            case TR_II:
-                switch (ss_anim->model->id)
-                {
-                    case TR2_AUTOPISTOL:
-                        shot_snd = 21;
-                        fire_rate = 1.0f;
-                        break;
-                    case TR2_UZI:
-                        /// Sound of UZI is in LOOP mode !
-                        /// Fixed in Idle Mode (below)
-                        shot_snd = 43;
-                        fire_rate = 3.5f;
-                        echo_snd = 44;
-                        break;
-                }
-                break;
-            case TR_III:
-                switch (ss_anim->model->id)
-                {
-                    case TR3_DESERTEAGLE:
-                        ///@FIXME: need to stop specific sound from object
-                        shot_snd = 121;
-                        fire_rate = 0.7f;
-                        break;
+        case TR_I:
+            switch (ss_anim->model->id)
+            {
+                case TR1_MAGNUM:
+                    fire_rate = 0.9f;
+                    break;
+                case TR1_UZI:
+                    fire_rate = 3.5f;
+                    break;
+            }
+            break;
+        case TR_II:
+            switch (ss_anim->model->id)
+            {
+                case TR2_AUTOMAGS:
+                    fire_rate = 1.0f;
+                    break;
+                case TR2_UZI:
+                    fire_rate = 3.5f;
+                    break;
+            }
+            break;
+        case TR_III:
+            switch (ss_anim->model->id)
+            {
+                case TR3_DESERTEAGLE:
+                    ///@FIXME: need to stop specific sound from object
+                    fire_rate = 0.7f;
+                    break;
 
-                    case TR3_UZI:
-                        ///@FIXME: need to stop specific sound from object
-                        shot_snd = 43;
-                        fire_rate = 3.5f;
-                        echo_snd = 44;
-                        break;
-                }
-                break;
-            case TR_IV:
-                switch (ss_anim->model->id)
-                {
-                    case TR4C_UZI:
-                        shot_snd = 43;
-                        fire_rate = 3.5f;
-                        echo_snd = 44;
-                        break;
+                case TR3_UZI:
+                    ///@FIXME: need to stop specific sound from object
+                    fire_rate = 3.5f;
+                    break;
+            }
+            break;
+        case TR_IV:
+            switch (ss_anim->model->id)
+            {
+                case TR4C_UZI:
+                    fire_rate = 3.5f;
+                    break;
 
-                    case TR4C_REVOLVER:
-                        shot_snd = 121;
-                        fire_rate = 0.7f;
-                        break;
-                }
-                break;
-            case TR_V:
-                switch (ss_anim->model->id)
-                {
-                    case TR4C_UZI:
-                        shot_snd = 43;
-                        fire_rate = 3.5f;
-                        echo_snd = 44;
-                        break;
+                case TR4C_REVOLVER:
+                    shot_snd = 121;
+                    break;
+            }
+            break;
+        case TR_V:
+            switch (ss_anim->model->id)
+            {
+                case TR4C_UZI:
+                    fire_rate = 3.5f;
+                    break;
 
-                    case TR4C_REVOLVER:
-                        shot_snd = 121;
-                        fire_rate = 0.7f;
-                        break;
-                }
-                break;
+                case TR4C_REVOLVER:
+                    fire_rate = 0.7f;
+                    break;
+            }
+            break;
         }
 
-        if(target)
+        if (target)
         {
-            float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.224f};
+            float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.224f };
             float target_pos[3];
 
-            if(target->character)
+            if (target->character)
             {
                 float *v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
                 Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
@@ -3339,7 +3331,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                 vec3_copy(target_pos, target->obb->centre);
             }
 
-            if(ss_anim->type == ANIM_TYPE_WEAPON_LH)
+            if (ss_anim->type == ANIM_TYPE_WEAPON_LH)
             {
                 vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
             }
@@ -3351,7 +3343,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
             SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
 
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
+            if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
             {
                 target = NULL;
             }
@@ -3360,343 +3352,286 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
         }
 
         b_tag->is_targeted = 0x00;
-        switch(ss_anim->current_animation)
+        switch (ss_anim->current_animation)
         {
-            case 0: // idle < - > aim;
-                b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+        case 0: // idle < - > aim;
+            b_tag->is_targeted = (target) ? (0x01) : (0x00);
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
 
-                if ((inc_state == 1) && ent->character->state.weapon_ready && ent->character->cmd.action)
+            if ((inc_state == 1) && ent->character->state.weapon_ready && ent->character->cmd.action)
+            {
+                /// defined if you using windows !
+                /// in windows the sound is not played the first time (first animation) !
+                #ifdef _WIN32
+                Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                #endif
+                Anim_SetAnimation(ss_anim, 3, 0);
+            }
+            else if ((inc_state == 2) && !ent->character->state.weapon_ready)
+            {
+                Anim_SetAnimation(ss_anim, 2, -1);
+            }
+            else if (ent->character->state.weapon_ready && !ent->character->cmd.action)
+            {
+                switch (ss_anim->current_frame)
                 {
-                    /// defined if you using windows !
-                    /// in windows the sound is not played the first time (first animation) !
-                    #ifdef _WIN32
-                        Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    #endif
-                    Anim_SetAnimation(ss_anim, 3, 0);
-                }
-                else if ((inc_state == 2) && !ent->character->state.weapon_ready)
-                {
-                    Anim_SetAnimation(ss_anim, 2, -1);
-                }
-                else if (ent->character->state.weapon_ready && !ent->character->cmd.action)
-                {
-                    switch (ss_anim->current_frame)
-                    {
-                        case 2:
-                            /// anim_frame_flags is needed or the sound will play before starting fire !
-                            if (ver == TR_II && ss_anim->model->id == TR2_UZI && ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE)
-                            {
-                                Audio_Send(echo_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                            }
-                            else if (ver == TR_III && ss_anim->model->id == TR3_UZI && ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE)
-                            {
-                                Audio_Send(echo_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                            }
-                            break;
-                        case 4:
-                            Audio_Kill(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                            break;
-                    }
-                }
-                break;
-
-            case 1: // hide -> draw;
-                inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
-                if((inc_state == 1) && ent->character->state.weapon_ready)
-                {
-                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
-                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 13);
-                    StateControl_SetWeaponMeshOff(ent->bf, 1);
-                    StateControl_SetWeaponMeshOff(ent->bf, 4);
-
-                    Anim_SetAnimation(ss_anim, 2, 0);
-                    Audio_Send(draw_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                }
-                else if((inc_state == 2) && !ent->character->state.weapon_ready)
-                {
-                    SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
-                    ent->character->state.weapon_ready = 0;
-                }
-                break;
-
-            case 2: // idle < - > hide;
-                inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
-                if((inc_state == 1) && ent->character->state.weapon_ready)
-                {
-                    Anim_SetAnimation(ss_anim, 0, 0);
-                }
-                else if((inc_state == 2) && !ent->character->state.weapon_ready)
-                {
-                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 1);
-                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 4);
-                    StateControl_SetWeaponMeshOff(ent->bf, 10);
-                    StateControl_SetWeaponMeshOff(ent->bf, 13);
-                    Anim_SetAnimation(ss_anim, 1, -1);
-                    Audio_Send(hide_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                }
-                break;
-
-            case 3: // fire process;
-                b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * fire_rate))
-                {
-                    if(ent->character->state.weapon_ready && ent->character->cmd.action)
-                    {
-                        Anim_SetAnimation(ss_anim, 3, 0);
-                        ss_anim->frame_changing_state = 0x01;
-                        
+                    case 2:
+                        /// anim_frame_flags is needed or the sound will play before starting fire !
+                        if ((ver == TR_II || ver == TR_II_DEMO) && (ss_anim->model->id == TR2_UZI) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
                         {
-                            collision_result_t cs;
-                            float from[3], to[3], tr[16];
-                            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_start;
-                            Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
-                            Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
-                            if (target && (bt->mod.current_slerp > 0.99))
-                            {
-                                vec3_copy(to, bt->mod.target_pos);
-                            }
-                            else
-                            {
-                                vec3_add_mul(to, from, tr + 8, -32768.0f);
-                            }
-                            /*vec3_copy(d_from, from);
-                            vec3_copy(d_to, to);*/
-                            if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
-                            {
-                                target = (entity_p) cs.obj->object;
-                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
-                            }
-
-                            Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                            Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
                         }
-                    }
-                    else
+                        else if ((ver == TR_III) && (ss_anim->model->id == TR3_UZI) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+                        {
+                            Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        }
+                        break;
+                    case 4:
+                        Audio_Kill(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        break;
+                }
+            }
+            break;
+
+        case 1: // hide -> draw;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
+            if ((inc_state == 1) && ent->character->state.weapon_ready)
+            {
+                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
+                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 13);
+                StateControl_SetWeaponMeshOff(ent->bf, 1);
+                StateControl_SetWeaponMeshOff(ent->bf, 4);
+
+                Anim_SetAnimation(ss_anim, 2, 0);
+                Audio_Send(Sounds[DRAW], TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            else if ((inc_state == 2) && !ent->character->state.weapon_ready)
+            {
+                SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
+                ent->character->state.weapon_ready = 0;
+            }
+            break;
+
+        case 2: // idle < - > hide;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
+            if ((inc_state == 1) && ent->character->state.weapon_ready)
+            {
+                Anim_SetAnimation(ss_anim, 0, 0);
+            }
+            else if ((inc_state == 2) && !ent->character->state.weapon_ready)
+            {
+                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 1);
+                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 4);
+                StateControl_SetWeaponMeshOff(ent->bf, 10);
+                StateControl_SetWeaponMeshOff(ent->bf, 13);
+                Anim_SetAnimation(ss_anim, 1, -1);
+                Audio_Send(Sounds[HIDE], TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            break;
+
+        case 3: // fire process;
+            b_tag->is_targeted = (target) ? (0x01) : (0x00);
+            if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * fire_rate))
+            {
+                if (ent->character->state.weapon_ready && ent->character->cmd.action)
+                {
+                    Anim_SetAnimation(ss_anim, 3, 0);
+                    ss_anim->frame_changing_state = 0x01;
+
                     {
-                        Anim_SetAnimation(ss_anim, 0, -1);
+                        collision_result_t cs;
+                        float from[3], to[3], tr[16];
+                        ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_start;
+                        Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
+                        Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
+                        if (target && (bt->mod.current_slerp > 0.99))
+                        {
+                            vec3_copy(to, bt->mod.target_pos);
+                        }
+                        else
+                        {
+                            vec3_add_mul(to, from, tr + 8, -32768.0f);
+                        }
+                        /*vec3_copy(d_from, from);
+                        vec3_copy(d_to, to);*/
+                        if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                        {
+                            target = (entity_p)cs.obj->object;
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
+                        }
+
+                        Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
                 }
-                break;
+                else
+                {
+                    Anim_SetAnimation(ss_anim, 0, -1);
+                }
+            }
+            break;
         };
     }
 
     return ss_anim->frame_changing_state;
 }
 
-int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_animation_s *ss_anim, float time)
+int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, float time)
 {
-   /* anims (TR_I - TR_V):
-    * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
-    
-    /*static float d_from[3] = { 0.0f, 0.0f, 0.0f };
-    static float d_to[3] = { 0.0f, 0.0f, 0.0f };
-    static float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-    renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
+    /* anims (TR_I - TR_V):
+     * shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
 
-    if(ss_anim->model->animation_count > 4)
+     /*static float d_from[3] = { 0.0f, 0.0f, 0.0f };
+     static float d_to[3] = { 0.0f, 0.0f, 0.0f };
+     static float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+     renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
+
+    if (ss_anim->model->animation_count > 4)
     {
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
-        float range = 32768.0f;
+        float range = 32768.0f; // default
         int inc_state;
+        int num_shots = 1; // default
         int32_t ver = World_GetVersion();
-        int shot_snd = 8, echo_snd = 0, draw_snd = 0, hide_snd = 0, num_shots = 1, reload_snd = 0;
+        // Sound Weapon
+        int *Sounds = LaraGetWeaponSFX(ss_anim, ver);
+        // get player->move_type for harpoon
+        entity_s *player = World_GetPlayer();
 
         // check actual version
         switch (ver)
         {
-            case TR_I:
-                if (ss_anim->model->id == TR1_SHOTGUN)
+        case TR_I:
+            if (ss_anim->model->id == TR1_SHOTGUN)
+            {
+                range = 8192.0f;
+                num_shots = 12;
+            }
+            break;
+        case TR_II:
+            switch (ss_anim->model->id)
+            {
+            case TR2_SHOTGUN:
+                range = 8192.0f;
+                num_shots = 12;
+                break;
+
+            case TR2_M16:
+                range = 16384.0f;
+                num_shots = 1;
+                break;
+
+            case TR_GRENADEGUN:
+                range = 8192.0f;
+                num_shots = 1;
+                break;
+
+            case TR2_HARPOONGUN:
+                switch (player->move_type)
                 {
+                case MOVE_ON_FLOOR:
+                case MOVE_ON_WATER:
                     range = 8192.0f;
-                    shot_snd = 45;
-                    reload_snd = 9;
-                    num_shots = 12;
-                    draw_snd = 6;
-                    hide_snd = 7;
+                    num_shots = 1;
+                    break;
+
+                case MOVE_UNDERWATER:
+                case MOVE_WADE:
+                    range = 16384.0f;
+                    num_shots = 1;
+                    break;
                 }
                 break;
-            case TR_II:
-                switch (ss_anim->model->id)
+            }
+            break;
+        case TR_III:
+            switch (ss_anim->model->id)
+            {
+            case TR3_SHOTGUN:
+                range = 8192.0f;
+                num_shots = 12;
+                break;
+
+            case TR3_MP5:
+                range = 16384.0f;
+                num_shots = 1;
+                break;
+
+            case TR3_GRENADEGUN:
+                range = 8192.0f;
+                num_shots = 1;
+                break;
+
+            case TR3_ROCKETGUN:
+                range = 16384.0f; /// really need a range for rocket launcher ?
+                num_shots = 1;
+                break;
+
+            case TR3_HARPOONGUN:
+                switch (player->move_type)
                 {
-                    /// no draw and out sound because already exits in-game !
-                    case TR2_SHOTGUN:
-                        range = 8192.0f;
-                        shot_snd = 45;
-                        reload_snd = 9;
-                        num_shots = 12;
-                        break;
+                case MOVE_ON_FLOOR:
+                case MOVE_ON_WATER:
+                    range = 8192.0f;
+                    num_shots = 1;
+                    break;
 
-                    case TR2_M16:
-                        /// Sound is in LOOP Mode !
-                        range = 16384.0f;
-                        shot_snd = 78;
-                        num_shots = 1;
-                        echo_snd = 104;
-                        break;
-
-                    case TR_GRENADEGUN:
-                        range = 8192.0f;
-                        shot_snd = 125;
-                        /// grenade gun have a second reload sound !!!
-                        reload_snd = 124;
-                        num_shots = 1;
-                        break;
-
-                    case TR2_HARPOONGUN:
-                        switch (Anim_GetCurrentState(ss_anim))
-                        {
-                            /// lara cant be use harpoon in wading state
-                            case TR_STATE_LARA_UNDERWATER_DIVING:
-                            case TR_STATE_LARA_UNDERWATER_FORWARD:
-                            case TR_STATE_LARA_UNDERWATER_INERTIA:
-                            case TR_STATE_LARA_UNDERWATER_STOP:
-                            case TR_STATE_LARA_UNDERWATER_TURNAROUND:
-                            case TR_STATE_LARA_WADE_FORWARD:
-                                /// in underwater
-                                ///@FIXME: the sound is too low in underwater
-                                range = 16384.0f;
-                                shot_snd = 23;
-                                reload_snd = 22;
-                                num_shots = 1;
-                                break;
-
-                            default:
-                                /// in ground
-                                range = 8196.0f;
-                                shot_snd = 15;
-                                reload_snd = 16;
-                                num_shots = 1;
-                                break;
-                        }
-                        break;
+                case MOVE_UNDERWATER:
+                case MOVE_WADE:
+                    range = 16384.0f;
+                    num_shots = 1;
+                    break;
                 }
                 break;
-            case TR_III:
-                switch (ss_anim->model->id)
-                {
-                    case TR3_SHOTGUN:
-                        range = 8192.0f;
-                        shot_snd = 45;
-                        reload_snd = 9;
-                        num_shots = 12;
-                        break;
-
-                    case TR3_MP5:
-                        range = 16384.0f;
-                        shot_snd = 78;
-                        num_shots = 1;
-                        break;
-
-                    case TR3_GRENADEGUN:
-                        range = 8192.0f;
-                        shot_snd = 125;
-                        /// grenade gun have a second reload sound !!!
-                        reload_snd = 124;
-                        num_shots = 1;
-                        break;
-
-                    case TR3_ROCKETGUN:
-                        range = 16384.0f; /// really need a range for rocket launcher ?
-                        shot_snd = 105;
-                        reload_snd = 104;
-                        num_shots = 1;
-                        break;
-
-                    case TR3_HARPOONGUN:
-                        switch (Anim_GetCurrentState(ss_anim))
-                        {
-                            /// lara cant be use harpoon in wading state
-                            case TR_STATE_LARA_UNDERWATER_DIVING:
-                            case TR_STATE_LARA_UNDERWATER_FORWARD:
-                            case TR_STATE_LARA_UNDERWATER_INERTIA:
-                            case TR_STATE_LARA_UNDERWATER_STOP:
-                            case TR_STATE_LARA_UNDERWATER_TURNAROUND:
-                            case TR_STATE_LARA_WADE_FORWARD:
-                                /// in underwater
-                                ///@FIXME: the sound is too low in underwater
-                                range = 16384.0f;
-                                shot_snd = 23;
-                                reload_snd = 22;
-                                num_shots = 1;
-                                break;
-
-                            default:
-                                /// in ground
-                                range = 8196.0f;
-                                shot_snd = 15;
-                                reload_snd = 16;
-                                num_shots = 1;
-                                break;
-                        }
-                        break;
-                }
-                break;
-            case TR_IV:
-                switch (ss_anim->model->id)
-                {
-                    case TR4C_SHOTGUN:
-                        range = 8192.0f;
-                        shot_snd = 45;
-                        reload_snd = 9;
-                        num_shots = 12;
-                        break;
-
-                    case TR4C_CROSSBOW:
-                        range = 16384.0f; /// affected by gravity ?
-                        shot_snd = 235;
-                        reload_snd = 9;
-                        num_shots = 1;
-                        draw_snd = 6;
-                        hide_snd = 7;
-                        break;
-
-                    case TR4C_GRENADEGUN:
-                        range = 8192.0f;
-                        shot_snd = 125;
-                        /// grenade gun have a second reload sound !!!
-                        reload_snd = 124;
-                        num_shots = 1;
-                        draw_snd = 6;
-                        hide_snd = 7;
-                        break;
-                }
-                break;
-            case TR_V:
-                switch (ss_anim->model->id)
-                {
-                    // cant be checked draw and hide sound
+            }
+            break;
+        case TR_IV:
+            switch (ss_anim->model->id)
+            {
                 case TR4C_SHOTGUN:
                     range = 8192.0f;
-                    shot_snd = 45;
-                    reload_snd = 9;
                     num_shots = 12;
                     break;
 
                 case TR4C_CROSSBOW:
                     range = 16384.0f; /// affected by gravity ?
-                    shot_snd = 235;
-                    reload_snd = 9;
                     num_shots = 1;
                     break;
 
                 case TR4C_GRENADEGUN:
                     range = 8192.0f;
-                    shot_snd = 125;
-                    /// grenade gun have a second reload sound !!!
-                    reload_snd = 124;
                     num_shots = 1;
                     break;
-                }
-                break;
+            }
+            break;
+        case TR_V:
+            switch (ss_anim->model->id)
+            {
+                case TR4C_SHOTGUN:
+                    range = 8192.0f;
+                    num_shots = 12;
+                    break;
+
+                case TR4C_CROSSBOW:
+                    range = 16384.0f; /// affected by gravity ?
+                    num_shots = 1;
+                    break;
+
+                case TR4C_GRENADEGUN:
+                    /// grenade gun have a second reload sound !!!
+                    range = 8192.0f;
+                    num_shots = 1;
+                    break;
+            }
+            break;
         }
 
-        if(target)
+        if (target)
         {
-            const float bone_dir[3] = {0.0f, 1.0f, 0.0f};
-            const float targeting_limit[4] = {0.0f, 1.0f, 0.0f, 0.624f};
+            const float bone_dir[3] = { 0.0f, 1.0f, 0.0f };
+            const float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.624f };
 
             if (target->character)
             {
@@ -3710,8 +3645,8 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_anima
 
             SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
             SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
-            
-            if(!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
+
+            if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
             {
                 target = NULL;
             }
@@ -3730,7 +3665,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                 /// defined if you using windows !
                 /// in windows the sound is not played the first time (first animation) !
                 #ifdef _WIN32
-                    Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
                 #endif
                 Anim_SetAnimation(ss_anim, 2, 0);  // start fire
             }
@@ -3740,147 +3675,395 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             }
             break;
 
-            case 1: // hide -> idle;
-                if (Anim_IncTime(ss_anim, time))
+        case 1: // hide -> idle;
+            if (Anim_IncTime(ss_anim, time))
+            {
+                Anim_SetAnimation(ss_anim, 0, 0);  // to idle
+            }
+
+            if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 8))
+            {
+                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
+
+                if (ver >= TR_II)
                 {
-                    Anim_SetAnimation(ss_anim, 0, 0);  // to idle
+                    StateControl_SetWeaponMeshOff(ent->bf, 14);
+                }
+                else
+                {
+                    StateControl_SetWeaponMeshOff(ent->bf, 7);
                 }
 
-                if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 8))
+                if (Sounds[DRAW])
                 {
-                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 10);
+                    Audio_Send(Sounds[DRAW], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+            }
+            break;
 
-                    if (ver > TR_I)
+        case 2: // fire process;
+            b_tag->is_targeted = (target) ? (0x01) : (0x00);
+            if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time))
+            {
+                if (ent->character->state.weapon_ready && ent->character->cmd.action)
+                {
+                    collision_result_t cs;
+                    float from[3], to[3], tr[16], dir[3], t;
+                    ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
+
+                    Anim_SetAnimation(ss_anim, 2, 0);
+                    ss_anim->frame_changing_state = 0x01;
+                    Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+
+                    Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
+                    vec3_copy(from, tr + 12);
+                    if (target && (bt->mod.current_slerp) > 0.99f)
                     {
-                        StateControl_SetWeaponMeshOff(ent->bf, 14);
+                        vec3_sub(dir, target_pos, from);
+                        vec3_norm(dir, t);
                     }
                     else
                     {
-                        StateControl_SetWeaponMeshOff(ent->bf, 7);
+                        vec3_copy_inv(dir, tr + 8);
                     }
-
-                    if (draw_snd)
+                    vec3_add_mul(to, from, dir, range);
+                    for (int i = 1; i <= num_shots; ++i)
                     {
-                        Audio_Send(draw_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    }
-                }
-                break;
-
-            case 2: // fire process;
-                b_tag->is_targeted = (target) ? (0x01) : (0x00);
-                if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time))
-                {
-                    if (ent->character->state.weapon_ready && ent->character->cmd.action)
-                    {
-                        collision_result_t cs;
-                        float from[3], to[3], tr[16], dir[3], t;
-                        ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
-
-                        Anim_SetAnimation(ss_anim, 2, 0);
-                        ss_anim->frame_changing_state = 0x01;
-                        Audio_Send(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-
-                        Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
-                        vec3_copy(from, tr + 12);
-                        if (target && (bt->mod.current_slerp) > 0.99f)
+                        //vec3_copy(d_from, from);
+                        //vec3_copy(d_to, to);
+                        if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                         {
-                            vec3_sub(dir, target_pos, from);
-                            vec3_norm(dir, t);
+                            target = (entity_p)cs.obj->object;
+                            Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                         }
-                        else
+                        t = (range * i) / num_shots;
+                        vec3_add_mul(to, from, dir, t);
+                        t = 8.0f * i;
+                        switch (i % 4)
                         {
-                            vec3_copy_inv(dir, tr + 8);
-                        }
-                        vec3_add_mul(to, from, dir, range);
-                        for (int i = 1; i <= num_shots; ++i)
-                        {
-                            //vec3_copy(d_from, from);
-                            //vec3_copy(d_to, to);
-                            if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
-                            {
-                                target = (entity_p)cs.obj->object;
-                                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
-                            }
-                            t = (range * i) / num_shots;
-                            vec3_add_mul(to, from, dir, t);
-                            t = 8.0f * i;
-                            switch (i % 4)
-                            {
-                            case 0: vec3_add_mul(to, to, tr + 0, t); break;
-                            case 1: vec3_add_mul(to, to, tr + 4, t); break;
-                            case 2: vec3_add_mul(to, to, tr + 0, -t); break;
-                            case 3: vec3_add_mul(to, to, tr + 4, -t); break;
-                            }
+                        case 0: vec3_add_mul(to, to, tr + 0, t); break;
+                        case 1: vec3_add_mul(to, to, tr + 4, t); break;
+                        case 2: vec3_add_mul(to, to, tr + 0, -t); break;
+                        case 3: vec3_add_mul(to, to, tr + 4, -t); break;
                         }
                     }
-                    else if (target)
-                    {
-                        Anim_SetAnimation(ss_anim, 0, -1);
-                    }
-                    else
-                    {
-                        Anim_SetAnimation(ss_anim, 4, 0);
-                    }
                 }
-                if ((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && reload_snd)
+                else if (target)
                 {
-                    Audio_Send(reload_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Anim_SetAnimation(ss_anim, 0, -1);
                 }
-                break;
-
-            case 3: // idle - > hide;
-                if (Anim_IncTime(ss_anim, time))
+                else
                 {
-                    SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
+                    Anim_SetAnimation(ss_anim, 4, 0);
                 }
-                if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 23))
+            }
+            if ((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && Sounds[RELOAD])
+            {
+                Audio_Send(Sounds[RELOAD], TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            break;
+
+        case 3: // idle - > hide;
+            if (Anim_IncTime(ss_anim, time))
+            {
+                SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
+            }
+            if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 23))
+            {
+                if (ver >= TR_II)
                 {
-                    if (ver > TR_I)
-                    {
-                        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 14);
-                    }
-                    else
-                    {
-                        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 7);
-                    }
-
-                    StateControl_SetWeaponMeshOff(ent->bf, 10);
-
-                    if (hide_snd)
-                    {
-                        Audio_Send(hide_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    }
+                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 14);
                 }
-                break;
-
-            case 4: // aim - > idle;
-                /// Shoot sound forced stopping because LOOP mode (only loop mode) ! and echo sound here !
-                switch (ss_anim->current_frame)
+                else
                 {
-                    case 1:
-                        // delete sound (loop mode killer)
-                        Audio_Kill(shot_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        break;
-
-                    case 2:
-                        // echo sound
-                        if (ver == TR_II && ss_anim->model->id == TR2_M16 && ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE)
-                        {
-                            Audio_Send(echo_snd, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        }
-                        break;
+                    StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 7);
                 }
 
-                if (Anim_IncTime(ss_anim, time))
+                StateControl_SetWeaponMeshOff(ent->bf, 10);
+
+                if (Sounds[HIDE])
                 {
-                    Anim_SetAnimation(ss_anim, 0, 0);
+                    Audio_Send(Sounds[HIDE], TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
+            }
+            break;
 
-                break;
+        case 4: // aim - > idle;
+            /// Shoot sound forced stopping because LOOP mode (only loop mode) ! and echo sound here !
+            if ((ss_anim->current_frame == 1))
+            {
+                // delete sound (loop mode killer)
+                Audio_Kill(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+
+                // echo sound
+                if ((ver == TR_II || ver == TR_II_DEMO) && (ss_anim->model->id == TR2_M16) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+                {
+                    Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+            }
+
+            if (Anim_IncTime(ss_anim, time))
+            {
+                Anim_SetAnimation(ss_anim, 0, 0);
+            }
+
+            break;
         };
     }
 
     return ss_anim->frame_changing_state;
+}
+
+/// LaraGetWeaponSFX(ss_anim, ver)
+int *LaraGetWeaponSFX(struct ss_animation_s *ss_anim, int32_t ver)
+{
+    static int result[4]; // On Hand Weapon
+    static int result_double[5]; // Two Hand Weapon
+    // get player->move_type for harpoon
+    entity_s *player = World_GetPlayer();
+
+    // init result with no sound to play !
+    result[SHOT] = NO_PLAY;
+    result[ECHO] = NO_PLAY; // only for Uzi !
+    result_double[SHOT] = NO_PLAY;
+    result_double[DRAW] = NO_PLAY;
+    result_double[HIDE] = NO_PLAY;
+    result_double[ECHO] = NO_PLAY; // only for M16 (and MP5 ?)
+    result_double[RELOAD] = NO_PLAY;
+
+    // init draw sound (only for one hand)
+    result[DRAW] = TR_AUDIO_SOUND_HOLSTEROUT;
+    result[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
+
+    // get the version and model_id and return the appropriate sound !
+    switch (ver)
+    {
+        case TR_I:
+        case TR_I_DEMO:
+        case TR_I_UB:
+            switch (ss_anim->model->id)
+            {
+                case PISTOL:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+                
+                case TR1_SHOTGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
+                    result_double[DRAW] = TR_AUDIO_SOUND_HOLSTEROUT;
+                    result_double[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR1_MAGNUM:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTMAGNUM;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR1_UZI:
+                    // no echo sound in tr1 !
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+            }
+            break;
+        case TR_II:
+        case TR_II_DEMO:
+            switch (ss_anim->model->id)
+            {
+                case PISTOL:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR2_SHOTGUN:
+                    // already sound for draw and hide !
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR2_AUTOMAGS:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTAUTOMAGS;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR2_UZI:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
+                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
+                    return result;
+
+                case TR2_M16:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTM16;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = NO_PLAY;
+                    result_double[ECHO] = TR_AUDIO_SOUND_SHOTM16_END;
+                    return result_double;
+                
+                case TR_GRENADEGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = NO_PLAY;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR2_HARPOONGUN:
+                    ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+                    switch (player->move_type)
+                    {
+                        case MOVE_ON_FLOOR:
+                        case MOVE_ON_WATER:
+                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_G;
+                            result_double[DRAW] = NO_PLAY;
+                            result_double[HIDE] = NO_PLAY;
+                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_G;
+                            result_double[ECHO] = NO_PLAY;
+                            return result_double;
+                        
+                        case MOVE_UNDERWATER:
+                        case MOVE_WADE:
+                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_W;
+                            result_double[DRAW] = NO_PLAY;
+                            result_double[HIDE] = NO_PLAY;
+                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_W;
+                            result_double[ECHO] = NO_PLAY;
+                            return result_double;
+                    }
+                    // if lara is in a move that is unknown !
+                    return NULL;
+            }
+            break;
+
+        case TR_III:
+            switch (ss_anim->model->id)
+            {
+                case PISTOL:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR3_SHOTGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR3_UZI:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
+                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
+                    return result;
+
+                case TR3_DESERTEAGLE:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR3_MP5:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTMP5;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR3_GRENADEGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR3_ROCKETGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTROCKETGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOADROCKETGUN;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR3_HARPOONGUN:
+                    ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+                    switch (player->move_type)
+                    {
+                        case MOVE_ON_FLOOR:
+                        case MOVE_ON_WATER:
+                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_G;
+                            result_double[DRAW] = NO_PLAY;
+                            result_double[HIDE] = NO_PLAY;
+                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_G;
+                            result_double[ECHO] = NO_PLAY;
+                            return result_double;
+
+                        case MOVE_UNDERWATER:
+                        case MOVE_WADE:
+                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_W;
+                            result_double[DRAW] = NO_PLAY;
+                            result_double[HIDE] = NO_PLAY;
+                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_W;
+                            result_double[ECHO] = NO_PLAY;
+                            return result_double;
+                    }
+                    // if lara is in a move that is unknown !
+                    return NULL;
+            }
+            break;
+
+        case TR_IV:
+        case TR_IV_DEMO:
+        case TR_V:
+            switch (ss_anim->model->id)
+            {
+                case PISTOL:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+
+                case TR4C_SHOTGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR4C_UZI:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
+                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
+                    return result;
+
+                case TR4C_CROSSBOW:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTCROSSBOW;
+                    result_double[DRAW] = TR_AUDIO_SOUND_HOLSTERIN;
+                    result_double[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
+                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR4C_GRENADEGUN:
+                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+                    result_double[DRAW] = NO_PLAY;
+                    result_double[HIDE] = NO_PLAY;
+                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
+                    result_double[ECHO] = NO_PLAY;
+                    return result_double;
+
+                case TR4C_REVOLVER:
+                    result[SHOT] = TR_AUDIO_SOUND_SHOTREVOLVER;
+                    result[ECHO] = NO_PLAY;
+                    return result;
+            }
+            break;
+    }
+
+    return NULL;
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)

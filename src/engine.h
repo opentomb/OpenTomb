@@ -2,7 +2,7 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <stdint.h>
 
 #include "core/base_types.h"
@@ -16,7 +16,14 @@ extern struct camera_s                       engine_camera;
 extern struct camera_state_s                 engine_camera_state;
 
 void Engine_Start(int argc, char **argv);
-void Engine_Shutdown(int val) __attribute__((noreturn));
+
+// no __attribute__ in windows
+#ifdef _WIN32
+    __declspec(noreturn) void Engine_Shutdown(int val);
+#elif __linux__
+    void Engine_Shutdown(int val) __attribute__((noreturn));
+#endif
+
 const char *Engine_GetBasePath();
 void Engine_SetDone();
 void Engine_JoyRumble(float power, int time);
