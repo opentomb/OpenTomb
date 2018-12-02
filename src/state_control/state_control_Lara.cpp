@@ -181,7 +181,7 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
                 // harpoon
                 if(weapon_model != TR2_HARPOONGUN)
                 {
-                    return true;
+                    return false;
                 }
             }
             else if(ver == TR_III)
@@ -189,7 +189,7 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
                 // harpoon
                 if(weapon_model != TR3_HARPOONGUN)
                 {
-                    return true;
+                    return false;
                 }
             }
             else
