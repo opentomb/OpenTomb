@@ -94,6 +94,9 @@ typedef struct ss_animation_s
     int16_t                     current_animation;
     int16_t                     current_frame;
     
+    struct bone_frame_s        *current_bf;
+    struct bone_frame_s        *prev_bf;
+    
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
 

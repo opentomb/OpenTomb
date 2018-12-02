@@ -576,8 +576,9 @@ void gui_InventoryManager::frameStates(float time)
 void gui_InventoryManager::frameItems(float time)
 {
     int ring_item_index = 0;
-    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
+    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; )
     {
+        inventory_node_p next_node = i->next;
         base_item_p bi = World_GetBaseItemByID(i->id);
         if(bi && (bi->type == m_current_items_type))
         {
@@ -648,6 +649,7 @@ void gui_InventoryManager::frameItems(float time)
             }
             ring_item_index++;
         }
+        i = next_node;
     }
 }
 
