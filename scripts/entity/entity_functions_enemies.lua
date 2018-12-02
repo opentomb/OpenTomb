@@ -27,14 +27,14 @@ function Lara_init(id)
     local ver = getLevelVersion();
     local level = getLevel();
     
-    if(ver == TR_I) then
+    if(ver < TR_II) then
         -- check if is home level
         if(level == 0) then
             setEntityMeshes(id, 5, 0, 13);
         end;
-    elseif(ver == TR_II) then
+    elseif(ver < TR_III) then
         print("entity_functions_enemies->unknown ! (L36)");
-    elseif(ver == TR_III) then
+    elseif(ver < TR_IV) then
         setEntityMeshes(id, 315, 0, 14);
     else
         setEntityMeshes(id, 8, 0, 14);

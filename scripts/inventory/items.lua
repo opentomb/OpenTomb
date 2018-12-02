@@ -12,7 +12,7 @@ function genBaseItems()
 
     local ver = getLevelVersion();
 
-    if (ver == TR_I) or (ver == TR_I_DEMO) or (ver == TR_I_UB) then
+    if (ver < TR_II) then
         createBaseItem(ITEM_COMPASS, 72, 72, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 71, 71, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 82, 82, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -50,7 +50,7 @@ function genBaseItems()
         createBaseItem(ITEM_QUEST_2, 146, 146, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_QUEST_3, 150, 150, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver == TR_II) or (ver == TR_II_DEMO) then
+    elseif (ver < TR_III) then
         createBaseItem(ITEM_COMPASS, 121, 121, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 120, 120, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 134, 134, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -95,7 +95,7 @@ function genBaseItems()
         --createBaseItem(ITEM_SECRET_2, 121, 121, ITEM_TYPE_QUEST, 1);
         --createBaseItem(ITEM_SECRET_3, 133, 133, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver == TR_III) then
+    elseif (ver < TR_IV) then
         createBaseItem(ITEM_COMPASS, 146, 146, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 145, 145, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 159, 159, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -137,7 +137,7 @@ function genBaseItems()
         createBaseItem(ITEM_PUZZLE_3, 207, 207, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_PUZZLE_4, 208, 208, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver == TR_IV) or (ver == TR_IV_DEMO) then
+    elseif (ver < TR_V) then
         createBaseItem(ITEM_COMPASS, 528, 528, ITEM_TYPE_SUPPLY, 1, ITEM_NAME_COMPASS);
         --createBaseItem(ITEM_LOAD, 357, 357, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LOAD);
         --createBaseItem(ITEM_SAVE, 358, 358, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_SAVE);
