@@ -78,7 +78,7 @@ typedef struct ss_bone_tag_s
 
     float                   qrotate[4];                                         // quaternion rotation
     
-#ifdef _WIN32
+#ifdef _WIN64
 	float                   local_transform[16];       // 4x4 OpenGL matrix for stack usage
 	float                   current_transform[16];    // 4x4 OpenGL matrix for global usage
 #elif __linux__

@@ -157,7 +157,7 @@ void StateControl_LaraSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state);
 // get the weapon sfx like shot_snd, echo_snd, reload_snd etc...
-int *LaraGetWeaponSFX(struct ss_animation_s *ss_anim, int32_t ver);
+struct weapon_inf_s LaraGetWeaponConfig(struct ss_animation_s *ss_anim, int32_t ver);
 
 static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
 {
@@ -171,12 +171,12 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
         case TR_STATE_LARA_UNDERWATER_DIVING: // new state for harpoon !
             ver = World_GetVersion();
 
-            if(ver == TR_I || ver == TR_I_DEMO || ver == TR_I_UB)
+            if(ver < TR_II)
             {
                 return false;
             }
 
-            if((ver == TR_II || ver == TR_II_DEMO))
+            if(ver < TR_III)
             {
                 // harpoon
                 if(weapon_model != TR2_HARPOONGUN)
@@ -184,7 +184,7 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
                     return false;
                 }
             }
-            else if(ver == TR_III)
+            else if(ver < TR_IV)
             {
                 // harpoon
                 if(weapon_model != TR3_HARPOONGUN)
@@ -3239,82 +3239,9 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
         ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool do_aim = ent->character->cmd.action;
         int inc_state;
-        /// default: int shot_snd = 8, draw_snd = 6, hide_snd = 7;
-        int shot_snd = 0, draw_snd = 6, hide_snd = 7, echo_snd = 0; /// echo sound (TR2 -> TR5) // Default
-        float fire_rate = 1.0f;
         int32_t ver = World_GetVersion();
         // Sound Weapon
-        int *Sounds = LaraGetWeaponSFX(ss_anim, ver);
-
-        // Universal Pistols Sound !
-        if (ss_anim->model->id == PISTOL)
-        {
-            fire_rate = 1.0f;
-        }
-
-        switch (ver)
-        {
-        case TR_I:
-            switch (ss_anim->model->id)
-            {
-                case TR1_MAGNUM:
-                    fire_rate = 0.9f;
-                    break;
-                case TR1_UZI:
-                    fire_rate = 3.5f;
-                    break;
-            }
-            break;
-        case TR_II:
-            switch (ss_anim->model->id)
-            {
-                case TR2_AUTOMAGS:
-                    fire_rate = 1.0f;
-                    break;
-                case TR2_UZI:
-                    fire_rate = 3.5f;
-                    break;
-            }
-            break;
-        case TR_III:
-            switch (ss_anim->model->id)
-            {
-                case TR3_DESERTEAGLE:
-                    ///@FIXME: need to stop specific sound from object
-                    fire_rate = 0.7f;
-                    break;
-
-                case TR3_UZI:
-                    ///@FIXME: need to stop specific sound from object
-                    fire_rate = 3.5f;
-                    break;
-            }
-            break;
-        case TR_IV:
-            switch (ss_anim->model->id)
-            {
-                case TR4C_UZI:
-                    fire_rate = 3.5f;
-                    break;
-
-                case TR4C_REVOLVER:
-                    shot_snd = 121;
-                    break;
-            }
-            break;
-        case TR_V:
-            switch (ss_anim->model->id)
-            {
-                case TR4C_UZI:
-                    fire_rate = 3.5f;
-                    break;
-
-                case TR4C_REVOLVER:
-                    fire_rate = 0.7f;
-                    break;
-            }
-            break;
-        }
+        weapon_inf_s weapon = LaraGetWeaponConfig(ss_anim, ver);
 
         if (target)
         {
@@ -3362,8 +3289,8 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             {
                 /// defined if you using windows !
                 /// in windows the sound is not played the first time (first animation) !
-                #ifdef _WIN32
-                Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                #ifdef _WIN64
+                Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 #endif
                 Anim_SetAnimation(ss_anim, 3, 0);
             }
@@ -3373,23 +3300,18 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             }
             else if (ent->character->state.weapon_ready && !ent->character->cmd.action)
             {
-                switch (ss_anim->current_frame)
-                {
-                    case 2:
-                        /// anim_frame_flags is needed or the sound will play before starting fire !
-                        if ((ver == TR_II || ver == TR_II_DEMO) && (ss_anim->model->id == TR2_UZI) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
-                        {
-                            Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        }
-                        else if ((ver == TR_III) && (ss_anim->model->id == TR3_UZI) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
-                        {
-                            Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        }
-                        break;
-                    case 4:
-                        Audio_Kill(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        break;
-                }
+				/// anim_frame_flags is needed or the sound will play before starting fire !
+				if ((ss_anim->current_frame == 5))
+				{
+					Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+				}
+				else if ((ss_anim->current_frame == 4) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+				{
+					if ((ver > TR_I && ver <= TR_V) && ((ss_anim->model->id == TR2_UZI) || (ss_anim->model->id == TR3_UZI)))
+					{
+						Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+					}
+				}
             }
             break;
 
@@ -3403,7 +3325,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                 StateControl_SetWeaponMeshOff(ent->bf, 4);
 
                 Anim_SetAnimation(ss_anim, 2, 0);
-                Audio_Send(Sounds[DRAW], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
             else if ((inc_state == 2) && !ent->character->state.weapon_ready)
             {
@@ -3425,13 +3347,13 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                 StateControl_SetWeaponMeshOff(ent->bf, 10);
                 StateControl_SetWeaponMeshOff(ent->bf, 13);
                 Anim_SetAnimation(ss_anim, 1, -1);
-                Audio_Send(Sounds[HIDE], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
             break;
 
         case 3: // fire process;
             b_tag->is_targeted = (target) ? (0x01) : (0x00);
-            if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * fire_rate))
+            if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.fire_rate))
             {
                 if (ent->character->state.weapon_ready && ent->character->cmd.action)
                 {
@@ -3460,7 +3382,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                         }
 
-                        Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                        Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
                 }
                 else
@@ -3491,142 +3413,10 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
-        float range = 32768.0f; // default
         int inc_state;
-        int num_shots = 1; // default
         int32_t ver = World_GetVersion();
         // Sound Weapon
-        int *Sounds = LaraGetWeaponSFX(ss_anim, ver);
-        // get player->move_type for harpoon
-        entity_s *player = World_GetPlayer();
-
-        // check actual version
-        switch (ver)
-        {
-        case TR_I:
-            if (ss_anim->model->id == TR1_SHOTGUN)
-            {
-                range = 8192.0f;
-                num_shots = 12;
-            }
-            break;
-        case TR_II:
-            switch (ss_anim->model->id)
-            {
-            case TR2_SHOTGUN:
-                range = 8192.0f;
-                num_shots = 12;
-                break;
-
-            case TR2_M16:
-                range = 16384.0f;
-                num_shots = 1;
-                break;
-
-            case TR_GRENADEGUN:
-                range = 8192.0f;
-                num_shots = 1;
-                break;
-
-            case TR2_HARPOONGUN:
-                switch (player->move_type)
-                {
-                case MOVE_ON_FLOOR:
-                case MOVE_ON_WATER:
-                    range = 8192.0f;
-                    num_shots = 1;
-                    break;
-
-                case MOVE_UNDERWATER:
-                case MOVE_WADE:
-                    range = 16384.0f;
-                    num_shots = 1;
-                    break;
-                }
-                break;
-            }
-            break;
-        case TR_III:
-            switch (ss_anim->model->id)
-            {
-            case TR3_SHOTGUN:
-                range = 8192.0f;
-                num_shots = 12;
-                break;
-
-            case TR3_MP5:
-                range = 16384.0f;
-                num_shots = 1;
-                break;
-
-            case TR3_GRENADEGUN:
-                range = 8192.0f;
-                num_shots = 1;
-                break;
-
-            case TR3_ROCKETGUN:
-                range = 16384.0f; /// really need a range for rocket launcher ?
-                num_shots = 1;
-                break;
-
-            case TR3_HARPOONGUN:
-                switch (player->move_type)
-                {
-                case MOVE_ON_FLOOR:
-                case MOVE_ON_WATER:
-                    range = 8192.0f;
-                    num_shots = 1;
-                    break;
-
-                case MOVE_UNDERWATER:
-                case MOVE_WADE:
-                    range = 16384.0f;
-                    num_shots = 1;
-                    break;
-                }
-                break;
-            }
-            break;
-        case TR_IV:
-            switch (ss_anim->model->id)
-            {
-                case TR4C_SHOTGUN:
-                    range = 8192.0f;
-                    num_shots = 12;
-                    break;
-
-                case TR4C_CROSSBOW:
-                    range = 16384.0f; /// affected by gravity ?
-                    num_shots = 1;
-                    break;
-
-                case TR4C_GRENADEGUN:
-                    range = 8192.0f;
-                    num_shots = 1;
-                    break;
-            }
-            break;
-        case TR_V:
-            switch (ss_anim->model->id)
-            {
-                case TR4C_SHOTGUN:
-                    range = 8192.0f;
-                    num_shots = 12;
-                    break;
-
-                case TR4C_CROSSBOW:
-                    range = 16384.0f; /// affected by gravity ?
-                    num_shots = 1;
-                    break;
-
-                case TR4C_GRENADEGUN:
-                    /// grenade gun have a second reload sound !!!
-                    range = 8192.0f;
-                    num_shots = 1;
-                    break;
-            }
-            break;
-        }
+        weapon_inf_s weapon = LaraGetWeaponConfig(ss_anim, ver);
 
         if (target)
         {
@@ -3664,8 +3454,8 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
             {
                 /// defined if you using windows !
                 /// in windows the sound is not played the first time (first animation) !
-                #ifdef _WIN32
-                    Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                #ifdef _WIN64
+                    Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 #endif
                 Anim_SetAnimation(ss_anim, 2, 0);  // start fire
             }
@@ -3694,9 +3484,9 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                     StateControl_SetWeaponMeshOff(ent->bf, 7);
                 }
 
-                if (Sounds[DRAW])
+                if (weapon.draw)
                 {
-                    Audio_Send(Sounds[DRAW], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
             }
             break;
@@ -3713,7 +3503,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
 
                     Anim_SetAnimation(ss_anim, 2, 0);
                     ss_anim->frame_changing_state = 0x01;
-                    Audio_Send(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
                     Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
                     vec3_copy(from, tr + 12);
@@ -3726,8 +3516,8 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                     {
                         vec3_copy_inv(dir, tr + 8);
                     }
-                    vec3_add_mul(to, from, dir, range);
-                    for (int i = 1; i <= num_shots; ++i)
+                    vec3_add_mul(to, from, dir, weapon.range);
+                    for (int i = 1; i <= weapon.num_shots; ++i)
                     {
                         //vec3_copy(d_from, from);
                         //vec3_copy(d_to, to);
@@ -3736,7 +3526,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                             target = (entity_p)cs.obj->object;
                             Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                         }
-                        t = (range * i) / num_shots;
+                        t = (weapon.range * i) / weapon.num_shots;
                         vec3_add_mul(to, from, dir, t);
                         t = 8.0f * i;
                         switch (i % 4)
@@ -3757,9 +3547,9 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                     Anim_SetAnimation(ss_anim, 4, 0);
                 }
             }
-            if ((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && Sounds[RELOAD])
+            if ((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && weapon.reload)
             {
-                Audio_Send(Sounds[RELOAD], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                Audio_Send(weapon.reload, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
             break;
 
@@ -3768,6 +3558,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
             {
                 SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
             }
+
             if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == 23))
             {
                 if (ver >= TR_II)
@@ -3781,26 +3572,28 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
 
                 StateControl_SetWeaponMeshOff(ent->bf, 10);
 
-                if (Sounds[HIDE])
+                if (weapon.hide)
                 {
-                    Audio_Send(Sounds[HIDE], TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
             }
             break;
 
         case 4: // aim - > idle;
             /// Shoot sound forced stopping because LOOP mode (only loop mode) ! and echo sound here !
-            if ((ss_anim->current_frame == 1))
-            {
-                // delete sound (loop mode killer)
-                Audio_Kill(Sounds[SHOT], TR_AUDIO_EMITTER_ENTITY, ent->id);
-
-                // echo sound
-                if ((ver == TR_II || ver == TR_II_DEMO) && (ss_anim->model->id == TR2_M16) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
-                {
-                    Audio_Send(Sounds[ECHO], TR_AUDIO_EMITTER_ENTITY, ent->id);
-                }
-            }
+			if ((ss_anim->current_frame == 1))
+			{
+				// delete sound (loop mode killer)
+				Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+			}
+			else if ((ss_anim->current_frame == 2))
+			{
+				// echo sound
+				if ((ver > TR_I && ver < TR_III) && (ss_anim->model->id == TR2_M16))
+				{
+					Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+				}
+			}
 
             if (Anim_IncTime(ss_anim, time))
             {
@@ -3814,256 +3607,316 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
     return ss_anim->frame_changing_state;
 }
 
-/// LaraGetWeaponSFX(ss_anim, ver)
-int *LaraGetWeaponSFX(struct ss_animation_s *ss_anim, int32_t ver)
+struct weapon_inf_s LaraGetWeaponConfig(struct ss_animation_s *ss_anim, int32_t ver)
 {
-    static int result[4]; // On Hand Weapon
-    static int result_double[5]; // Two Hand Weapon
     // get player->move_type for harpoon
     entity_s *player = World_GetPlayer();
+	weapon_inf_s weapon;
+	// default sound for one hand.
+	weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+	weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
 
-    // init result with no sound to play !
-    result[SHOT] = NO_PLAY;
-    result[ECHO] = NO_PLAY; // only for Uzi !
-    result_double[SHOT] = NO_PLAY;
-    result_double[DRAW] = NO_PLAY;
-    result_double[HIDE] = NO_PLAY;
-    result_double[ECHO] = NO_PLAY; // only for M16 (and MP5 ?)
-    result_double[RELOAD] = NO_PLAY;
+	if (ver < TR_II)
+	{
+		switch (ss_anim->model->id)
+		{
+		case PISTOL:
+			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 1.0f;
+			weapon.num_shots = 2;
+			return weapon;
 
-    // init draw sound (only for one hand)
-    result[DRAW] = TR_AUDIO_SOUND_HOLSTEROUT;
-    result[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
+		case TR1_SHOTGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+			weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+			weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
+			weapon.reload = TR_AUDIO_SOUND_RELOAD;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 12;
+			return weapon;
 
-    // get the version and model_id and return the appropriate sound !
-    switch (ver)
-    {
-        case TR_I:
-        case TR_I_DEMO:
-        case TR_I_UB:
-            switch (ss_anim->model->id)
-            {
-                case PISTOL:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
-                    result[ECHO] = NO_PLAY;
-                    return result;
-                
-                case TR1_SHOTGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
-                    result_double[DRAW] = TR_AUDIO_SOUND_HOLSTEROUT;
-                    result_double[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR1_MAGNUM:
+			weapon.shot = TR_AUDIO_SOUND_SHOTMAGNUM;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.7f;
+			weapon.num_shots = 2;
+			return weapon;
 
-                case TR1_MAGNUM:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTMAGNUM;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+		case TR1_UZI:
+			// no echo sound in tr1 !
+			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 4.0f;
+			weapon.num_shots = 2;
+			return weapon;
+		}
+	}
+	else if (ver < TR_III)
+	{
+		switch (ss_anim->model->id)
+		{
+			case PISTOL:
+				weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+				weapon.echo = NO_SOUND;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 1.0f;
+				weapon.num_shots = 2;
+				return weapon;
 
-                case TR1_UZI:
-                    // no echo sound in tr1 !
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
-                    result[ECHO] = NO_PLAY;
-                    return result;
-            }
-            break;
-        case TR_II:
-        case TR_II_DEMO:
-            switch (ss_anim->model->id)
-            {
-                case PISTOL:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+			case TR2_SHOTGUN:
+				// already sound for draw and hide !
+				weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+				weapon.draw = NO_SOUND;
+				weapon.hide = NO_SOUND;
+				weapon.reload = TR_AUDIO_SOUND_RELOAD;
+				weapon.echo = NO_SOUND;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 0.0f;
+				weapon.num_shots = 12;
+				return weapon;
 
-                case TR2_SHOTGUN:
-                    // already sound for draw and hide !
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+			case TR2_AUTOMAGS:
+				weapon.shot = TR_AUDIO_SOUND_SHOTAUTOMAGS;
+				weapon.echo = NO_SOUND;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 0.9f;
+				weapon.num_shots = 2;
+				return weapon;
 
-                case TR2_AUTOMAGS:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTAUTOMAGS;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+			case TR2_UZI:
+				weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+				weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 4.0f;
+				weapon.num_shots = 2;
+				return weapon;
 
-                case TR2_UZI:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
-                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
-                    return result;
+			case TR2_M16:
+				weapon.shot = TR_AUDIO_SOUND_SHOTM16;
+				weapon.draw = NO_SOUND;
+				weapon.hide = NO_SOUND;
+				weapon.reload = NO_SOUND;
+				weapon.echo = TR_AUDIO_SOUND_SHOTM16_END;
+				weapon.range = 16384.0f;
+				weapon.fire_rate = 0.0f;
+				weapon.num_shots = 1;
+				return weapon;
 
-                case TR2_M16:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTM16;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = NO_PLAY;
-                    result_double[ECHO] = TR_AUDIO_SOUND_SHOTM16_END;
-                    return result_double;
-                
-                case TR_GRENADEGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = NO_PLAY;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+			case TR_GRENADEGUN:
+				weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+				weapon.draw = NO_SOUND;
+				weapon.hide = NO_SOUND;
+				weapon.reload = NO_SOUND;
+				weapon.echo = NO_SOUND;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 0.0f;
+				weapon.num_shots = 1;
+				return weapon;
 
-                case TR2_HARPOONGUN:
-                    ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
-                    switch (player->move_type)
-                    {
-                        case MOVE_ON_FLOOR:
-                        case MOVE_ON_WATER:
-                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_G;
-                            result_double[DRAW] = NO_PLAY;
-                            result_double[HIDE] = NO_PLAY;
-                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_G;
-                            result_double[ECHO] = NO_PLAY;
-                            return result_double;
-                        
-                        case MOVE_UNDERWATER:
-                        case MOVE_WADE:
-                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_W;
-                            result_double[DRAW] = NO_PLAY;
-                            result_double[HIDE] = NO_PLAY;
-                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_W;
-                            result_double[ECHO] = NO_PLAY;
-                            return result_double;
-                    }
-                    // if lara is in a move that is unknown !
-                    return NULL;
-            }
-            break;
+			case TR2_HARPOONGUN:
+				///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+				switch (player->move_type)
+				{
+					case MOVE_ON_FLOOR:
+					case MOVE_ON_WATER:
+						weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
+						weapon.draw = NO_SOUND;
+						weapon.hide = NO_SOUND;
+						weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
+						weapon.echo = NO_SOUND;
+						weapon.range = 8192.0f;
+						weapon.fire_rate = 0.0f;
+						weapon.num_shots = 1;
+						return weapon;
 
-        case TR_III:
-            switch (ss_anim->model->id)
-            {
-                case PISTOL:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+					case MOVE_UNDERWATER:
+					case MOVE_WADE:
+						weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
+						weapon.draw = NO_SOUND;
+						weapon.hide = NO_SOUND;
+						weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
+						weapon.echo = NO_SOUND;
+						weapon.range = 16384.0f;
+						weapon.fire_rate = 0.0f;
+						weapon.num_shots = 1;
+						return weapon;
+				}
+				break;
+		}
+	}
+	else if (ver < TR_IV)
+	{
+		switch (ss_anim->model->id)
+		{
+		case PISTOL:
+			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 1.0f;
+			weapon.num_shots = 2;
+			return weapon;
 
-                case TR3_SHOTGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR3_SHOTGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = TR_AUDIO_SOUND_RELOAD;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 12;
+			return weapon;
 
-                case TR3_UZI:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
-                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
-                    return result;
+		case TR3_UZI:
+			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+			weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 4.0f;
+			weapon.num_shots = 2;
+			return weapon;
 
-                case TR3_DESERTEAGLE:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+		case TR3_DESERTEAGLE:
+			weapon.shot = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.7f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR3_MP5:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTMP5;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR3_MP5:
+			weapon.shot = TR_AUDIO_SOUND_SHOTMP5;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+			weapon.echo = NO_SOUND;
+			weapon.range = 16384.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR3_GRENADEGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR3_GRENADEGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+			weapon.echo = NO_SOUND;
+			weapon.range = 16384.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR3_ROCKETGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTROCKETGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOADROCKETGUN;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR3_ROCKETGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTROCKETGUN;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = TR_AUDIO_SOUND_RELOADROCKETGUN;
+			weapon.echo = NO_SOUND;
+			weapon.range = 16384.0f; // need really a range ?
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR3_HARPOONGUN:
-                    ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
-                    switch (player->move_type)
-                    {
-                        case MOVE_ON_FLOOR:
-                        case MOVE_ON_WATER:
-                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_G;
-                            result_double[DRAW] = NO_PLAY;
-                            result_double[HIDE] = NO_PLAY;
-                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_G;
-                            result_double[ECHO] = NO_PLAY;
-                            return result_double;
+		case TR3_HARPOONGUN:
+			///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+			switch (player->move_type)
+			{
+			case MOVE_ON_FLOOR:
+			case MOVE_ON_WATER:
+				weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
+				weapon.draw = NO_SOUND;
+				weapon.hide = NO_SOUND;
+				weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
+				weapon.echo = NO_SOUND;
+				weapon.range = 8192.0f;
+				weapon.fire_rate = 0.0f;
+				weapon.num_shots = 1;
+				return weapon;
 
-                        case MOVE_UNDERWATER:
-                        case MOVE_WADE:
-                            result_double[SHOT] = TR_AUDIO_SOUND_SHOTHARPOON_W;
-                            result_double[DRAW] = NO_PLAY;
-                            result_double[HIDE] = NO_PLAY;
-                            result_double[RELOAD] = TR_AUDIO_SOUND_RELOADHARPOON_W;
-                            result_double[ECHO] = NO_PLAY;
-                            return result_double;
-                    }
-                    // if lara is in a move that is unknown !
-                    return NULL;
-            }
-            break;
+			case MOVE_UNDERWATER:
+			case MOVE_WADE:
+				weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
+				weapon.draw = NO_SOUND;
+				weapon.hide = NO_SOUND;
+				weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
+				weapon.echo = NO_SOUND;
+				weapon.range = 16384.0f;
+				weapon.fire_rate = 0.0f;
+				weapon.num_shots = 1;
+				return weapon;
+			}
+			break;
+		}
+	}
+	else if (ver <= TR_V)
+	{
+		switch (ss_anim->model->id)
+		{
+		case PISTOL:
+			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 1.0f;
+			weapon.num_shots = 2;
+			return weapon;
 
-        case TR_IV:
-        case TR_IV_DEMO:
-        case TR_V:
-            switch (ss_anim->model->id)
-            {
-                case PISTOL:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTPISTOLS;
-                    result[ECHO] = NO_PLAY;
-                    return result;
+		case TR4C_SHOTGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = TR_AUDIO_SOUND_RELOAD;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 12;
+			return weapon;
 
-                case TR4C_SHOTGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTSHOTGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR4C_UZI:
+			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+			weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 4.0f;
+			weapon.num_shots = 2;
+			return weapon;
 
-                case TR4C_UZI:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTUZI;
-                    result[ECHO] = TR_AUDIO_SOUND_SHOTUZI_END;
-                    return result;
+		case TR4C_CROSSBOW:
+			weapon.shot = TR_AUDIO_SOUND_SHOTCROSSBOW;
+			weapon.draw = TR_AUDIO_SOUND_HOLSTERIN;
+			weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
+			weapon.reload = TR_AUDIO_SOUND_RELOAD;
+			weapon.echo = NO_SOUND;
+			weapon.range = 16384.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR4C_CROSSBOW:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTCROSSBOW;
-                    result_double[DRAW] = TR_AUDIO_SOUND_HOLSTERIN;
-                    result_double[HIDE] = TR_AUDIO_SOUND_HOLSTERIN;
-                    result_double[RELOAD] = TR_AUDIO_SOUND_RELOAD;
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
+		case TR4C_GRENADEGUN:
+			weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+			weapon.draw = NO_SOUND;
+			weapon.hide = NO_SOUND;
+			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.0f;
+			weapon.num_shots = 1;
+			return weapon;
 
-                case TR4C_GRENADEGUN:
-                    result_double[SHOT] = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-                    result_double[DRAW] = NO_PLAY;
-                    result_double[HIDE] = NO_PLAY;
-                    result_double[RELOAD] = NO_PLAY; // grenadegun have double reload sound !
-                    result_double[ECHO] = NO_PLAY;
-                    return result_double;
-
-                case TR4C_REVOLVER:
-                    result[SHOT] = TR_AUDIO_SOUND_SHOTREVOLVER;
-                    result[ECHO] = NO_PLAY;
-                    return result;
-            }
-            break;
+		case TR4C_REVOLVER:
+			weapon.shot = TR_AUDIO_SOUND_SHOTREVOLVER;
+			weapon.echo = NO_SOUND;
+			weapon.range = 8192.0f;
+			weapon.fire_rate = 0.7f;
+			weapon.num_shots = 1;
+			return weapon;
+		}
     }
 
-    return NULL;
+	return weapon;
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)

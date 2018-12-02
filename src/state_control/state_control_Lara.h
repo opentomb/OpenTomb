@@ -2,13 +2,21 @@
 #ifndef STATE_CONTROL_LARA_H
 #define STATE_CONTROL_LARA_H
 
-/// Define Name. Just to see what sound is assigned !
-#define NO_PLAY (-1)
-#define SHOT 0
-#define DRAW 1
-#define HIDE 2
-#define ECHO 3
-#define RELOAD 4      // only for two hand
+struct weapon_inf_s
+{
+	int shot;
+	int draw;
+	int hide;
+	int echo;        // tr1 not have echo sound !
+	int reload;
+	int reload_2;    // for grenade gun !
+
+	int num_shots; // one hand weapon not have this function but in original tr this function is enabled ! (1 bullet for each weapon)
+	float range;     // two hand weapon not have range (added by default for future update) !
+	float fire_rate; // one hand weapon not have fire_rate (added by default for future update) !
+};
+
+#define NO_SOUND (-1);
 
 /// DEFAULT PISTOLS (ALL TR HAVE PISTOL IN SLOT 1)
 #define PISTOL           1

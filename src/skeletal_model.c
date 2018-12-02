@@ -49,8 +49,8 @@ void SkeletalModel_Clear(skeletal_model_p model)
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
 	int stack = 0;
-#ifdef _WIN32
-	uint16_t* parents = malloc(sizeof(model->mesh_count));
+#ifdef _WIN64
+	uint16_t *parents = malloc(sizeof(model->mesh_count));
 #elif __linux__
 	uint16_t parents[model->mesh_count];
 #endif
@@ -96,7 +96,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
         }
     }
 
-#ifdef _WIN32
+#ifdef _WIN64
 	free(parents);
 #endif
 }
