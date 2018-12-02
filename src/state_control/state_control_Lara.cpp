@@ -3300,18 +3300,18 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             }
             else if (ent->character->state.weapon_ready && !ent->character->cmd.action)
             {
-				/// anim_frame_flags is needed or the sound will play before starting fire !
-				if ((ss_anim->current_frame == 5))
-				{
-					Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-				}
-				else if ((ss_anim->current_frame == 4) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
-				{
-					if ((ver > TR_I && ver <= TR_V) && ((ss_anim->model->id == TR2_UZI) || (ss_anim->model->id == TR3_UZI)))
-					{
-						Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-					}
-				}
+                /// anim_frame_flags is needed or the sound will play before starting fire !
+                if ((ss_anim->current_frame == 5))
+                {
+                    Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+                else if ((ss_anim->current_frame == 4) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+                {
+                    if ((ver > TR_I && ver <= TR_V) && ((ss_anim->model->id == TR2_UZI) || (ss_anim->model->id == TR3_UZI)))
+                    {
+                        Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                    }
+                }
             }
             break;
 
@@ -3581,19 +3581,19 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
 
         case 4: // aim - > idle;
             /// Shoot sound forced stopping because LOOP mode (only loop mode) ! and echo sound here !
-			if ((ss_anim->current_frame == 1))
-			{
-				// delete sound (loop mode killer)
-				Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-			}
-			else if ((ss_anim->current_frame == 2))
-			{
-				// echo sound
-				if ((ver > TR_I && ver < TR_III) && (ss_anim->model->id == TR2_M16))
-				{
-					Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-				}
-			}
+            if ((ss_anim->current_frame == 1))
+            {
+                // delete sound (loop mode killer)
+                Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            else if ((ss_anim->current_frame == 2))
+            {
+                // echo sound
+                if ((ver > TR_I && ver < TR_III) && (ss_anim->model->id == TR2_M16))
+                {
+                    Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+            }
 
             if (Anim_IncTime(ss_anim, time))
             {
@@ -3611,312 +3611,312 @@ struct weapon_inf_s LaraGetWeaponConfig(struct ss_animation_s *ss_anim, int32_t 
 {
     // get player->move_type for harpoon
     entity_s *player = World_GetPlayer();
-	weapon_inf_s weapon;
-	// default sound for one hand.
-	weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
-	weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
+    weapon_inf_s weapon;
+    // default sound for one hand.
+    weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+    weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
 
-	if (ver < TR_II)
-	{
-		switch (ss_anim->model->id)
-		{
-		case PISTOL:
-			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 1.0f;
-			weapon.num_shots = 2;
-			return weapon;
+    if (ver < TR_II)
+    {
+        switch (ss_anim->model->id)
+        {
+        case PISTOL:
+            weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 1.0f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR1_SHOTGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
-			weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
-			weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
-			weapon.reload = TR_AUDIO_SOUND_RELOAD;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 12;
-			return weapon;
+        case TR1_SHOTGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+            weapon.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+            weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
+            weapon.reload = TR_AUDIO_SOUND_RELOAD;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 12;
+            return weapon;
 
-		case TR1_MAGNUM:
-			weapon.shot = TR_AUDIO_SOUND_SHOTMAGNUM;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.7f;
-			weapon.num_shots = 2;
-			return weapon;
+        case TR1_MAGNUM:
+            weapon.shot = TR_AUDIO_SOUND_SHOTMAGNUM;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.7f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR1_UZI:
-			// no echo sound in tr1 !
-			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 4.0f;
-			weapon.num_shots = 2;
-			return weapon;
-		}
-	}
-	else if (ver < TR_III)
-	{
-		switch (ss_anim->model->id)
-		{
-			case PISTOL:
-				weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
-				weapon.echo = NO_SOUND;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 1.0f;
-				weapon.num_shots = 2;
-				return weapon;
+        case TR1_UZI:
+            // no echo sound in tr1 !
+            weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 4.0f;
+            weapon.num_shots = 2;
+            return weapon;
+        }
+    }
+    else if (ver < TR_III)
+    {
+        switch (ss_anim->model->id)
+        {
+            case PISTOL:
+                weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+                weapon.echo = NO_SOUND;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 1.0f;
+                weapon.num_shots = 2;
+                return weapon;
 
-			case TR2_SHOTGUN:
-				// already sound for draw and hide !
-				weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
-				weapon.draw = NO_SOUND;
-				weapon.hide = NO_SOUND;
-				weapon.reload = TR_AUDIO_SOUND_RELOAD;
-				weapon.echo = NO_SOUND;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 0.0f;
-				weapon.num_shots = 12;
-				return weapon;
+            case TR2_SHOTGUN:
+                // already sound for draw and hide !
+                weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+                weapon.draw = NO_SOUND;
+                weapon.hide = NO_SOUND;
+                weapon.reload = TR_AUDIO_SOUND_RELOAD;
+                weapon.echo = NO_SOUND;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 0.0f;
+                weapon.num_shots = 12;
+                return weapon;
 
-			case TR2_AUTOMAGS:
-				weapon.shot = TR_AUDIO_SOUND_SHOTAUTOMAGS;
-				weapon.echo = NO_SOUND;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 0.9f;
-				weapon.num_shots = 2;
-				return weapon;
+            case TR2_AUTOMAGS:
+                weapon.shot = TR_AUDIO_SOUND_SHOTAUTOMAGS;
+                weapon.echo = NO_SOUND;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 0.9f;
+                weapon.num_shots = 2;
+                return weapon;
 
-			case TR2_UZI:
-				weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
-				weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 4.0f;
-				weapon.num_shots = 2;
-				return weapon;
+            case TR2_UZI:
+                weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+                weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 4.0f;
+                weapon.num_shots = 2;
+                return weapon;
 
-			case TR2_M16:
-				weapon.shot = TR_AUDIO_SOUND_SHOTM16;
-				weapon.draw = NO_SOUND;
-				weapon.hide = NO_SOUND;
-				weapon.reload = NO_SOUND;
-				weapon.echo = TR_AUDIO_SOUND_SHOTM16_END;
-				weapon.range = 16384.0f;
-				weapon.fire_rate = 0.0f;
-				weapon.num_shots = 1;
-				return weapon;
+            case TR2_M16:
+                weapon.shot = TR_AUDIO_SOUND_SHOTM16;
+                weapon.draw = NO_SOUND;
+                weapon.hide = NO_SOUND;
+                weapon.reload = NO_SOUND;
+                weapon.echo = TR_AUDIO_SOUND_SHOTM16_END;
+                weapon.range = 16384.0f;
+                weapon.fire_rate = 0.0f;
+                weapon.num_shots = 1;
+                return weapon;
 
-			case TR_GRENADEGUN:
-				weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-				weapon.draw = NO_SOUND;
-				weapon.hide = NO_SOUND;
-				weapon.reload = NO_SOUND;
-				weapon.echo = NO_SOUND;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 0.0f;
-				weapon.num_shots = 1;
-				return weapon;
+            case TR_GRENADEGUN:
+                weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+                weapon.draw = NO_SOUND;
+                weapon.hide = NO_SOUND;
+                weapon.reload = NO_SOUND;
+                weapon.echo = NO_SOUND;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 0.0f;
+                weapon.num_shots = 1;
+                return weapon;
 
-			case TR2_HARPOONGUN:
-				///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
-				switch (player->move_type)
-				{
-					case MOVE_ON_FLOOR:
-					case MOVE_ON_WATER:
-						weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
-						weapon.draw = NO_SOUND;
-						weapon.hide = NO_SOUND;
-						weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
-						weapon.echo = NO_SOUND;
-						weapon.range = 8192.0f;
-						weapon.fire_rate = 0.0f;
-						weapon.num_shots = 1;
-						return weapon;
+            case TR2_HARPOONGUN:
+                ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+                switch (player->move_type)
+                {
+                    case MOVE_ON_FLOOR:
+                    case MOVE_ON_WATER:
+                        weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
+                        weapon.draw = NO_SOUND;
+                        weapon.hide = NO_SOUND;
+                        weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
+                        weapon.echo = NO_SOUND;
+                        weapon.range = 8192.0f;
+                        weapon.fire_rate = 0.0f;
+                        weapon.num_shots = 1;
+                        return weapon;
 
-					case MOVE_UNDERWATER:
-					case MOVE_WADE:
-						weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
-						weapon.draw = NO_SOUND;
-						weapon.hide = NO_SOUND;
-						weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
-						weapon.echo = NO_SOUND;
-						weapon.range = 16384.0f;
-						weapon.fire_rate = 0.0f;
-						weapon.num_shots = 1;
-						return weapon;
-				}
-				break;
-		}
-	}
-	else if (ver < TR_IV)
-	{
-		switch (ss_anim->model->id)
-		{
-		case PISTOL:
-			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 1.0f;
-			weapon.num_shots = 2;
-			return weapon;
+                    case MOVE_UNDERWATER:
+                    case MOVE_WADE:
+                        weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
+                        weapon.draw = NO_SOUND;
+                        weapon.hide = NO_SOUND;
+                        weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
+                        weapon.echo = NO_SOUND;
+                        weapon.range = 16384.0f;
+                        weapon.fire_rate = 0.0f;
+                        weapon.num_shots = 1;
+                        return weapon;
+                }
+                break;
+        }
+    }
+    else if (ver < TR_IV)
+    {
+        switch (ss_anim->model->id)
+        {
+        case PISTOL:
+            weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 1.0f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR3_SHOTGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = TR_AUDIO_SOUND_RELOAD;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 12;
-			return weapon;
+        case TR3_SHOTGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = TR_AUDIO_SOUND_RELOAD;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 12;
+            return weapon;
 
-		case TR3_UZI:
-			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
-			weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 4.0f;
-			weapon.num_shots = 2;
-			return weapon;
+        case TR3_UZI:
+            weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+            weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 4.0f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR3_DESERTEAGLE:
-			weapon.shot = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.7f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR3_DESERTEAGLE:
+            weapon.shot = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.7f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR3_MP5:
-			weapon.shot = TR_AUDIO_SOUND_SHOTMP5;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
-			weapon.echo = NO_SOUND;
-			weapon.range = 16384.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR3_MP5:
+            weapon.shot = TR_AUDIO_SOUND_SHOTMP5;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+            weapon.echo = NO_SOUND;
+            weapon.range = 16384.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR3_GRENADEGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
-			weapon.echo = NO_SOUND;
-			weapon.range = 16384.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR3_GRENADEGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+            weapon.echo = NO_SOUND;
+            weapon.range = 16384.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR3_ROCKETGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTROCKETGUN;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = TR_AUDIO_SOUND_RELOADROCKETGUN;
-			weapon.echo = NO_SOUND;
-			weapon.range = 16384.0f; // need really a range ?
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR3_ROCKETGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTROCKETGUN;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = TR_AUDIO_SOUND_RELOADROCKETGUN;
+            weapon.echo = NO_SOUND;
+            weapon.range = 16384.0f; // need really a range ?
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR3_HARPOONGUN:
-			///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
-			switch (player->move_type)
-			{
-			case MOVE_ON_FLOOR:
-			case MOVE_ON_WATER:
-				weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
-				weapon.draw = NO_SOUND;
-				weapon.hide = NO_SOUND;
-				weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
-				weapon.echo = NO_SOUND;
-				weapon.range = 8192.0f;
-				weapon.fire_rate = 0.0f;
-				weapon.num_shots = 1;
-				return weapon;
+        case TR3_HARPOONGUN:
+            ///@FIXME: need to rewrite playSound for removed the sound muffler in water (for harpoon_snd)
+            switch (player->move_type)
+            {
+            case MOVE_ON_FLOOR:
+            case MOVE_ON_WATER:
+                weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_G;
+                weapon.draw = NO_SOUND;
+                weapon.hide = NO_SOUND;
+                weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_G;
+                weapon.echo = NO_SOUND;
+                weapon.range = 8192.0f;
+                weapon.fire_rate = 0.0f;
+                weapon.num_shots = 1;
+                return weapon;
 
-			case MOVE_UNDERWATER:
-			case MOVE_WADE:
-				weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
-				weapon.draw = NO_SOUND;
-				weapon.hide = NO_SOUND;
-				weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
-				weapon.echo = NO_SOUND;
-				weapon.range = 16384.0f;
-				weapon.fire_rate = 0.0f;
-				weapon.num_shots = 1;
-				return weapon;
-			}
-			break;
-		}
-	}
-	else if (ver <= TR_V)
-	{
-		switch (ss_anim->model->id)
-		{
-		case PISTOL:
-			weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 1.0f;
-			weapon.num_shots = 2;
-			return weapon;
+            case MOVE_UNDERWATER:
+            case MOVE_WADE:
+                weapon.shot = TR_AUDIO_SOUND_SHOTHARPOON_W;
+                weapon.draw = NO_SOUND;
+                weapon.hide = NO_SOUND;
+                weapon.reload = TR_AUDIO_SOUND_RELOADHARPOON_W;
+                weapon.echo = NO_SOUND;
+                weapon.range = 16384.0f;
+                weapon.fire_rate = 0.0f;
+                weapon.num_shots = 1;
+                return weapon;
+            }
+            break;
+        }
+    }
+    else if (ver <= TR_V)
+    {
+        switch (ss_anim->model->id)
+        {
+        case PISTOL:
+            weapon.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 1.0f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR4C_SHOTGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = TR_AUDIO_SOUND_RELOAD;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 12;
-			return weapon;
+        case TR4C_SHOTGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = TR_AUDIO_SOUND_RELOAD;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 12;
+            return weapon;
 
-		case TR4C_UZI:
-			weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
-			weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 4.0f;
-			weapon.num_shots = 2;
-			return weapon;
+        case TR4C_UZI:
+            weapon.shot = TR_AUDIO_SOUND_SHOTUZI;
+            weapon.echo = TR_AUDIO_SOUND_SHOTUZI_END;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 4.0f;
+            weapon.num_shots = 2;
+            return weapon;
 
-		case TR4C_CROSSBOW:
-			weapon.shot = TR_AUDIO_SOUND_SHOTCROSSBOW;
-			weapon.draw = TR_AUDIO_SOUND_HOLSTERIN;
-			weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
-			weapon.reload = TR_AUDIO_SOUND_RELOAD;
-			weapon.echo = NO_SOUND;
-			weapon.range = 16384.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR4C_CROSSBOW:
+            weapon.shot = TR_AUDIO_SOUND_SHOTCROSSBOW;
+            weapon.draw = TR_AUDIO_SOUND_HOLSTERIN;
+            weapon.hide = TR_AUDIO_SOUND_HOLSTERIN;
+            weapon.reload = TR_AUDIO_SOUND_RELOAD;
+            weapon.echo = NO_SOUND;
+            weapon.range = 16384.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR4C_GRENADEGUN:
-			weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
-			weapon.draw = NO_SOUND;
-			weapon.hide = NO_SOUND;
-			weapon.reload = NO_SOUND; // grenadegun have double reload sound !
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.0f;
-			weapon.num_shots = 1;
-			return weapon;
+        case TR4C_GRENADEGUN:
+            weapon.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
+            weapon.draw = NO_SOUND;
+            weapon.hide = NO_SOUND;
+            weapon.reload = NO_SOUND; // grenadegun have double reload sound !
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.0f;
+            weapon.num_shots = 1;
+            return weapon;
 
-		case TR4C_REVOLVER:
-			weapon.shot = TR_AUDIO_SOUND_SHOTREVOLVER;
-			weapon.echo = NO_SOUND;
-			weapon.range = 8192.0f;
-			weapon.fire_rate = 0.7f;
-			weapon.num_shots = 1;
-			return weapon;
-		}
+        case TR4C_REVOLVER:
+            weapon.shot = TR_AUDIO_SOUND_SHOTREVOLVER;
+            weapon.echo = NO_SOUND;
+            weapon.range = 8192.0f;
+            weapon.fire_rate = 0.7f;
+            weapon.num_shots = 1;
+            return weapon;
+        }
     }
 
-	return weapon;
+    return weapon;
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)
