@@ -24,13 +24,17 @@ end;
 
 print("entity_functions_enemies->lara loaded !");
 function Lara_init(id)
-    if(getLevelVersion() < TR_II) then
-        if(getLevel() == 0) then
+    local ver = getLevelVersion();
+    local level = getLevel();
+    
+    if(ver < TR_II) then
+        -- check if is home level
+        if(level == 0) then
             setEntityMeshes(id, 5, 0, 13);
         end;
-    elseif(getLevelVersion() < TR_III) then
-        print("entity_functions_enemies->tr2 selected for tr3 (similar) !");
-    elseif(getLevelVersion() < TR_IV) then
+    elseif(ver < TR_III) then
+        print("entity_functions_enemies->unknown ! (L36)");
+    elseif(ver < TR_IV) then
         setEntityMeshes(id, 315, 0, 14);
     else
         setEntityMeshes(id, 8, 0, 14);
@@ -261,7 +265,7 @@ function bat_init(id)
             setCharacterTarget(object_id, player);
             local hit, frac, hx, hy, hz = getEntityRayTest(object_id, COLLISION_GROUP_STATIC_ROOM, 0, 0, 1024, 0, 0, -512);
             
-			if(hit) then
+            if(hit) then
                 local x, y, z = getEntityPos(object_id);
                 z = hz - 320;
                 print("bat fix");
@@ -876,7 +880,7 @@ function Pierre_init(id)
                 entity_funcs[object_id].onLoop = nil;
             end;
         elseif((hp == 1) and entity_funcs[object_id].is_flee) then
-			
+            
         end;
     end;
 end;

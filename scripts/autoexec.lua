@@ -27,6 +27,8 @@
 -- 0x04: add mesh to slot in disarmed state;
 print("autoexec->lara_model loaded !");
 
+local ver = getLevelVersion();
+
 -- creates map for left and right hands
 function setDefaultModelAnimReplaceFlag(m_id)
     setModelAnimReplaceFlag(m_id, 8, 0x01);
@@ -50,7 +52,7 @@ function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
     end;
 end;
 
-if (getLevelVersion() < TR_II) then
+if (ver < TR_II) then
     enableModelAnimReplaceFlags(5, false);
 
     -- pistols
@@ -66,7 +68,7 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(2, 13, 0x01);
     setModelMeshReplaceFlag(2, 7, 0x01);
 
-    -- auto pistols
+    -- magnum
     setDefaultModelAnimReplaceFlag(3);
     copyModelAnimations(3, 1);
     setModelMeshReplaceFlag(3, 10, 0x01);
@@ -74,7 +76,7 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(3, 1, 0x01);
     setModelMeshReplaceFlag(3, 4, 0x01);
 
-    -- UZI
+    -- uzi
     setDefaultModelAnimReplaceFlag(4);
     copyModelAnimations(4, 1);
     setModelMeshReplaceFlag(4, 10, 0x01);
@@ -83,9 +85,9 @@ if (getLevelVersion() < TR_II) then
     setModelMeshReplaceFlag(4, 1, 0x01);
     setModelMeshReplaceFlag(4, 4, 0x01);
 
-elseif (getLevelVersion() < TR_III) then
+elseif (ver < TR_III) then
     enableModelAnimReplaceFlags(12, true);
-
+    
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -98,27 +100,32 @@ elseif (getLevelVersion() < TR_III) then
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 13, 0x01);
     setModelMeshReplaceFlag(3, 14, 0x02);
-
+    
     -- auto pistols
     setDefaultModelAnimReplaceFlag(4);
+    copyModelAnimations(4, 1);
     setModelMeshReplaceFlag(4, 10, 0x01);
     setModelMeshReplaceFlag(4, 13, 0x01);
     setModelMeshReplaceFlag(4, 1, 0x01);
     setModelMeshReplaceFlag(4, 4, 0x01);
 
-    -- UZI
+    -- uzi
     setDefaultModelAnimReplaceFlag(5);
+    copyModelAnimations(5, 1);
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 13, 0x01);
     setModelMeshReplaceFlag(5, 14, 0x01);
     setModelMeshReplaceFlag(5, 1, 0x01);
     setModelMeshReplaceFlag(5, 4, 0x01);
 
-    -- M16
+    -- m16
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
     setModelMeshReplaceFlag(6, 14, 0x02);
-
+    -- m16 override model anim (movement)
+    setModelAnimReplaceFlag(6, 7,  0x01);  -- needed for animation (weapon)
+    setModelAnimReplaceFlag(6, 14, 0x01);  -- needed for animation (weapon)
+    
     -- grenade launcher
     setDefaultModelAnimReplaceFlag(7);
     setModelMeshReplaceFlag(7, 10, 0x01);
@@ -128,13 +135,13 @@ elseif (getLevelVersion() < TR_III) then
     setDefaultModelAnimReplaceFlag(8);
     setModelMeshReplaceFlag(8, 10, 0x01);
     setModelMeshReplaceFlag(8, 14, 0x02);      -- 0x02 slot mesh model: draws with original mesh
-
+	
     -- flare
     setModelAnimReplaceFlag(9, 11, 0x01);
     setModelAnimReplaceFlag(9, 12, 0x01);
     setModelAnimReplaceFlag(9, 13, 0x01);
     setModelMeshReplaceFlag(9, 13, 0x01);
-elseif (getLevelVersion() < TR_IV) then
+elseif (ver < TR_IV) then
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
@@ -147,12 +154,12 @@ elseif (getLevelVersion() < TR_IV) then
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 14, 0x02);
 
-    -- magnum
+    -- desert eagle
     setDefaultModelAnimReplaceFlag(4);
     setModelMeshReplaceFlag(4, 10, 0x01);
     setModelMeshReplaceFlag(4, 4, 0x01);
 
-    -- UZI
+    -- uzi
     setDefaultModelAnimReplaceFlag(5);
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 13, 0x01);
@@ -160,11 +167,14 @@ elseif (getLevelVersion() < TR_IV) then
     setModelMeshReplaceFlag(5, 1, 0x01);
     setModelMeshReplaceFlag(5, 4, 0x01);
 
-    -- M16
+    -- mp5
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
     setModelMeshReplaceFlag(6, 14, 0x02);
-
+    -- mp5 override model anim (movement)
+    setModelAnimReplaceFlag(6, 7,  0x01);  -- needed for animation
+    setModelAnimReplaceFlag(6, 14, 0x01);  -- needed for animation (weapon)
+    
     -- rocket launcher
     setDefaultModelAnimReplaceFlag(7);
     setModelMeshReplaceFlag(7, 10, 0x01);
@@ -186,7 +196,7 @@ elseif (getLevelVersion() < TR_IV) then
     setModelAnimReplaceFlag(10, 13, 0x01);
     setModelMeshReplaceFlag(10, 13, 0x01);
 
-elseif (getLevelVersion() <= TR_V) then
+elseif (ver <= TR_V) then
     -- pistols
     copyMeshFromModelToModel(1, 14, 1, 4);
     copyMeshFromModelToModel(1, 14, 4, 8);
@@ -196,7 +206,7 @@ elseif (getLevelVersion() <= TR_V) then
     setModelMeshReplaceFlag(1, 1, 0x02);
     setModelMeshReplaceFlag(1, 4, 0x02);
     
-    -- UZI
+    -- uzi
     copyMeshFromModelToModel(2, 15, 1, 4);
     copyMeshFromModelToModel(2, 15, 4, 8);
     setDefaultModelAnimReplaceFlag(2);
@@ -220,7 +230,7 @@ elseif (getLevelVersion() <= TR_V) then
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 14, 0x02);
 
-    -- magnum
+    -- revolver
     copyMeshFromModelToModel(6, 16, 4, 8);
     setDefaultModelAnimReplaceFlag(6);
     setModelMeshReplaceFlag(6, 10, 0x01);
@@ -254,11 +264,11 @@ setModelCollisionMap(0, 14, 13);
 
 -- Generate UV rotation texture animations for waterfalls in TR4+ versions
 
-if (getLevelVersion() == TR_IV) then
+if (ver == TR_IV) then
     for i=423, 426, 1 do
         genUVRotateAnimation(i);
     end;
-elseif (getLevelVersion() == TR_V) then
+elseif (ver == TR_V) then
     for i=410, 415, 1 do
         genUVRotateAnimation(i);
     end;
@@ -267,17 +277,92 @@ end;
 -- Add global level tasks
 addTask(checkDebugKeys);
 
--- Test TR_ITEMS
-
+-----------------------------------
+--   Tomb Raider Starting Items
+-----------------------------------
 addItem(player, ITEM_COMPASS, 1);
-addItem(player, ITEM_PASSPORT, 1);
-addItem(player, ITEM_LARAHOME, 1);
-addItem(player, ITEM_CONTROLS, 1);
-addItem(player, ITEM_AUDIO, 1);
 addItem(player, ITEM_PISTOL, 1);
-addItem(player, ITEM_SHOTGUN, 1);
-addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
-addItem(player, ITEM_UZI, 1);
-addItem(player, ITEM_UZI_AMMO, 1000);
+
+if (ver < TR_II) then
+    addItem(player, ITEM_PASSPORT, 1);
+    addItem(player, ITEM_CONTROLS, 1);
+    addItem(player, ITEM_AUDIO, 1);
+    addItem(player, ITEM_VIDEO, 1);
+    
+    addItem(player, ITEM_SHOTGUN, 1);
+    addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_UZI, 1);
+    addItem(player, ITEM_UZI_AMMO, 1000);
+    addItem(player, ITEM_MAGNUM, 1);
+    addItem(player, ITEM_MAGNUM_AMMO, 1000);
+elseif (ver < TR_III) then
+    addItem(player, ITEM_PASSPORT, 1);
+    addItem(player, ITEM_CONTROLS, 1);
+    addItem(player, ITEM_AUDIO, 1);
+    addItem(player, ITEM_VIDEO, 1);
+    
+    addItem(player, ITEM_SHOTGUN, 1);
+    addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_UZI, 1);
+    addItem(player, ITEM_UZI_AMMO, 1000);
+    addItem(player, ITEM_AUTOMAGS, 1);
+    addItem(player, ITEM_AUTOMAGS_AMMO, 1000);
+    addItem(player, ITEM_M16, 1);
+    addItem(player, ITEM_M16_AMMO, 1000);
+    addItem(player, ITEM_HARPOONGUN, 1);
+    addItem(player, ITEM_HARPOONGUN_AMMO, 1000);
+    addItem(player, ITEM_GRENADEGUN, 1);
+    addItem(player, ITEM_GRENADEGUN_AMMO, 1000);
+elseif (ver < TR_IV) then
+    addItem(player, ITEM_PASSPORT, 1);
+    addItem(player, ITEM_CONTROLS, 1);
+    addItem(player, ITEM_AUDIO, 1);
+    addItem(player, ITEM_VIDEO, 1);
+    
+    addItem(player, ITEM_SHOTGUN, 1);
+    addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_DESERTEAGLE, 1);
+    addItem(player, ITEM_DESERTEAGLE_AMMO, 1000);
+    addItem(player, ITEM_UZI, 1);
+    addItem(player, ITEM_UZI_AMMO, 1000);
+    addItem(player, ITEM_HARPOONGUN, 1);
+    addItem(player, ITEM_HARPOONGUN_AMMO, 1000);
+    addItem(player, ITEM_MP5, 1);
+    addItem(player, ITEM_MP5_AMMO, 1000);
+    addItem(player, ITEM_ROCKETGUN, 1);
+    addItem(player, ITEM_ROCKETGUN_AMMO, 1000);
+    addItem(player, ITEM_GRENADEGUN, 1);
+    addItem(player, ITEM_GRENADEGUN_AMMO, 1000);
+    
+    --addItem(player, ITEM_KEY_1, 1);
+    --addItem(player, ITEM_KEY_2, 1);
+    --addItem(player, ITEM_KEY_3, 1);
+    --addItem(player, ITEM_KEY_4, 1); --first key in jungle level (need name now)
+elseif (ver < TR_V) then
+    print("autoexec->give_item: no system item for TR4 and TR4 Demo is implemented now !");
+    
+    addItem(player, ITEM_UZI, 1);
+    addItem(player, ITEM_UZI_AMMO, 1000);
+    addItem(player, ITEM_SHOTGUN, 1);
+    addItem(player, ITEM_SHOTGUN_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_SHOTGUN_WIDESHOT_AMMO, 1000);
+    addItem(player, ITEM_CROSSBOW, 1);
+    addItem(player, ITEM_CROSSBOW_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_CROSSBOW_POISON_AMMO, 1000);
+    addItem(player, ITEM_CROSSBOW_EXPLOSIVE_AMMO, 1000);
+    addItem(player, ITEM_GRENADEGUN, 1);
+    addItem(player, ITEM_GRENADEGUN_NORMAL_AMMO, 1000);
+    addItem(player, ITEM_GRENADEGUN_SUPER_AMMO, 1000);
+    addItem(player, ITEM_GRENADEGUN_FLASH_AMMO, 1000);
+    addItem(player, ITEM_REVOLVER, 1);
+    addItem(player, ITEM_REVOLVER_AMMO, 1000);
+elseif (ver == TR_V) then
+    print("autoexec->give_item: no system item for TR5 is implemented now !");
+    print("autoexec->give_item: you can only have revolver in the starting level !");
+    
+    addItem(player, ITEM_REVOLVER, 1);
+    addItem(player, ITEM_REVOLVER_AMMO, 1000);
+end;
+
 addItem(player, ITEM_SMALL_MEDIPACK, 3);
 addItem(player, ITEM_LARGE_MEDIPACK, 1);

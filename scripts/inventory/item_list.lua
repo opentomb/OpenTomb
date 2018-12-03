@@ -10,45 +10,61 @@
 -- eagle and revolver.
 --------------------------------------------------------------------------------
 
-ITEM_PISTOL = 10;
-ITEM_SHOTGUN = 11;
-ITEM_MAGNUM = 12;        -- TR2: Automags, TR3/5: Desert eagle, TR4/5: Revolver
-ITEM_UZI = 13;
-ITEM_M16 = 14;           -- TR3: MP5, TR5: H&K
-ITEM_GRENADEGUN = 15;
-ITEM_ROCKETGUN = 16;
-ITEM_HARPOONGUN = 17;
-ITEM_CROSSBOW = 18;      -- TR5: Grappling gun
+---------------------------------------
+-- WEAPON SECTION
+---------------------------------------
+ITEM_PISTOL         = 10;
+ITEM_SHOTGUN        = 11;
+ITEM_MAGNUM         = 12;           -- TR1 Magnum
+ITEM_AUTOMAGS       = 13;           -- TR2: Auto Pistols (Aka MAGNUM)
+ITEM_DESERTEAGLE    = 14;           -- TR3/5 Desert Eagle (Aka MAGNUM)
+ITEM_REVOLVER       = 15;           -- TR4/5 Revolver (Aka MAGNUM)
+ITEM_UZI            = 16;
+ITEM_M16            = 17;           -- TR2: M16
+ITEM_MP5            = 18;           -- TR3: MP5 & TR5: H&K
+ITEM_GRENADEGUN     = 19;
+ITEM_ROCKETGUN      = 20;
+ITEM_HARPOONGUN     = 21;
+ITEM_CROSSBOW       = 22;           -- TR4: Crossbow
+ITEM_GRAPPLEGUN     = 23;           -- TR5: Grappling Gun
+---------------------------------------
+-- !WEAPON SECTION
+---------------------------------------
 
-ITEM_MAGNUM_LASERSIGHT       =  1220;    -- Extra item index for revolver + lasersight (TR4-5)
-ITEM_CROSSBOW_LASERSIGHT     =  1820;    -- Extra item index for crossbow + lasersight (TR4)
-ITEM_M16_LASERSIGHT          =  1420;    -- Extra item index for H&K gun + lasersight (TR5)
+ITEM_LASERSIGHT = 24;    -- Exist only in TR4-5.
+ITEM_BINOCULARS = 25;    -- Exist only in TR4-5.
+ITEM_SILENCER   = 26;    -- Exist only in TR5, not used.
 
-ITEM_LASERSIGHT = 20;    -- Exist only in TR4-5.
-ITEM_BINOCULARS = 21;    -- Exist only in TR4-5.
-ITEM_SILENCER   = 22;    -- Exist only in TR5, not used.
-
-ITEM_PISTOL_AMMO = 30;
-ITEM_SHOTGUN_NORMAL_AMMO = 31;       -- Equal to generic shotgun ammo in TR1-3.
-ITEM_SHOTGUN_WIDESHOT_AMMO = 32;
-ITEM_MAGNUM_AMMO = 33;
+ITEM_PISTOL_AMMO = 27;               -- not used in-game
+ITEM_SHOTGUN_NORMAL_AMMO = 28;       -- Equal to generic shotgun ammo in TR1-3.
+ITEM_SHOTGUN_WIDESHOT_AMMO = 29;
+ITEM_MAGNUM_AMMO = 30;
+ITEM_DESERTEAGLE_AMMO = 31;
+ITEM_AUTOMAGS_AMMO = 32;
+ITEM_REVOLVER_AMMO = 33;
 ITEM_UZI_AMMO = 34;
 ITEM_M16_AMMO = 35;
-ITEM_GRENADEGUN_NORMAL_AMMO = 36;    -- Equal to generic grenadegun ammo in TR3.
-ITEM_GRENADEGUN_SUPER_AMMO = 37;
-ITEM_GRENADEGUN_FLASH_AMMO = 38;
-ITEM_ROCKETGUN_AMMO = 39;            -- Equal to generic grenadegun ammo in TR2.
-ITEM_HARPOONGUN_AMMO = 40;
-ITEM_CROSSBOW_NORMAL_AMMO = 41;
-ITEM_CROSSBOW_POISON_AMMO = 42;
-ITEM_CROSSBOW_EXPLOSIVE_AMMO = 43;
+ITEM_MP5_AMMO = 36;
+ITEM_GRENADEGUN_NORMAL_AMMO = 37;    -- Equal to generic grenadegun ammo in TR3.
+ITEM_GRENADEGUN_SUPER_AMMO = 38;
+ITEM_GRENADEGUN_FLASH_AMMO = 39;
+ITEM_ROCKETGUN_AMMO = 40;            -- Equal to generic grenadegun ammo in TR2.
+ITEM_HARPOONGUN_AMMO = 41;
+ITEM_CROSSBOW_NORMAL_AMMO = 42;
+ITEM_CROSSBOW_POISON_AMMO = 43;
+ITEM_CROSSBOW_EXPLOSIVE_AMMO = 44;
+ITEM_GRAPPLEGUN_AMMO = 45;
 
-ITEM_FLARES = 45;
-ITEM_SINGLE_FLARE = 46;
-ITEM_TORCH = 47;             -- Only exists in TR4-5.
+ITEM_FLARES = 46;
+ITEM_SINGLE_FLARE = 47;
+ITEM_TORCH = 48;             -- Only exists in TR4-5.
 
-ITEM_SMALL_MEDIPACK = 50;
-ITEM_LARGE_MEDIPACK = 51;
+ITEM_SMALL_MEDIPACK = 49;
+ITEM_LARGE_MEDIPACK = 50;
+
+ITEM_REVOLVER_LASERSIGHT       =  1220;    -- Extra item index for revolver + lasersight (TR4-5)
+ITEM_CROSSBOW_LASERSIGHT     =  1820;    -- Extra item index for crossbow + lasersight (TR4)
+ITEM_MP5_LASERSIGHT          =  1420;    -- Extra item index for H&K gun + lasersight (TR5)
 
 --------------------------------------------------------------------------------
 -- Defines level-specific inventory items.

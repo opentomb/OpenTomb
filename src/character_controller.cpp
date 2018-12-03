@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 
 #include "core/vmath.h"
@@ -2218,6 +2217,12 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
     }
 
     return 0;
+}
+
+bool Character_CompareHealth(entity_s *ent, int min, int max)
+{
+	int hp = Character_GetParam(ent, PARAM_HEALTH);
+    return (hp > min) && (hp < max);
 }
 
 int Character_SetParam(struct entity_s *ent, int parameter, float value)
