@@ -1,10 +1,10 @@
 #ifndef ENGINE_INVENTORY_H
 #define ENGINE_INVENTORY_H
 
-
-#define ITEM_TYPE_SYSTEM    0
-#define ITEM_TYPE_SUPPLY    1
-#define ITEM_TYPE_QUEST     2
+#define ITEM_TYPE_SYSTEM     0
+#define ITEM_TYPE_AMMO       1
+#define ITEM_TYPE_INVENTORY  2
+#define ITEM_TYPE_QUEST      3
 
 #define ITEM_COMPASS  1     // Aka Watch in TR2-3, Timex in TR5
 #define ITEM_PASSPORT 2     // Exists only in TR1-3, not used in TR4 (diary)

@@ -2219,15 +2219,10 @@ int Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_val
     return 0;
 }
 
-bool Character_CompareHearth(entity_s *ent, int min, int max)
+bool Character_CompareHealth(entity_s *ent, int min, int max)
 {
-    if (Character_GetParam(ent, PARAM_HEALTH) > min && Character_GetParam(ent, PARAM_HEALTH) < max)
-    {
-        return true; // lara can use medikit !
-    }
-
-    // lara have full hearth
-    return false;
+	int hp = Character_GetParam(ent, PARAM_HEALTH);
+    return (hp > min) && (hp < max);
 }
 
 int Character_SetParam(struct entity_s *ent, int parameter, float value)

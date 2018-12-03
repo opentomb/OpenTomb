@@ -3301,11 +3301,11 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct  ss_anima
             else if (ent->character->state.weapon_ready && !ent->character->cmd.action)
             {
                 /// anim_frame_flags is needed or the sound will play before starting fire !
-                if ((ss_anim->current_frame == 5))
+                if ((ss_anim->current_frame == 4))
                 {
                     Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
                 }
-                else if ((ss_anim->current_frame == 4) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+                else if ((ss_anim->current_frame == 3) && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
                 {
                     if ((ver > TR_I && ver <= TR_V) && ((ss_anim->model->id == TR2_UZI) || (ss_anim->model->id == TR3_UZI)))
                     {
@@ -3547,6 +3547,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                     Anim_SetAnimation(ss_anim, 4, 0);
                 }
             }
+			
             if ((ss_anim->frame_changing_state == 0x01) && (ss_anim->prev_frame == 2) && weapon.reload)
             {
                 Audio_Send(weapon.reload, TR_AUDIO_EMITTER_ENTITY, ent->id);

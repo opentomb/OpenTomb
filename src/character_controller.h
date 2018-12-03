@@ -356,7 +356,7 @@ float Character_GetParam(struct entity_s *ent, int parameter);
 int   Character_SetParam(struct entity_s *ent, int parameter, float value);
 int   Character_ChangeParam(struct entity_s *ent, int parameter, float value);
 int   Character_SetParamMaximum(struct entity_s *ent, int parameter, float max_value);
-bool  Character_CompareHearth(struct entity_s *ent, int min, int max);
+bool  Character_CompareHealth(struct entity_s *ent, int min, int max);
 
 int Character_IsTargetAccessible(struct entity_s *character, struct entity_s *target);
 struct entity_s *Character_FindTarget(struct entity_s *ent);

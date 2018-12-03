@@ -25,6 +25,7 @@
 #include "../entity.h"
 #include "../gameflow.h"
 #include "../world.h"
+#include "../controls.h"
 #include "../character_controller.h"
 #include "gui.h"
 #include "gui_menu.h"
@@ -296,9 +297,13 @@ void gui_InventoryManager::setTitle(int items_type)
             string_index = STR_GEN_ITEMS;
             break;
 
-        case GUI_MENU_ITEMTYPE_SUPPLY:
+        case GUI_MENU_ITEMTYPE_INVENTORY:
         default:
             string_index = STR_GEN_INVENTORY;
+            break;
+
+        case GUI_MENU_ITEMTYPE_AMMO:
+            string_index = STR_GEN_INV_AMMO;
             break;
     }
 
@@ -417,7 +422,7 @@ void gui_InventoryManager::frameStates(float time)
                 case GUI_COMMAND_UP:
                     if(m_current_items_type < GUI_MENU_ITEMTYPE_QUEST)
                     {
-                        if (World_GetVersion() <= TR_III)
+                        if (World_GetVersion() < TR_IV)
                         {
                             Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         }
@@ -431,9 +436,9 @@ void gui_InventoryManager::frameStates(float time)
                     break;
 
                 case GUI_COMMAND_DOWN:
-                    if(m_current_items_type > 0)
+                    if (m_current_items_type > 0)
                     {
-                        if (World_GetVersion() <= TR_III)
+                        if (World_GetVersion() < TR_IV)
                         {
                             Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         }
@@ -457,9 +462,9 @@ void gui_InventoryManager::frameStates(float time)
                     base_item_p bi = World_GetBaseItemByID(i->id);
                     if(bi)
                     {
-                        if(bi->type == GUI_MENU_ITEMTYPE_SUPPLY)
+                        if(bi->type == GUI_MENU_ITEMTYPE_INVENTORY)
                         {
-                            m_current_items_type = GUI_MENU_ITEMTYPE_SUPPLY;
+                            m_current_items_type = GUI_MENU_ITEMTYPE_INVENTORY;
                             break;
                         }
                         else
@@ -564,7 +569,7 @@ void gui_InventoryManager::frameStates(float time)
                 m_ring_time = 0.0f;
                 m_ring_angle = 0.0f;
                 m_vertical_offset = 0.0f;
-                setTitle(GUI_MENU_ITEMTYPE_SUPPLY);
+                setTitle(GUI_MENU_ITEMTYPE_INVENTORY);
             }
             break;
 
@@ -696,7 +701,7 @@ void gui_InventoryManager::frameItems(float time)
                 }
                 else if (m_current_state == INVENTORY_MEDI_EXIT)
                 {
-                    if (Character_CompareHearth(player, 0, 1000))
+                    if (Character_CompareHealth(player, 0, 1000))
                     {
                         // need because medipack have no same frame time
                         if (bi->id == ITEM_SMALL_MEDIPACK)
