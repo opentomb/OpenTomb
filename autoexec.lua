@@ -20,7 +20,8 @@ setCameraViewDistance(32768);
 noclip(0);
 --playVideo(base_path .. "data/tr3/fmv/logo.rpl");
 --playVideo(base_path .. "data/tr3/fmv/Crsh_Eng.rpl");
---setgamef(1, 17)
+
+setgamef(2, 8);
 --loadMap(base_path .. "tests/altroom3/LEVEL1.PHD");
 --loadMap(base_path .. "tests/heavy1/LEVEL1.PHD");
 --loadMap(base_path .. "tests/TRIGGERS.PHD");

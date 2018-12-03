@@ -77,8 +77,14 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
+    
+#ifdef __GNUC__
     float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
     float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+#else
+    float                   local_transform[16];       // 4x4 OpenGL matrix for stack usage
+    float                   current_transform[16];    // 4x4 OpenGL matrix for global usage
+#endif
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 typedef struct ss_animation_s
@@ -278,6 +284,7 @@ void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p eff
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
 void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);
+
 int  Anim_SetNextFrame(struct ss_animation_s *ss_anim, float time);
 int  Anim_IncTime(struct ss_animation_s *ss_anim, float time);
 inline uint16_t Anim_GetCurrentState(struct ss_animation_s *ss_anim)

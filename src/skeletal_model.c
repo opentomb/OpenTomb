@@ -49,13 +49,19 @@ void SkeletalModel_Clear(skeletal_model_p model)
 void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
     int stack = 0;
+#ifndef __GNUC__
+    uint16_t *parents = malloc(sizeof(model->mesh_count));
+#else
     uint16_t parents[model->mesh_count];
+#endif
 
     parents[0] = 0;
-    model->mesh_tree[0].parent = 0;                                             // root
+    model->mesh_tree[0].parent = 0;      // root
+
     for(uint16_t i = 1; i < model->mesh_count; i++)
     {
         model->mesh_tree[i].parent = i - 1;
+
         if(model->mesh_tree[i].flag & 0x01)                                     // POP
         {
             if(stack > 0)
@@ -66,7 +72,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
         }
         if(model->mesh_tree[i].flag & 0x02)                                     // PUSH
         {
-            if(stack + 1 < (int16_t)model->mesh_count)
+            if(stack + 1 < (uint16_t) model->mesh_count)
             {
                 stack++;
                 parents[stack] = model->mesh_tree[i].parent;
@@ -80,6 +86,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
         {
             uint16_t m1 = model->collision_map[j];
             uint16_t m2 = model->collision_map[j + 1];
+
             if(model->mesh_tree[m1].parent > model->mesh_tree[m2].parent)
             {
                 uint16_t t = model->collision_map[j];
@@ -88,6 +95,10 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
             }
         }
     }
+
+#ifndef __GNUC__
+    free(parents);
+#endif
 }
 
 

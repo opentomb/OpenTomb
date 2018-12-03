@@ -200,14 +200,10 @@ void ShowModelView(float time)
         cam_pos[2] = -engine_camera.transform.M4x4[8 + 2] * test_model_dist + test_model_z_offset;
         Cam_Apply(&engine_camera);
 
-        g_test_model.animations.frame_time += time;
-        g_test_model.animations.prev_frame = g_test_model.animations.frame_time / g_test_model.animations.period;
-        if(g_test_model.animations.prev_frame >= af->frames_count)
+        if(Anim_IncTime(&g_test_model.animations, time))
         {
-            g_test_model.animations.frame_time = 0.0f;
-            g_test_model.animations.prev_frame = 0;
+            Anim_SetAnimation(&g_test_model.animations, g_test_model.animations.current_animation, 0);
         }
-        g_test_model.animations.current_frame = g_test_model.animations.prev_frame;
         SSBoneFrame_Update(&g_test_model, 0.0f);
 
         Mat4_Mat4_mul(subModelView, engine_camera.gl_view_mat, tr.M4x4);

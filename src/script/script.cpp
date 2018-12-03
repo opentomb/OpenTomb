@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "script.h"
 
 extern "C" {
 #include <lua.h>
@@ -9,7 +10,6 @@ extern "C" {
 #include <lauxlib.h>
 }
 
-#include "script.h"
 #include "../core/system.h"
 #include "../core/console.h"
 #include "../core/gl_text.h"
@@ -585,7 +585,8 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, GF_OP_REMOVEAMMO);
 
         LUA_EXPOSE(lua, ITEM_TYPE_SYSTEM);
-        LUA_EXPOSE(lua, ITEM_TYPE_SUPPLY);
+        LUA_EXPOSE(lua, ITEM_TYPE_INVENTORY);
+        LUA_EXPOSE(lua, ITEM_TYPE_AMMO);
         LUA_EXPOSE(lua, ITEM_TYPE_QUEST);
 
         LUA_EXPOSE(lua, ITEM_COMPASS);

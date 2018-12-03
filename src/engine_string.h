@@ -69,4 +69,6 @@
 #define STR_GEN_GAMENAME_TR5        500
 #define STR_GEN_GAMENAME_CUSTOM     600
 
+#define STR_GEN_INV_AMMO            51
+
 #endif
