@@ -16,10 +16,10 @@ extern struct camera_state_s                 engine_camera_state;
 
 void Engine_Start(int argc, char **argv);
 
-#ifndef __GNUC__
-    __declspec(noreturn) void Engine_Shutdown(int val);
-#else
+#ifdef __GNUC__
     void Engine_Shutdown(int val) __attribute__((noreturn));
+#else
+    __declspec(noreturn) void Engine_Shutdown(int val);
 #endif
 
 const char *Engine_GetBasePath();
