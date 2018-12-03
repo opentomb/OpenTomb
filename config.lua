@@ -6,7 +6,7 @@ screen =
     width = 800;
     height = 600;
     fov = 75.0;
-    debug_view_state = 0;
+    debug_view_state = 6;
     fullscreen = 0;
     crosshair = 0;
 }

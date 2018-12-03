@@ -78,12 +78,12 @@ typedef struct ss_bone_tag_s
 
     float                   qrotate[4];                                         // quaternion rotation
     
-#ifdef _WIN64
-	float                   local_transform[16];       // 4x4 OpenGL matrix for stack usage
-	float                   current_transform[16];    // 4x4 OpenGL matrix for global usage
-#elif __linux__
-	float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
-	float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+#ifdef __GNUC__
+    float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
+    float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
+#else
+    float                   local_transform[16];       // 4x4 OpenGL matrix for stack usage
+    float                   current_transform[16];    // 4x4 OpenGL matrix for global usage
 #endif
 }ss_bone_tag_t, *ss_bone_tag_p;
 
@@ -99,6 +99,9 @@ typedef struct ss_animation_s
     int16_t                     prev_frame;
     int16_t                     current_animation;
     int16_t                     current_frame;
+    
+    struct bone_frame_s        *current_bf;
+    struct bone_frame_s        *prev_bf;
     
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags

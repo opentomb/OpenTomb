@@ -16,11 +16,10 @@ extern struct camera_state_s                 engine_camera_state;
 
 void Engine_Start(int argc, char **argv);
 
-// no __attribute__ in windows
-#ifdef _WIN64
-    __declspec(noreturn) void Engine_Shutdown(int val);
-#elif __linux__
+#ifdef __GNUC__
     void Engine_Shutdown(int val) __attribute__((noreturn));
+#else
+    __declspec(noreturn) void Engine_Shutdown(int val);
 #endif
 
 const char *Engine_GetBasePath();

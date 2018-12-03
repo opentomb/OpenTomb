@@ -630,8 +630,9 @@ void gui_InventoryManager::frameItems(float time)
     entity_s *player = World_GetPlayer();
     int32_t ver = World_GetVersion();
 
-    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
+    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; )
     {
+        inventory_node_p next_node = i->next;
         base_item_p bi = World_GetBaseItemByID(i->id);
         Item_Frame(bi->bf, 0.0f);
 
@@ -813,6 +814,7 @@ void gui_InventoryManager::frameItems(float time)
             }
             ring_item_index++;
         }
+        i = next_node;
     }
 }
 
