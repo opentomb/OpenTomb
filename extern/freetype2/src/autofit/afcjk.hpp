@@ -520,8 +520,8 @@
     /* digit `0' is 0x30 in all supported charmaps */
     for ( i = 0x30; i <= 0x39; i++ )
     {
-      FT_ULong  glyph_index;
-      FT_Long   y_offset;
+      FT_ULong  glyph_index = 0;
+      FT_Long   y_offset = 0;
 
 
       af_get_char_index( &metrics->root, i, &glyph_index, &y_offset );
