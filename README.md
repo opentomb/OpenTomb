@@ -192,6 +192,7 @@ camera fix-ups.
 * [Banderi](https://github.com/Banderi): documentation, bugfixing.
 * [gabrielmtzcarrillo](https://github.com/gabrielmtzcarrillo): entity shader work.
 * [filfreire](https://github.com/filfreire): documentation.
+* [TokyoSU](https://github.com/TokyoSU): misc fixes, weapon inventory.
 
 
 Additional contributions from: Ado Croft (extensive testing),
