@@ -358,13 +358,13 @@ items_funcs[ITEM_SHOTGUN] = {};
 items_funcs[ITEM_SHOTGUN].onUse = function(id)
     local ver = getLevelVersion();
     if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) then
-        if(ver == TR_I) then
+        if(ver < TR_II) then
             playSound(getGlobalSound(1, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 2);
-        elseif (ver == TR_II) then
+        elseif (ver < TR_III) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 3);
-        elseif (ver == TR_III) then
+        elseif (ver < TR_IV) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 3);
         else

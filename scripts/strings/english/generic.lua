@@ -81,6 +81,7 @@ strings[048] = "Did you know that at least ten different programmers worked on O
 strings[049] = "Did you know that Core Design never released any Tomb Raider source code?";     -- Whatever... :]
 
 strings[050] = "Press INVENTORY key to skip.";
+strings[051] = "AMMO";
 
 -- String masks
 
