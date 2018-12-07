@@ -341,11 +341,11 @@ end;
 items_funcs[ITEM_PISTOL] = {};
 items_funcs[ITEM_PISTOL].onUse = function(id)
     local ver = getLevelVersion();
-    if (ver == TR_I) then
+    if (ver < TR_II) then
         playSound(getGlobalSound(1, GLOBALID_MENUWEAPON)); -- play the weapon_select menu sound
-    elseif (ver == TR_II) then
+    elseif (ver < TR_III) then
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
-    elseif (ver == TR_III) then
+    elseif (ver < TR_IV) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
     else
         -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used if is custom level).
@@ -445,13 +445,13 @@ items_funcs[ITEM_UZI] = {};
 items_funcs[ITEM_UZI].onUse = function(id)
     local ver = getLevelVersion();
     if(getItemsCount(id, ITEM_UZI_AMMO) > 0) then
-        if (ver == TR_I) then
+        if (ver < TR_II) then
             playSound(getGlobalSound(1, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 4);
-        elseif (ver == TR_II) then
+        elseif (ver < TR_III) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 5);
-        elseif (ver == TR_III) then
+        elseif (ver < TR_IV) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 5);
         else
@@ -472,10 +472,12 @@ items_funcs[ITEM_HARPOONGUN] = {};
 items_funcs[ITEM_HARPOONGUN].onUse = function(id)
     local ver = getLevelVersion();
     if(getItemsCount(id, ITEM_HARPOONGUN_AMMO) > 0) then
-        if (ver == TR_II) then
+        if (ver < TR_II) then
+            ;
+        elseif (ver < TR_III) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 8);
-        elseif (ver == TR_III) then
+        elseif (ver < TR_IV) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 9);
         end;
@@ -507,8 +509,9 @@ end;
 items_funcs[ITEM_MP5] = {};
 items_funcs[ITEM_MP5].onUse = function(id)
     local ver = getLevelVersion();
-    
-    if (ver == TR_III) then
+    if (ver < TR_III) then
+        ;
+    elseif (ver < TR_IV) then
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 6);
         return 1;
@@ -528,14 +531,15 @@ end;
 items_funcs[ITEM_GRENADEGUN] = {};
 items_funcs[ITEM_GRENADEGUN].onUse = function(id)
     local ver = getLevelVersion();
-    
-    if (ver == TR_II) then
+    if (ver < TR_II) then
+        ;
+    elseif (ver < TR_III) then
         if (getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 7);
             return 1;
         end;
-    elseif (ver == TR_III) then
+    elseif (ver < TR_IV) then
         if (getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 8);
