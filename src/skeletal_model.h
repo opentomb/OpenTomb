@@ -87,21 +87,37 @@ typedef struct ss_bone_tag_s
 #endif
 }ss_bone_tag_t, *ss_bone_tag_p;
 
+typedef struct bone_tag_s
+{
+    float               offset[3];                                              // bone vector
+    float               qrotate[4];                                             // rotation quaternion
+}bone_tag_t, *bone_tag_p;
+
+typedef struct bone_frame_s
+{
+    uint16_t            bone_tag_count;                                         // number of bones
+    uint16_t            unused;                                                
+    struct bone_tag_s  *bone_tags;                                              // bones data
+    float               pos[3];                                                 // position (base offset)
+    float               bb_min[3];                                              // bounding box min coordinates
+    float               bb_max[3];                                              // bounding box max coordinates
+    float               centre[3];                                              // bounding box centre
+}bone_frame_t, *bone_frame_p ;
+
 typedef struct ss_animation_s
 {
     uint16_t                    type;
     uint16_t                    enabled : 1;
-    uint16_t                    do_jump_anim : 1;
     uint16_t                    heavy_state : 1;
-    uint16_t                    frame_changing_state : 13;
+    uint16_t                    frame_changing_state : 14;
     int16_t                     target_state;
     int16_t                     prev_animation;
     int16_t                     prev_frame;
     int16_t                     current_animation;
     int16_t                     current_frame;
     
-    struct bone_frame_s        *current_bf;
-    struct bone_frame_s        *prev_bf;
+    struct bone_frame_s         current_bf;
+    struct bone_frame_s         prev_bf;
     
     uint16_t                    anim_frame_flags;                               // base animation control flags
     uint16_t                    anim_ext_flags;                                 // additional animation control flags
@@ -133,29 +149,6 @@ typedef struct ss_bone_frame_s
 
     struct ss_animation_s       animations;                                     // animations list
 }ss_bone_frame_t, *ss_bone_frame_p;
-
-/*
- * ORIGINAL ANIMATIONS
- */
-typedef struct bone_tag_s
-{
-    float               offset[3];                                              // bone vector
-    float               qrotate[4];                                             // rotation quaternion
-}bone_tag_t, *bone_tag_p;
-
-/*
- * base frame of animated skeletal model
- */
-typedef struct bone_frame_s
-{
-    uint16_t            bone_tag_count;                                         // number of bones
-    uint16_t            unused;                                                
-    struct bone_tag_s  *bone_tags;                                              // bones data
-    float               pos[3];                                                 // position (base offset)
-    float               bb_min[3];                                              // bounding box min coordinates
-    float               bb_max[3];                                              // bounding box max coordinates
-    float               centre[3];                                              // bounding box centre
-}bone_frame_t, *bone_frame_p ;
 
 /*
  * mesh tree base element structure
@@ -259,11 +252,13 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model);
 void SkeletalModel_FillTransparency(skeletal_model_p model);
 void SkeletalModel_CopyMeshes(mesh_tree_tag_p dst, mesh_tree_tag_p src, int tags_count);
 void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src);
-void BoneFrame_Copy(bone_frame_p dst, bone_frame_p src);
+void BoneFrame_Copy(bone_frame_p dst, const bone_frame_p src);
 
 void SSBoneFrame_CreateFromModel(ss_bone_frame_p bf, skeletal_model_p model);
 void SSBoneFrame_Clear(ss_bone_frame_p bf);
 void SSBoneFrame_Copy(struct ss_bone_frame_s *dst, struct ss_bone_frame_s *src);
+void SSBoneFrame_UpdateMoveCommand(struct ss_animation_s *ss_anim, float move[3]);
+void SSBoneFrame_UpdateChangeDirCommand(struct ss_bone_frame_s *bf);
 void SSBoneFrame_Update(struct ss_bone_frame_s *bf, float time);
 void SSBoneFrame_RotateBone(struct ss_bone_frame_s *bf, const float q_rotate[4], int bone);
 int  SSBoneFrame_CheckTargetBoneLimit(struct ss_bone_frame_s *bf, struct ss_bone_tag_s *b_tag, float target[3]);

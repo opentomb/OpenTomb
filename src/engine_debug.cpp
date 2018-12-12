@@ -239,6 +239,11 @@ void ShowModelView(float time)
                 GLText_OutTextXY(30.0f, y += dy, "command[%d][frame = %d]: {%.1f,  %.1f,  %.1f}",
                     (int)cmd->id, (int)cmd->frame, cmd->data[0], cmd->data[1], cmd->data[2]);
             }
+            for(animation_effect_p effect = af->effects; effect; effect = effect->next)
+            {
+                GLText_OutTextXY(30.0f, y += dy, "effect[%d][frame = %d]: {d = %d,  e = %d}",
+                    (int)effect->id, (int)effect->frame, (int)(effect->data & 0x3FFF), (int)effect->extra);
+            }
 
             y = (float)screen_info.h + dy;
             for(uint16_t i = 0; i < af->state_change_count; ++i)
@@ -332,13 +337,13 @@ void ShowDebugInfo()
     {
         case debug_view_state_e::player_anim:
             {
-                GLText_OutTextXY(30.0f, y += dy, "VIEW: Lara anim");
+                GLText_OutTextXY(30.0f, y += dy, "VIEW: Player anim");
                 entity_p ent = World_GetPlayer();
                 if(ent && ent->character)
                 {
-                    animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.prev_animation;
-                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, next_st = %03d", anim->state_id, ent->bf->animations.target_state);
-                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, next_anim = %03d, next_frame = %03d", ent->bf->animations.prev_animation, ent->bf->animations.prev_frame, ent->bf->animations.current_animation, ent->bf->animations.current_frame);
+                    animation_frame_p anim = ent->bf->animations.model->animations + ent->bf->animations.current_animation;
+                    GLText_OutTextXY(30.0f, y += dy, "curr_st = %03d, target_st = %03d", anim->state_id, ent->bf->animations.target_state);
+                    GLText_OutTextXY(30.0f, y += dy, "curr_anim = %03d, curr_frame = %03d, prev_anim = %03d, prev_frame = %03d", ent->bf->animations.current_animation, ent->bf->animations.current_frame, ent->bf->animations.prev_animation, ent->bf->animations.prev_frame);
                     GLText_OutTextXY(30.0f, y += dy, "anim_next_anim = %03d, anim_next_frame = %03d", anim->next_anim->id, anim->next_frame);
                     GLText_OutTextXY(30.0f, y += dy, "posX = %f, posY = %f, posZ = %f", ent->transform.M4x4[12], ent->transform.M4x4[13], ent->transform.M4x4[14]);
                 }

@@ -764,7 +764,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
 {
     if(ss_anim->model)
     {
-        L_START:
         animation_frame_p current_af = ss_anim->model->animations + ss_anim->current_animation;
         animation_frame_p prev_af = ss_anim->model->animations + ss_anim->prev_animation;
         ///@DO COMMANDS
@@ -778,7 +777,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                         float tr[3];
                         Mat4_vec3_rot_macro(tr, entity->transform.M4x4, command->data);
                         vec3_add(entity->transform.M4x4 + 12, entity->transform.M4x4 + 12, tr);
-                        ss_anim->do_jump_anim = 0x01;
+                        SSBoneFrame_UpdateMoveCommand(ss_anim, command->data);
                         entity->no_move = 0x01;
                     }
                     break;
@@ -798,16 +797,11 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             if(ss_anim->current_frame == effect->frame)
             {
                 Entity_DoFlipEffect(entity, effect->id, effect->data);
-                ss_anim->do_jump_anim = (effect->data == TR_EFFECT_CHANGEDIRECTION) ? 0x01 : ss_anim->do_jump_anim;
+                if(((0x3FFF & effect->data) == TR_EFFECT_CHANGEDIRECTION) && (effect->id == TR_ANIMCOMMAND_PLAYEFFECT))
+                {
+                    SSBoneFrame_UpdateChangeDirCommand(entity->bf);
+                }
             }
-        }
-        
-        if(ss_anim->do_jump_anim)
-        {
-            ss_anim->do_jump_anim = 0x00;
-            Anim_SetNextFrame(ss_anim, ss_anim->period);    // skip one frame
-            Entity_UpdateTransform(entity);
-            goto L_START;
         }
     }
 }
