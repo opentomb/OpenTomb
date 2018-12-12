@@ -1589,7 +1589,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         model->animations->state_change = NULL;
         model->animations->state_change_count = 0;
         model->animations->commands = NULL;
-        model->animations->effects = NULL;
         bone_frame->bone_tag_count = model->mesh_count;
         bone_frame->bone_tags = (bone_tag_p)malloc(bone_frame->bone_tag_count * sizeof(bone_tag_t));
         vec3_set_zero(bone_frame->pos);
@@ -1628,7 +1627,6 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
         anim->speed_y = tr_animation->accel_lateral;
         anim->accel_y = tr_animation->speed_lateral;
         anim->commands = NULL;
-        anim->effects = NULL;
         anim->state_id = tr_animation->state_id;
 
         anim->max_frame = tr_animation->frame_end - tr_animation->frame_start + 1;
@@ -1645,14 +1643,13 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
             // Calculate current animation anim command block offset.
             int16_t *pointer = tr->anim_commands + tr_animation->anim_command;
             animation_command_t command;
-            animation_effect_t effect;
             for(uint32_t count = 0; count < tr_animation->num_anim_commands; count++, pointer++)
             {
                 command.id = *pointer;
                 command.frame = -1;
+                command.effect = 0;
+                command.extra = 0;
                 vec3_set_zero(command.data);
-                effect.frame = -1;
-                effect.data = 0;
                 switch(command.id)
                 {
                     case TR_ANIMCOMMAND_SETPOSITION:
@@ -1671,14 +1668,13 @@ void TR_GenSkeletalModel(struct skeletal_model_s *model, size_t model_id, struct
                         
                     case TR_ANIMCOMMAND_PLAYEFFECT:
                     case TR_ANIMCOMMAND_PLAYSOUND:
-                        effect.frame = *(++pointer) - tr_animation->frame_start;
-                        effect.data = *(++pointer);
+                        command.frame = *(++pointer) - tr_animation->frame_start;
+                        command.effect = *(++pointer);
                     case TR_ANIMCOMMAND_KILL:
                     case TR_ANIMCOMMAND_EMPTYHANDS:
                     default:
-                        effect.id = command.id;
-                        effect.extra = 0x0000;
-                        Anim_AddEffect(anim, &effect);
+                        command.extra = 0x0000;
+                        Anim_AddCommand(anim, &command);
                         break;
                 };
             }

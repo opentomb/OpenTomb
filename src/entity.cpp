@@ -792,12 +792,12 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
         }
 
         ///@DO EFFECTS
-        for(animation_effect_p effect = current_af->effects; effect; effect = effect->next)
+        for(animation_command_p effect = current_af->commands; effect; effect = effect->next)
         {
-            if(ss_anim->current_frame == effect->frame)
+            if((ss_anim->current_frame == effect->frame) && (effect->id != TR_ANIMCOMMAND_SETPOSITION) && (effect->id != TR_ANIMCOMMAND_JUMPDISTANCE))
             {
-                Entity_DoFlipEffect(entity, effect->id, effect->data);
-                if(((0x3FFF & effect->data) == TR_EFFECT_CHANGEDIRECTION) && (effect->id == TR_ANIMCOMMAND_PLAYEFFECT))
+                Entity_DoFlipEffect(entity, effect->id, effect->effect);
+                if(((0x3FFF & effect->effect) == TR_EFFECT_CHANGEDIRECTION) && (effect->id == TR_ANIMCOMMAND_PLAYEFFECT))
                 {
                     SSBoneFrame_UpdateChangeDirCommand(entity->bf);
                 }

@@ -185,19 +185,12 @@ typedef struct state_change_s
 typedef struct animation_command_s
 {
     uint16_t                    id;
+    uint16_t                    extra;
     int16_t                     frame;
+    int16_t                     effect;
     float                       data[3];
     struct animation_command_s *next;
 }animation_command_t, *animation_command_p;
-
-typedef struct animation_effect_s
-{
-    uint16_t                    id;
-    int16_t                     frame;
-    int16_t                     data;
-    uint16_t                    extra;
-    struct animation_effect_s  *next;
-}animation_effect_t, *animation_effect_p;
 
 /*
  * one animation frame structure
@@ -211,9 +204,7 @@ typedef struct animation_frame_s
     uint16_t                    state_change_count;     // Number of animation statechanges
     struct bone_frame_s        *frames;                 // Frame data
     struct state_change_s      *state_change;           // Animation statechanges data
-    
     struct animation_command_s *commands;
-    struct animation_effect_s  *effects;
     
     float                       speed_x;                // Forward-backward speed
     float                       accel_x;                // Forward-backward accel
@@ -275,7 +266,6 @@ void SSBoneFrame_DisableOverrideAnim(struct ss_bone_frame_s *bf, struct ss_anima
 void SSBoneFrame_FillSkinnedMeshMap(ss_bone_frame_p model);
 
 void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p command);
-void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect);
 struct state_change_s *Anim_FindStateChangeByID(struct animation_frame_s *anim, uint32_t id);
 int  Anim_GetAnimDispatchCase(struct ss_animation_s *ss_anim, uint32_t id);
 void Anim_SetAnimation(struct ss_animation_s *ss_anim, int animation, int frame);

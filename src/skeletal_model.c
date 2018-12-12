@@ -134,7 +134,6 @@ void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src)
     for(uint16_t i = 0; i < src->animation_count; ++i, ++dst_a, ++src_a)
     {
         animation_command_p *last_cmd = &dst_a->commands;
-        animation_effect_p *last_effect = &dst_a->effects;
         
         for(animation_command_p cmd = src_a->commands; cmd; cmd = cmd->next)
         {
@@ -142,14 +141,6 @@ void SkeletalModel_CopyAnims(skeletal_model_p dst, skeletal_model_p src)
             **last_cmd = *cmd;
             (*last_cmd)->next = NULL;
             last_cmd = &((*last_cmd)->next);
-        }
-
-        for(animation_effect_p effect = src_a->effects; effect; effect = effect->next)
-        {
-            *last_effect = (animation_effect_p)malloc(sizeof(animation_effect_t));
-            **last_effect = *effect;
-            (*last_effect)->next = NULL;
-            last_effect = &((*last_effect)->next);
         }
 
         dst_a->frames_count = src_a->frames_count;
@@ -769,13 +760,6 @@ void Anim_Clear(struct animation_frame_s *anim)
         free(anim->commands);
         anim->commands = next_command;
     }
-
-    while(anim->effects)
-    {
-        animation_effect_p next_effect = anim->effects->next;
-        free(anim->effects);
-        anim->effects = next_effect;
-    }
 }
 
 
@@ -785,16 +769,6 @@ void Anim_AddCommand(struct animation_frame_s *anim, const animation_command_p c
     for(; *ptr; ptr = &((*ptr)->next));
     *ptr = (animation_command_p)malloc(sizeof(animation_command_t));
     **ptr = *command;
-    (*ptr)->next = NULL;
-}
-
-
-void Anim_AddEffect(struct animation_frame_s *anim, const animation_effect_p effect)
-{
-    animation_effect_p *ptr = &anim->effects;
-    for(; *ptr; ptr = &((*ptr)->next));
-    *ptr = (animation_effect_p)malloc(sizeof(animation_effect_t));
-    **ptr = *effect;
     (*ptr)->next = NULL;
 }
 

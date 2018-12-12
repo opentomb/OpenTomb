@@ -236,13 +236,16 @@ void ShowModelView(float time)
 
             for(animation_command_p cmd = af->commands; cmd; cmd = cmd->next)
             {
-                GLText_OutTextXY(30.0f, y += dy, "command[%d][frame = %d]: {%.1f,  %.1f,  %.1f}",
-                    (int)cmd->id, (int)cmd->frame, cmd->data[0], cmd->data[1], cmd->data[2]);
-            }
-            for(animation_effect_p effect = af->effects; effect; effect = effect->next)
-            {
-                GLText_OutTextXY(30.0f, y += dy, "effect[%d][frame = %d]: {d = %d,  e = %d}",
-                    (int)effect->id, (int)effect->frame, (int)(effect->data & 0x3FFF), (int)effect->extra);
+                if(cmd->id != TR_ANIMCOMMAND_PLAYEFFECT)
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "command[%d][frame = %d]: {%.1f,  %.1f,  %.1f}",
+                        (int)cmd->id, (int)cmd->frame, cmd->data[0], cmd->data[1], cmd->data[2]);
+                }
+                else
+                {
+                    GLText_OutTextXY(30.0f, y += dy, "effect[%d][frame = %d]: {d = %d,  e = %d}",
+                        (int)cmd->id, (int)cmd->frame, (int)(cmd->effect & 0x3FFF), (int)cmd->extra);
+                }
             }
 
             y = (float)screen_info.h + dy;
