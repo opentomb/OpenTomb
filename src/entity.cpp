@@ -800,6 +800,7 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
                 if(((0x3FFF & effect->effect) == TR_EFFECT_CHANGEDIRECTION) && (effect->id == TR_ANIMCOMMAND_PLAYEFFECT))
                 {
                     SSBoneFrame_UpdateChangeDirCommand(entity->bf);
+                    Entity_UpdateTransform(entity);
                 }
             }
         }
