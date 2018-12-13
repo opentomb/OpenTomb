@@ -629,7 +629,8 @@ void gui_InventoryManager::frameItems(float time)
     int ring_item_index = 0;
     entity_s *player = World_GetPlayer();
     int32_t ver = World_GetVersion();
-
+    bool need_to_close = (m_current_state == INVENTORY_DEACTIVATING);
+    
     for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; )
     {
         inventory_node_p next_node = i->next;
@@ -640,6 +641,7 @@ void gui_InventoryManager::frameItems(float time)
         {
             if(ring_item_index == m_selected_item)
             {
+                need_to_close = false;
                 if(m_current_state == INVENTORY_ACTIVATING)
                 {
                     restoreItemAngle(time);
@@ -815,6 +817,10 @@ void gui_InventoryManager::frameItems(float time)
             ring_item_index++;
         }
         i = next_node;
+    }
+    if(need_to_close)
+    {
+        m_current_state = INVENTORY_CLOSING;
     }
 }
 

@@ -797,11 +797,6 @@ void Entity_DoAnimCommands(entity_p entity, struct ss_animation_s *ss_anim)
             if((ss_anim->current_frame == effect->frame) && (effect->id != TR_ANIMCOMMAND_SETPOSITION) && (effect->id != TR_ANIMCOMMAND_JUMPDISTANCE))
             {
                 Entity_DoFlipEffect(entity, effect->id, effect->effect);
-                if(((0x3FFF & effect->effect) == TR_EFFECT_CHANGEDIRECTION) && (effect->id == TR_ANIMCOMMAND_PLAYEFFECT))
-                {
-                    SSBoneFrame_UpdateChangeDirCommand(entity->bf);
-                    Entity_UpdateTransform(entity);
-                }
             }
         }
     }
@@ -884,6 +879,8 @@ void Entity_DoFlipEffect(entity_p entity, uint16_t effect_id, int16_t param)
                             {
                                 entity->dir_flag = ENT_MOVE_BACKWARD;
                             }
+                            SSBoneFrame_UpdateChangeDirCommand(entity->bf);
+                            Entity_UpdateTransform(entity);
                         }
                         break;
                         
