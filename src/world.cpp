@@ -760,37 +760,27 @@ struct sprite_s *World_GetSpriteByID(uint32_t ID)
 
 struct skeletal_model_s *World_GetModelByID(uint32_t id)
 {
-    long int i, min, max;
-
-    min = 0;
-    max = global_world.skeletal_models_count - 1;
-    if(global_world.skeletal_models[min].id == id)
+    if(global_world.skeletal_models)
     {
-        return global_world.skeletal_models + min;
-    }
-    if(global_world.skeletal_models[max].id == id)
-    {
-        return global_world.skeletal_models + max;
-    }
-    do
-    {
-        i = (min + max) / 2;
-        if(global_world.skeletal_models[i].id == id)
+        skeletal_model_p left = global_world.skeletal_models;
+        skeletal_model_p right = global_world.skeletal_models + global_world.skeletal_models_count - 1;
+        while(left <= right)
         {
-            return global_world.skeletal_models + i;
-        }
-
-        if(global_world.skeletal_models[i].id < id)
-        {
-            min = i;
-        }
-        else
-        {
-            max = i;
+            skeletal_model_p mid = left + (right - left) / 2;
+            if(mid->id == id)
+            {
+                return mid;
+            }
+            else if(mid->id > id)
+            {
+                right = mid - 1;
+            }
+            else
+            {
+                left = mid + 1;
+            }
         }
     }
-    while(min < max - 1);
-
     return NULL;
 }
 

@@ -77,7 +77,7 @@ enum inventoryState
     INVENTORY_DISABLED = 0,
     INVENTORY_IDLE,
     INVENTORY_OPENING,
-    INVENTORY_CLOSING,
+    INVENTORY_EXIT,
     INVENTORY_R_LEFT,
     INVENTORY_R_RIGHT,
     INVENTORY_UP,
@@ -115,7 +115,6 @@ public:
     void setTitle(int items_type);
     void frame(float time);
     void render();
-    uint32_t getItemIdActualView();
 
     gl_text_line_t              m_label_title;
     char                        m_label_title_text[GUI_LINE_DEFAULTSIZE];

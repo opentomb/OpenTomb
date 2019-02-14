@@ -48,7 +48,7 @@ int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t acto
 {
     inventory_node_p i = *root;
     base_item_p bi = NULL;
-
+    
     for(; i; i = i->next)
     {
         if(i->id == item_id)
@@ -405,7 +405,7 @@ void gui_InventoryManager::frameStates(float time)
                     Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                     m_label_item_name.show = 0;
                     m_label_title.show = 0;
-                    m_current_state = INVENTORY_CLOSING;
+                    m_current_state = INVENTORY_EXIT;
                     break;
 
                 case GUI_COMMAND_LEFT:
@@ -573,7 +573,7 @@ void gui_InventoryManager::frameStates(float time)
             }
             break;
 
-        case INVENTORY_CLOSING:
+        case INVENTORY_EXIT:
             Gui_SetCurrentMenu(NULL);
             m_ring_time += time;
             m_ring_radius = m_base_ring_radius * (m_ring_rotate_period - m_ring_time) / m_ring_rotate_period;
@@ -602,28 +602,6 @@ void gui_InventoryManager::frameStates(float time)
     }
 }
 
-uint32_t gui_InventoryManager::getItemIdActualView()
-{
-    int ring_item_index = 0;
-
-    for (inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
-    {
-        base_item_p bi = World_GetBaseItemByID(i->id);
-
-        if (bi && (bi->type == m_current_items_type))
-        {
-            if (ring_item_index == m_selected_item)
-            {
-                return bi->id;
-            }
-            ring_item_index++;
-        }
-    }
-
-    // if inventory have error !
-    return 0;
-}
-
 void gui_InventoryManager::frameItems(float time)
 {
     int ring_item_index = 0;
@@ -631,7 +609,7 @@ void gui_InventoryManager::frameItems(float time)
     int32_t ver = World_GetVersion();
     bool need_to_close = (m_current_state == INVENTORY_DEACTIVATING);
     
-    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; )
+    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i;)
     {
         inventory_node_p next_node = i->next;
         base_item_p bi = World_GetBaseItemByID(i->id);
@@ -765,14 +743,14 @@ void gui_InventoryManager::frameItems(float time)
                                             break;
                                         default:
                                             m_command = GUI_COMMAND_CLOSE;
-                                            m_current_state = INVENTORY_CLOSING;
+                                            m_current_state = INVENTORY_EXIT;
                                             break;
                                     }
                                     break;
 
                                 default:
                                     m_command = GUI_COMMAND_CLOSE;
-                                    m_current_state = INVENTORY_CLOSING;
+                                    m_current_state = INVENTORY_EXIT;
                                     break;
                             }
                         }
@@ -820,7 +798,7 @@ void gui_InventoryManager::frameItems(float time)
     }
     if(need_to_close)
     {
-        m_current_state = INVENTORY_CLOSING;
+        m_current_state = INVENTORY_EXIT;
     }
 }
 
