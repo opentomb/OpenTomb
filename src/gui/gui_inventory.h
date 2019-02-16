@@ -78,7 +78,7 @@ class gui_InventoryManager
         INVENTORY_DISABLED = 0,
         INVENTORY_IDLE,
         INVENTORY_OPENING,
-        INVENTORY_CLOSING,
+        INVENTORY_EXIT,
         INVENTORY_R_LEFT,
         INVENTORY_R_RIGHT,
         INVENTORY_UP,
