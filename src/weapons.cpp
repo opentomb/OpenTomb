@@ -87,7 +87,7 @@ void weapon_init()
     shotgun.muzzle_orient[0] = NULL;
     shotgun.muzzle_orient[1] = NULL;
     shotgun.muzzle_orient[2] = NULL;
-
+	
     uzi.item_id = TYPE_UZIS;
     uzi.shot = SND_UZI;
     uzi.draw = SND_UNIVERSAL_DRAW;
@@ -531,12 +531,15 @@ int SetCurrentWeaponAnimation(struct entity_s* ent, struct ss_animation_s* ss_an
         case ANIM_IDLE_TO_FIRING:
             ONEHAND_IDLE_TO_FIRING;
             return IS_IDLE;
+
         case ANIM_HIDE_TO_IDLE:
             ONEHAND_HIDE_TO_IDLE;
             return IS_DRAW;
+
         case ANIM_IDLE_AND_HIDE:
             ONEHAND_HIDE_AND_IDLE;
             return IS_SPECIAL;
+
         case ANIM_FIRING:
             if (checkCanShoot(weapon))
             {
@@ -577,7 +580,8 @@ int ShotgunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
+                return IS_HIDE;
             }
             return IS_NOT_DEFINED;
 
@@ -655,12 +659,13 @@ int GrenadeGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float t
             if (checkCanShoot(weapon))
             {
                 TWOHAND_FIRING(GRENADEGUN_FIRING_RELOAD, GRENADEGUN_FIRING_TO_IDLE, GRENADEGUN_IDLE_TO_FIRING);
+                return IS_FIRING;
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_GRENADEGUN_IS_END, false);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
+                return IS_HIDE;
             }
-            
             return IS_FIRING;
 
         case GRENADEGUN_FIRING_TO_IDLE:
@@ -790,7 +795,7 @@ int MP5Anim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, st
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
                 return IS_HIDE;
             }
             return IS_NOT_DEFINED;
@@ -828,7 +833,7 @@ int M16Anim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, st
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
                 return IS_HIDE;
             }
             return IS_NOT_DEFINED;
@@ -866,7 +871,7 @@ int RocketGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float ti
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
                 return IS_HIDE;
             }
             break;
@@ -904,7 +909,7 @@ int CrossbowAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float tim
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
                 return IS_HIDE;
             }
             break;
@@ -941,7 +946,7 @@ int GrapplinGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float 
             }
             else
             {
-                TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, true);
+                AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
                 return IS_HIDE;
             }
             break;
@@ -969,32 +974,16 @@ void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time
     {
         Anim_SetAnimation(ss_anim, 2, -1);
     }
+    else
+    {
+        Anim_SetAnimation(ss_anim, 3, 0);
+    }
 
     // when animation is finished, change weapon t
     if (Anim_IncTime(ss_anim, time))
     {
         Character_ChangeWeapon(ent, model_id);
     }
-
-    // checking if entity (lara) is not dead and entity is moving on floor (not underwater)
-    if (!ent->character->state.dead && ent->move_type == MOVE_ON_FLOOR)
-    {
-        
-    }
-    /*
-    else
-    {
-        // starting idle to hide anim but no change weapon
-        if (ss_anim->model->animation_count > 4)
-        {
-            Anim_SetAnimation(ss_anim, 3, 0);
-        }
-        else
-        {
-            Anim_SetAnimation(ss_anim, 2, -1);
-        }
-    }
-    */
 }
 
 // get the current version without ">" or "<" !
