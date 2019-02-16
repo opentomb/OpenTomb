@@ -4,6 +4,7 @@ print("level/tr1/level8a.city_of_khamoon->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
 end;
 
 level_PreLoad = function()

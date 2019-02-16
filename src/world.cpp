@@ -5,9 +5,9 @@
 #include <SDL2/SDL_rwops.h>
 
 extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+	#include <lua.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
 }
 
 #include "core/avl.h"
@@ -39,7 +39,8 @@ extern "C" {
 #include "resource.h"
 #include "inventory.h"
 #include "trigger.h"
-
+#include "state_control/state_control_Lara.h"
+#include "weapons.h"
 
  struct world_s
 {
@@ -269,6 +270,10 @@ void World_Open(const char *path, int trv)
         global_world.tex_atlas = NULL;
     }
 
+	Gui_DrawLoadScreen(990);
+	weapon_init();
+
+	Gui_DrawLoadScreen(1000);
     delete tr;
 }
 
@@ -708,22 +713,25 @@ int World_DeleteEntity(uint32_t id)
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
     skeletal_model_p model = World_GetModelByID(model_id);
+
     if(model && (!AVL_SearchNode(&global_world.items_tree, item_id)))
     {
         base_item_p item = BaseItem_Create(model, item_id);
+
         item->world_model_id = world_model_id;
         item->type = type;
         item->count = count;
+
         if(name)
         {
             strncpy(item->name, name, sizeof(item->name));
         }
+
         return (AVL_InsertReplace(&global_world.items_tree, item_id, item)) ? (0x01) : (0x00);
     }
 
     return 0;
 }
-
 
 int World_DeleteItem(uint32_t item_id)
 {
@@ -764,6 +772,7 @@ struct skeletal_model_s *World_GetModelByID(uint32_t id)
 
     min = 0;
     max = global_world.skeletal_models_count - 1;
+
     if(global_world.skeletal_models[min].id == id)
     {
         return global_world.skeletal_models + min;

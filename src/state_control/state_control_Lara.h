@@ -1,69 +1,10 @@
-
 #ifndef STATE_CONTROL_LARA_H
 #define STATE_CONTROL_LARA_H
 
-struct weapon_inf_s
-{
-	int shot;
-	int draw;
-	int hide;
-	int echo;        // tr1 not have echo sound !
-	int reload;
-	int reload_2;    // for grenade gun !
+#include "../skeletal_model.h"
 
-	int num_shots; // one hand weapon not have this function but in original tr this function is enabled ! (1 bullet for each weapon)
-	float range;     // two hand weapon not have range (added by default for future update) !
-	float fire_rate; // one hand weapon not have fire_rate (added by default for future update) !
-};
-
-#define NO_SOUND (-1);
-
-/// DEFAULT PISTOLS (ALL TR HAVE PISTOL IN SLOT 1)
-#define PISTOL           1
-#define TR_GRENADEGUN    7
-
-/// TR1 Constants
-#define TR1_SHOTGUN   2
-#define TR1_MAGNUM    3
-#define TR1_UZI       4
-
-/// TR2 Constants
-#define TR2_SHOTGUN       3
-#define TR2_AUTOMAGS      4  // autopistols
-#define TR2_UZI           5
-#define TR2_M16           6
-#define TR2_HARPOONGUN    8
-
-/// TR3 Constants
-#define TR3_SHOTGUN       3
-#define TR3_DESERTEAGLE   4
-#define TR3_UZI           5
-#define TR3_MP5           6
-#define TR3_GRENADEGUN    7
-#define TR3_ROCKETGUN     8
-#define TR3_HARPOONGUN    9
-
-/// TR4 & 5 Constants
-#define TR4C_UZI           2    // TR4 - TR5
-#define TR4C_SHOTGUN       3    // TR4 - TR5
-#define TR4C_CROSSBOW      4    // TR4 - TR5
-#define TR4C_GRENADEGUN    5    // TR4 - TR5
-#define TR4C_REVOLVER      6    // TR4 - TR5
-
-/// TR5 Constants
-
-/// Custom TR Define for State Control (sound, reload, fire, etc..) (dont use it !)
-/// it's for my custom level (TR4)
-#define TRTS_PISTOL             3
-#define TRTS_SHOTGUN            4
-#define TRTS_AUTOPISTOL            5
-#define TRTS_UZI                6
-#define TRTS_DESERT_EAGLE       7
-#define TRTS_M16                8
-#define TRTS_MP5                9
-#define TRTS_GRENADE_LAUNCHER   10
-#define TRTS_ROCKET_LAUNCHER    11
-#define TRTS_HARPOON_LAUNCHER   12
+void StateControl_SetWeaponMeshOn(ss_bone_frame_p bf, skeletal_model_p sm, int bone);
+void StateControl_SetWeaponMeshOff(ss_bone_frame_p bf, int bone);
 
 /*
  *  ====== LARA'S ANIMATIONS ======

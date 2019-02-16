@@ -12,7 +12,7 @@ function genBaseItems()
 
     local ver = getLevelVersion();
 
-    if (ver < TR_II) then
+    if(ver < TR_II) then
         createBaseItem(ITEM_COMPASS, 72, 72, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 71, 71, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 82, 82, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -28,7 +28,7 @@ function genBaseItems()
         createBaseItem(ITEM_UZI, 102, 102, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_UZIS);
 
         createBaseItem(ITEM_PISTOL_AMMO, 103, 103, ITEM_TYPE_AMMO, 40, ITEM_NAME_PISTOL_AMMO);
-        createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 104, 104, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
+        createBaseItem(ITEM_SHOTGUN_AMMO, 104, 104, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
         createBaseItem(ITEM_MAGNUM_AMMO, 105, 105, ITEM_TYPE_AMMO, 50, ITEM_NAME_MAGNUM_AMMO);
         createBaseItem(ITEM_UZI_AMMO, 106, 106, ITEM_TYPE_AMMO, 100, ITEM_NAME_UZI_AMMO);
 
@@ -46,11 +46,11 @@ function genBaseItems()
         createBaseItem(ITEM_KEY_3, 135, 135, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_KEY_4, 136, 136, ITEM_TYPE_QUEST, 1);
 
-        createBaseItem(ITEM_QUEST_1, 145, 145, ITEM_TYPE_QUEST, 1);
-        createBaseItem(ITEM_QUEST_2, 146, 146, ITEM_TYPE_QUEST, 1);
-        createBaseItem(ITEM_QUEST_3, 150, 150, ITEM_TYPE_QUEST, 1);
+        createBaseItem(ITEM_QUEST_1, 145, 145, ITEM_TYPE_QUEST, 1, ITEM_NAME_TR1_SCION);
+        createBaseItem(ITEM_QUEST_2, 146, 146, ITEM_TYPE_QUEST, 1, ITEM_NAME_TR1_SCION);
+        createBaseItem(ITEM_QUEST_3, 150, 150, ITEM_TYPE_QUEST, 1, ITEM_NAME_TR1_SCION);
 
-    elseif (ver < TR_III) then
+    elseif(ver < TR_III) then
         createBaseItem(ITEM_COMPASS, 121, 121, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 120, 120, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 134, 134, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -70,7 +70,7 @@ function genBaseItems()
         
         -- TR2 supplies fully checked
         createBaseItem(ITEM_PISTOL_AMMO, 164, 164, ITEM_TYPE_AMMO, 40, ITEM_NAME_PISTOL_AMMO);
-        createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 165, 165, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
+        createBaseItem(ITEM_SHOTGUN_AMMO, 165, 165, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
         createBaseItem(ITEM_AUTOMAGS_AMMO, 166, 166, ITEM_TYPE_AMMO, 40, ITEM_NAME_AUTOMAG_AMMO);
         createBaseItem(ITEM_UZI_AMMO, 167, 167, ITEM_TYPE_AMMO, 80, ITEM_NAME_UZI_AMMO);
         createBaseItem(ITEM_HARPOONGUN_AMMO, 168, 168, ITEM_TYPE_AMMO, 3, ITEM_NAME_HARPOONGUN_AMMO);
@@ -95,7 +95,7 @@ function genBaseItems()
         --createBaseItem(ITEM_SECRET_2, 121, 121, ITEM_TYPE_QUEST, 1);
         --createBaseItem(ITEM_SECRET_3, 133, 133, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver < TR_IV) then
+    elseif(ver < TR_IV) then
         createBaseItem(ITEM_COMPASS, 146, 146, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_COMPASS);
         createBaseItem(ITEM_PASSPORT, 145, 145, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_PASSPORT);
         createBaseItem(ITEM_LARAHOME, 159, 159, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LARAHOME);
@@ -115,7 +115,7 @@ function genBaseItems()
         createBaseItem(ITEM_GRENADEGUN, 192, 167, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_GRENADEGUN);
         -- TR3 supplies fully checked
         createBaseItem(ITEM_PISTOL_AMMO, 193, 168, ITEM_TYPE_AMMO, 40, ITEM_NAME_PISTOL_AMMO);
-        createBaseItem(ITEM_SHOTGUN_NORMAL_AMMO, 194, 169, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
+        createBaseItem(ITEM_SHOTGUN_AMMO, 194, 169, ITEM_TYPE_AMMO, 2, ITEM_NAME_SHOTGUN_AMMO);
         createBaseItem(ITEM_DESERTEAGLE_AMMO, 195, 170, ITEM_TYPE_AMMO, 10, ITEM_NAME_DESERTEAGLE_AMMO);
         createBaseItem(ITEM_UZI_AMMO, 196, 171, ITEM_TYPE_AMMO, 40, ITEM_NAME_UZI_AMMO);
         createBaseItem(ITEM_HARPOONGUN_AMMO, 197, 172, ITEM_TYPE_AMMO, 3, ITEM_NAME_HARPOONGUN_AMMO);
@@ -137,7 +137,7 @@ function genBaseItems()
         createBaseItem(ITEM_PUZZLE_3, 207, 207, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_PUZZLE_4, 208, 208, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver < TR_V) then
+    elseif(ver < TR_V) then
         createBaseItem(ITEM_COMPASS, 528, 528, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_COMPASS);
         --createBaseItem(ITEM_LOAD, 357, 357, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LOAD);
         --createBaseItem(ITEM_SAVE, 358, 358, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_SAVE);
@@ -254,7 +254,7 @@ function genBaseItems()
 
         createBaseItem(ITEM_SECRET_1, 120, 120, ITEM_TYPE_QUEST, 1);
 
-    elseif (ver == TR_V) then
+    elseif(ver == TR_V) then
         createBaseItem(ITEM_COMPASS, 356, 356, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_COMPASS);
         --createBaseItem(ITEM_LOAD, 357, 357, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_LOAD);
         --createBaseItem(ITEM_SAVE, 358, 358, ITEM_TYPE_SYSTEM, 1, ITEM_NAME_SAVE);
@@ -306,15 +306,15 @@ items_funcs = {};
 
 items_funcs[ITEM_SMALL_MEDIPACK] = {}; 
 items_funcs[ITEM_SMALL_MEDIPACK].onUse = function(id)
-    if (getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
-        if (player == id) then
+    if(getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
     else
         changeCharacterParam(player, PARAM_HEALTH, 250);
         removeItem(id, ITEM_SMALL_MEDIPACK, 1);
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_MEDIPACK);
         end;
         return 1;
@@ -323,15 +323,15 @@ end;
 
 items_funcs[ITEM_LARGE_MEDIPACK] = {};
 items_funcs[ITEM_LARGE_MEDIPACK].onUse = function(id)
-    if (getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
-        if (player == id) then
+    if(getCharacterParam(player, PARAM_HEALTH) == 0) or (getCharacterParam(player, PARAM_HEALTH) == 1000) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
     else
         changeCharacterParam(player, PARAM_HEALTH, PARAM_ABSOLUTE_MAX);
         removeItem(id, ITEM_LARGE_MEDIPACK, 1);
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_MEDIPACK);
         end;
         return 1;
@@ -341,14 +341,14 @@ end;
 items_funcs[ITEM_PISTOL] = {};
 items_funcs[ITEM_PISTOL].onUse = function(id)
     local ver = getLevelVersion();
-    if (ver == TR_I) then
+    if(ver < TR_II) then
         playSound(getGlobalSound(1, GLOBALID_MENUWEAPON)); -- play the weapon_select menu sound
-    elseif (ver == TR_II) then
+    elseif(ver < TR_III) then
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
-    elseif (ver == TR_III) then
+    elseif(ver < TR_IV) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
     else
-        -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used if is custom level).
+        -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used ifis custom level).
     end;
     setCharacterCurrentWeapon(id, 1);
     return 1;
@@ -357,23 +357,27 @@ end;
 items_funcs[ITEM_SHOTGUN] = {};
 items_funcs[ITEM_SHOTGUN].onUse = function(id)
     local ver = getLevelVersion();
-    if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) then
-        if(ver < TR_II) then
-            playSound(getGlobalSound(1, GLOBALID_MENUWEAPON));
-            setCharacterCurrentWeapon(id, 2);
-        elseif (ver < TR_III) then
-            playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
-            setCharacterCurrentWeapon(id, 3);
-        elseif (ver < TR_IV) then
-            playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
-            setCharacterCurrentWeapon(id, 3);
-        else
-            -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used if is custom level).
+    if(ver < TR_IV) then
+        if(getItemsCount(id, ITEM_SHOTGUN_AMMO) > 0) then
+            if(ver < TR_II) then
+                playSound(getGlobalSound(1, GLOBALID_MENUWEAPON));
+                setCharacterCurrentWeapon(id, 2);
+            elseif(ver < TR_III) then
+                playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
+                setCharacterCurrentWeapon(id, 3);
+            elseif(ver < TR_IV) then
+                playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
+                setCharacterCurrentWeapon(id, 3);
+            end;
+            return 1;
+        end;
+    elseif (ver > TR_III) then
+        if(getItemsCount(id, ITEM_SHOTGUN_NORMAL_AMMO) > 0) or (getItemsCount(id, ITEM_SHOTGUN_WIDESHOT_AMMO) > 0) then
             setCharacterCurrentWeapon(id, 3);
         end;
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -388,7 +392,7 @@ items_funcs[ITEM_MAGNUM].onUse = function(id)
         setCharacterCurrentWeapon(id, 3);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -398,12 +402,12 @@ end;
 
 items_funcs[ITEM_DESERTEAGLE] = {};
 items_funcs[ITEM_DESERTEAGLE].onUse = function(id)
-    if (getItemsCount(id, ITEM_DESERTEAGLE_AMMO) > 0) then
+    if(getItemsCount(id, ITEM_DESERTEAGLE_AMMO) > 0) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 4);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -413,12 +417,11 @@ end;
 
 items_funcs[ITEM_REVOLVER] = {};
 items_funcs[ITEM_REVOLVER].onUse = function(id)
-    if (getItemsCount(id, ITEM_REVOLVER_AMMO) > 0) then
-        -- playSound(getGlobalSound(2, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used if is custom level).
+    if(getItemsCount(id, ITEM_REVOLVER_AMMO) > 0) then
         setCharacterCurrentWeapon(id, 6);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -428,12 +431,12 @@ end;
 
 items_funcs[ITEM_AUTOMAGS] = {};
 items_funcs[ITEM_AUTOMAGS].onUse = function(id)
-    if (getItemsCount(id, ITEM_AUTOMAGS_AMMO) > 0) then
+    if(getItemsCount(id, ITEM_AUTOMAGS_AMMO) > 0) then
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 4);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -445,22 +448,21 @@ items_funcs[ITEM_UZI] = {};
 items_funcs[ITEM_UZI].onUse = function(id)
     local ver = getLevelVersion();
     if(getItemsCount(id, ITEM_UZI_AMMO) > 0) then
-        if (ver == TR_I) then
+        if(ver < TR_II) then
             playSound(getGlobalSound(1, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 4);
-        elseif (ver == TR_II) then
+        elseif(ver < TR_III) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 5);
-        elseif (ver == TR_III) then
+        elseif(ver < TR_IV) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 5);
         else
-            -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used if is custom level).
             setCharacterCurrentWeapon(id, 2);
         end;
         return 1;
    else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -472,16 +474,16 @@ items_funcs[ITEM_HARPOONGUN] = {};
 items_funcs[ITEM_HARPOONGUN].onUse = function(id)
     local ver = getLevelVersion();
     if(getItemsCount(id, ITEM_HARPOONGUN_AMMO) > 0) then
-        if (ver == TR_II) then
+        if((ver > TR_I_UB) and (ver < TR_III)) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 8);
-        elseif (ver == TR_III) then
+        elseif(ver < TR_IV) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 9);
         end;
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
     end;
@@ -490,13 +492,12 @@ end;
 
 items_funcs[ITEM_M16] = {};
 items_funcs[ITEM_M16].onUse = function(id)
-    local ver = getLevelVersion();
-    if (getItemsCount(id, ITEM_M16_AMMO) > 0) then
+    if(getItemsCount(id, ITEM_M16_AMMO) > 0) then
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 6);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -507,68 +508,65 @@ end;
 items_funcs[ITEM_MP5] = {};
 items_funcs[ITEM_MP5].onUse = function(id)
     local ver = getLevelVersion();
-    
-    if (ver == TR_III) then
-        playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
+    if((ver > TR_II) and (ver < TR_IV)) then
+        playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 6);
         return 1;
-    elseif (ver == TR_V) then
+    elseif(ver == TR_V) then
         setCharacterCurrentWeapon(id, 5);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
     end;
-    
     return 0;
 end;
 
 items_funcs[ITEM_GRENADEGUN] = {};
 items_funcs[ITEM_GRENADEGUN].onUse = function(id)
     local ver = getLevelVersion();
-    
-    if (ver == TR_II) then
-        if (getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
+    if(ver < TR_II) then
+        ;
+    elseif(ver < TR_III) then
+        if(getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
             playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 7);
             return 1;
         end;
-    elseif (ver == TR_III) then
-        if (getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
+    elseif(ver < TR_IV) then
+        if(getItemsCount(id, ITEM_GRENADEGUN_AMMO) > 0) then
             playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
             setCharacterCurrentWeapon(id, 8);
             return 1;
         end;
     else
-        if (getItemsCount(id, ITEM_GRENADEGUN_NORMAL_AMMO) > 0) then
+        if(getItemsCount(id, ITEM_GRENADEGUN_NORMAL_AMMO) > 0) then
             setCharacterCurrentWeapon(id, 5);
             return 1;
-        elseif (getItemsCount(id, ITEM_GRENADEGUN_SUPER_AMMO) > 0) then
+        elseif(getItemsCount(id, ITEM_GRENADEGUN_SUPER_AMMO) > 0) then
             setCharacterCurrentWeapon(id, 5);
             return 1;
-        elseif (getItemsCount(id, ITEM_GRENADEGUN_FLASH_AMMO) > 0) then
+        elseif(getItemsCount(id, ITEM_GRENADEGUN_FLASH_AMMO) > 0) then
             setCharacterCurrentWeapon(id, 5);
             return 1;
         end;
     end;
-    
-    if (player == id) then
+    if(player == id) then
         playSound(SOUND_NO);
     end;
-    
     return 0;
 end;
 
 items_funcs[ITEM_ROCKETGUN] = {};
 items_funcs[ITEM_ROCKETGUN].onUse = function(id)
-    if (getItemsCount(id, ITEM_ROCKETGUN_AMMO) > 0) then
+    if(getItemsCount(id, ITEM_ROCKETGUN_AMMO) > 0) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
         setCharacterCurrentWeapon(id, 7);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
@@ -580,20 +578,33 @@ items_funcs[ITEM_CROSSBOW] = {};
 items_funcs[ITEM_CROSSBOW].onUse = function(id)
     local ver = getLevelVersion();
     
-    if (getItemsCount(id, ITEM_CROSSBOW_NORMAL_AMMO) > 0) then
+    if(getItemsCount(id, ITEM_CROSSBOW_NORMAL_AMMO) > 0) then
         setCharacterCurrentWeapon(id, 4);
         return 1;
-    elseif (getItemsCount(id, ITEM_CROSSBOW_EXPLOSIVE_AMMO) > 0) then
+    elseif(getItemsCount(id, ITEM_CROSSBOW_EXPLOSIVE_AMMO) > 0) then
         setCharacterCurrentWeapon(id, 4);
         return 1;
-    elseif (getItemsCount(id, ITEM_CROSSBOW_POISON_AMMO) > 0) then
+    elseif(getItemsCount(id, ITEM_CROSSBOW_POISON_AMMO) > 0) then
         setCharacterCurrentWeapon(id, 4);
         return 1;
     else
-        if (player == id) then
+        if(player == id) then
             playSound(SOUND_NO);
         end;
         return 0;
+    end;
+    return 0;
+end;
+
+items_funcs[ITEM_GRAPPLEGUN] = {};
+items_funcs[ITEM_GRAPPLEGUN].onUse = function(id)
+    if(getItemsCount(id, ITEM_GRAPPLEGUN_AMMO) > 0) then
+        setCharacterCurrentWeapon(id, 4);
+        return 1;
+    else
+        if(player == id) then
+            playSound(SOUND_NO);
+        end;
     end;
     return 0;
 end;

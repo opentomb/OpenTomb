@@ -5,9 +5,9 @@
 #include "script.h"
 
 extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+	#include <lua.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
 }
 
 #include "../core/system.h"
@@ -24,11 +24,11 @@ extern "C" {
 #include "../trigger.h"
 #include "../inventory.h"
 #include "../character_controller.h"
+#include "../weapons.h"
 #include "../state_control/state_control.h"
-
+#include "../state_control/state_control_Lara.h"
 
 #define LUA_EXPOSE(lua, x) do { lua_pushinteger(lua, x); lua_setglobal(lua, #x); } while(false)
-
 
 /*
  * MISK
@@ -598,6 +598,33 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, ITEM_LOAD);
         LUA_EXPOSE(lua, ITEM_SAVE);
         LUA_EXPOSE(lua, ITEM_MAP);
+
+		//==============================//
+		// generic model id weapon
+		LUA_EXPOSE(lua, TR_MODEL_PISTOL);
+		LUA_EXPOSE(lua, TR_MODEL_SHOTGUN);
+		// tomb raider 1
+		LUA_EXPOSE(lua, TR1_MODEL_MAGNUM);
+		LUA_EXPOSE(lua, TR1_MODEL_SHOTGUN);
+		LUA_EXPOSE(lua, TR1_MODEL_UZI);
+		// tomb raider 2
+		LUA_EXPOSE(lua, TR2_MODEL_UZI);
+		LUA_EXPOSE(lua, TR2_MODEL_AUTOMAGS);
+		LUA_EXPOSE(lua, TR2_MODEL_M16);
+		LUA_EXPOSE(lua, TR2_MODEL_GRENADEGUN);
+		LUA_EXPOSE(lua, TR2_MODEL_HARPOONGUN);
+		// tomb raider 3
+		LUA_EXPOSE(lua, TR3_MODEL_DESERTEAGLE);
+		LUA_EXPOSE(lua, TR3_MODEL_HARPOONGUN);
+		LUA_EXPOSE(lua, TR3_MODEL_UZI);
+		LUA_EXPOSE(lua, TR3_MODEL_ROCKETGUN);
+		LUA_EXPOSE(lua, TR3_MODEL_GRENADEGUN);
+		// tomb raider 4 & 5
+		LUA_EXPOSE(lua, TR4C_MODEL_UZI);
+		LUA_EXPOSE(lua, TR4C_MODEL_CROSSBOW);
+		LUA_EXPOSE(lua, TR4C_MODEL_GRENADEGUN);
+		LUA_EXPOSE(lua, TR4C_MODEL_REVOLVER);
+		//==============================//
 
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_TRIGGER);
         LUA_EXPOSE(lua, TR_FD_TRIGTYPE_PAD);

@@ -3,6 +3,7 @@
 print("level/tr1/level3b.tomb_of_qualopec->level_loaded !");
 
 level_PostLoad = function()
+	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_COG);
 end;
 
 level_PreLoad = function()

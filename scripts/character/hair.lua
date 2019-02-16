@@ -7,34 +7,30 @@
 print("hair->hair_setup loaded !");
 -- if you want to change the hair slot, you can rewrite model with you own id of wad !
 
-HAIR_TR1       = 0
-HAIR_TR2       = 1
-HAIR_TR3       = 2
-HAIR_TR4_KID_1 = 3
-HAIR_TR4_KID_2 = 4
-HAIR_TR4_OLD   = 5
-HAIR_TR5_KID_1 = 6
-HAIR_TR5_KID_2 = 7
-HAIR_TR5_OLD   = 8
+HAIR_TR1       = 0;
+HAIR_TR2       = 1;
+HAIR_TR3       = 2;
+HAIR_TR4_KID_1 = 3;
+HAIR_TR4_KID_2 = 4;
+HAIR_TR4_OLD   = 5;
+HAIR_TR5_KID_1 = 6;
+HAIR_TR5_KID_2 = 7;
+HAIR_TR5_OLD   = 8;
 
 M_PI = 3.141592653;   -- Needed for hair alignment
 
 
 hair_properties = {
-
     root_weight     = 10.0,
     tail_weight     = 1.0,
-
     hair_damping    = {0.15, 0.80},
     hair_inertia    = 100.0,
     hair_friction   = 0.3,
     hair_bouncing   = 0.0,
-
     joint_cfm       = 0.1,
     joint_erp       = 0.9,
-
-    joint_overlap   = 0.9,
-}
+    joint_overlap   = 0.9
+};
 
 hair = {}
 
@@ -49,7 +45,7 @@ hair[HAIR_TR1] = {
     v_index = {43, 44, 45 },
     offset = { 0.0, -48.0, -32.0 },
     root_angle = {-M_PI/2, 0.0, -M_PI}
-}
+};
 
 hair[HAIR_TR2] = { 
     props = hair_properties,
@@ -59,7 +55,7 @@ hair[HAIR_TR2] = {
     v_index = { 52, 55, 51, 48 },
     offset = { 0.0, -48.0,  16.0 },
     root_angle = { -M_PI/2, 0.0, -M_PI }
-}
+};
 
 hair[HAIR_TR4_KID_1] = { 
     props = hair_properties,
@@ -69,7 +65,7 @@ hair[HAIR_TR4_KID_1] = {
     v_index = { 70, 71, 68, 69 },
     offset = { 32.0, -40.0,  44.0 },
     root_angle = { -M_PI/4, 0.0, ((M_PI/4)*5) }
-}
+};
 
 hair[HAIR_TR4_KID_2] = {
     props = hair_properties,
@@ -79,7 +75,7 @@ hair[HAIR_TR4_KID_2] = {
     v_index = { 76, 77, 79, 78 },
     offset = { -36.0, -40.0,  44.0 },
     root_angle = { -M_PI/4, M_PI/4, (M_PI/4)*3 }
-}
+};
 
 hair[HAIR_TR4_OLD]   = {
     props = hair_properties, 
@@ -89,7 +85,7 @@ hair[HAIR_TR4_OLD]   = {
     v_index = { 40, 38, 37, 39 },
     offset = { 0.0, -36.0, 8.0 },
     root_angle = {-M_PI/2, 0.0, -M_PI}
-}
+};
 
 -- TR3 hair is similar to TR2, TR5 hair is similar to TR4.
 

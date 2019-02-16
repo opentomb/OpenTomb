@@ -4,6 +4,11 @@ print("level/tr1/level8b.obelisk_of_khamoon->level_loaded !");
 
 level_PostLoad = function()
     playStream(59);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
+	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TRI_PUZZLE_EYE_OF_HORUS);
+	rewriteName(player, ITEM_PUZZLE_2, ITEM_NAME_TR1_PUZZLE_SCARAB);
+	rewriteName(player, ITEM_PUZZLE_3, ITEM_NAME_TR1_PUZZLE_SEAL_OF_ANUBIS);
+	rewriteName(player, ITEM_PUZZLE_4, ITEM_NAME_TR1_PUZZLE_ANKH);
 end;
 
 level_PreLoad = function()

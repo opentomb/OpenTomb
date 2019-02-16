@@ -1,4 +1,4 @@
-
+#include <string>
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
@@ -27,10 +27,10 @@
 #include "../world.h"
 #include "../controls.h"
 #include "../character_controller.h"
+#include "../weapons.h"
 #include "gui.h"
 #include "gui_menu.h"
 #include "gui_inventory.h"
-
 
 extern GLuint backgroundBuffer;
 extern GLfloat guiProjectionMatrix[16];
@@ -39,9 +39,9 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 
 void Gui_InitNotifier()
 {
-    Notifier.SetRot(180.0f, 270.0f);
+    Notifier.SetRot(0.0f, 180.0f);
     Notifier.SetSize(128.0f);
-    Notifier.SetRotateTime(2500.0f);
+    Notifier.SetRotateTime(2048.0f);
 }
 
 int32_t Item_Use(struct inventory_node_s **root, uint32_t item_id, uint32_t actor_id)
@@ -156,15 +156,16 @@ gui_InventoryManager::gui_InventoryManager()
     m_next_items_type           = GUI_MENU_ITEMTYPE_SYSTEM;
     m_current_items_count       = 0;
     m_selected_item             = 0;
-
+	
     m_item_time                 = 0.0f;
     m_ring_rotate_period        = 0.4f;
     m_ring_time                 = 0.0f;
     m_ring_angle                = 0.0f;
+	m_ring_vertical_angle_base  = 270.0f;
     m_ring_vertical_angle       = 0.0f;
     m_ring_angle_step           = 0.0f;
-    m_base_ring_radius          = 650.0f;
-    m_ring_radius               = 650.0f;
+    m_base_ring_radius          = 500.0f;
+    m_ring_radius               = 500.0f;
     m_vertical_offset           = 0.0f;
 
     m_item_rotate_period        = 3.0f;
@@ -207,8 +208,8 @@ gui_InventoryManager::gui_InventoryManager()
     m_label_item_name_text[0]   = 0;
     m_label_item_name.show      = 0;
 
-    GLText_AddLine(&m_label_item_name);
-    GLText_AddLine(&m_label_title);
+	GLText_AddLine(&m_label_title);
+	GLText_AddLine(&m_label_item_name);
 }
 
 gui_InventoryManager::~gui_InventoryManager()
@@ -217,11 +218,11 @@ gui_InventoryManager::~gui_InventoryManager()
     m_command = GUI_COMMAND_CLOSE;
     m_inventory = NULL;
 
+	m_label_title.show = 0;
+	GLText_DeleteLine(&m_label_title);
+
     m_label_item_name.show = 0;
     GLText_DeleteLine(&m_label_item_name);
-
-    m_label_title.show = 0;
-    GLText_DeleteLine(&m_label_title);
 
     if(m_current_menu)
     {
@@ -279,8 +280,8 @@ void gui_InventoryManager::setInventory(struct inventory_node_s **i, uint32_t ow
     m_owner_id = owner_id;
     m_current_state = INVENTORY_DISABLED;
     m_command = GUI_COMMAND_NONE;
+	m_label_title.show = 0;
     m_label_item_name.show = 0;
-    m_label_title.show = 0;
 }
 
 void gui_InventoryManager::setTitle(int items_type)
@@ -344,24 +345,25 @@ void gui_InventoryManager::frameStates(float time)
     switch(m_current_state)
     {
         case INVENTORY_R_LEFT:
+			restoreItemAngle(time);
             m_command = GUI_COMMAND_NONE;
             m_ring_time += time;
             m_ring_angle = m_ring_angle_step * m_ring_time / m_ring_rotate_period;
-            if(m_ring_time >= m_ring_rotate_period)
-            {
-                m_ring_time = 0.0f;
-                m_ring_angle = 0.0f;
-                m_current_state = INVENTORY_IDLE;
-                m_selected_item--;
-                if(m_selected_item < 0)
-                {
-                    m_selected_item = m_current_items_count - 1;
-                }
-            }
-            restoreItemAngle(time);
+			if (m_ring_time >= m_ring_rotate_period)
+			{
+				m_ring_time = 0.0f;
+				m_ring_angle = 0.0f;
+				m_current_state = INVENTORY_IDLE;
+				m_selected_item--;
+				if (m_selected_item < 0)
+				{
+					m_selected_item = m_current_items_count - 1;
+				}
+			}
             break;
 
         case INVENTORY_R_RIGHT:
+			restoreItemAngle(time);
             m_command = GUI_COMMAND_NONE;
             m_ring_time += time;
             m_ring_angle = -m_ring_angle_step * m_ring_time / m_ring_rotate_period;
@@ -376,7 +378,6 @@ void gui_InventoryManager::frameStates(float time)
                     m_selected_item = 0;
                 }
             }
-            restoreItemAngle(time);
             break;
 
         case INVENTORY_IDLE:
@@ -420,6 +421,7 @@ void gui_InventoryManager::frameStates(float time)
                     break;
 
                 case GUI_COMMAND_UP:
+					restoreItemAngle(time);
                     if(m_current_items_type < GUI_MENU_ITEMTYPE_QUEST)
                     {
                         if (World_GetVersion() < TR_IV)
@@ -429,6 +431,7 @@ void gui_InventoryManager::frameStates(float time)
                         m_next_items_type = m_current_items_type + 1;
                         m_current_state = INVENTORY_UP;
                         m_ring_time = 0.0f;
+						m_selected_item = 0;
                     }
                     m_command = GUI_COMMAND_NONE;
                     m_label_item_name.show = 0;
@@ -436,7 +439,8 @@ void gui_InventoryManager::frameStates(float time)
                     break;
 
                 case GUI_COMMAND_DOWN:
-                    if (m_current_items_type > 0)
+					restoreItemAngle(time);
+					if (m_current_items_type > 0)
                     {
                         if (World_GetVersion() < TR_IV)
                         {
@@ -445,6 +449,7 @@ void gui_InventoryManager::frameStates(float time)
                         m_next_items_type = m_current_items_type - 1;
                         m_current_state = INVENTORY_DOWN;
                         m_ring_time = 0.0f;
+						m_selected_item = 0;
                     }
                     m_command = GUI_COMMAND_NONE;
                     m_label_item_name.show = 0;
@@ -498,7 +503,7 @@ void gui_InventoryManager::frameStates(float time)
             {
                 if(m_ring_time - time <= m_ring_rotate_period)
                 {
-                    if (World_GetVersion() <= TR_III)
+                    if (World_GetVersion() < TR_IV)
                     {
                         Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     }
@@ -533,7 +538,7 @@ void gui_InventoryManager::frameStates(float time)
             {
                 if(m_ring_time - time <= m_ring_rotate_period)
                 {
-                    if (World_GetVersion() <= TR_III)
+                    if (World_GetVersion() < TR_IV)
                     {
                         Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     }
@@ -559,16 +564,19 @@ void gui_InventoryManager::frameStates(float time)
             m_ring_radius = m_base_ring_radius * m_ring_time / m_ring_rotate_period;
             m_ring_angle -= 180.0f * time / m_ring_rotate_period;
             m_ring_vertical_angle -= 180.0f * time / m_ring_rotate_period;
+
             if(m_ring_time >= m_ring_rotate_period)
             {
                 m_current_state = INVENTORY_IDLE;
                 m_command = GUI_COMMAND_NONE;
-                m_ring_vertical_angle = 0;
+                m_ring_vertical_angle = 0.0f;
 
                 m_ring_radius = m_base_ring_radius;
                 m_ring_time = 0.0f;
                 m_ring_angle = 0.0f;
                 m_vertical_offset = 0.0f;
+
+				setSpecificItemModelMeshHidden();
                 setTitle(GUI_MENU_ITEMTYPE_INVENTORY);
             }
             break;
@@ -587,7 +595,7 @@ void gui_InventoryManager::frameStates(float time)
                 m_ring_vertical_angle = 180.0f;
                 m_ring_time = 0.0f;
                 m_label_title.show = 0;
-                m_label_item_name.show = 0; /// - required because label is showed after closing !
+                m_label_item_name.show = 0; /// - required because label is showed after closing inventory !
                 m_ring_radius = m_base_ring_radius;
                 m_current_items_type = 1;
 
@@ -602,6 +610,45 @@ void gui_InventoryManager::frameStates(float time)
     }
 }
 
+void gui_InventoryManager::setSpecificItemModelMeshHidden()
+{
+	int32_t ver = World_GetVersion();
+	// hide specific mesh in inventory
+	int ring_item_index = 0;
+
+	for (inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
+	{
+		base_item_p bi = World_GetBaseItemByID(i->id);
+
+		if (bi)
+		{
+			// Tomb Raider 1 -> 3
+			if (ver < TR_IV)
+			{
+				switch (bi->id)
+				{
+					case ITEM_PISTOL:
+					case ITEM_MAGNUMS:
+					case ITEM_AUTOMAGS:
+					case ITEM_UZIS:
+						if (bi->bf->bone_tags[0].is_hidden == 0x00)
+						{
+							bi->bf->bone_tags[0].is_hidden = 0x01;
+						}
+						break;
+				}
+			}
+
+			ring_item_index++;
+		}
+		else
+		{
+			Con_Warning("m_inventory couldn't be null or empty !");
+		}
+	}
+}
+
+/* get the actual item_id in the inventory (used to display the hp bar) */
 uint32_t gui_InventoryManager::getItemIdActualView()
 {
     int ring_item_index = 0;
@@ -616,12 +663,13 @@ uint32_t gui_InventoryManager::getItemIdActualView()
             {
                 return bi->id;
             }
+
             ring_item_index++;
         }
     }
 
-    // if inventory have error !
-    return 0;
+    // if m_inventory have error !
+    return -1;
 }
 
 void gui_InventoryManager::frameItems(float time)
@@ -630,7 +678,9 @@ void gui_InventoryManager::frameItems(float time)
     entity_s *player = World_GetPlayer();
     int32_t ver = World_GetVersion();
 
-    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; )
+	bool need_to_close = (m_current_state == INVENTORY_DEACTIVATING);
+
+    for(inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i;)
     {
         inventory_node_p next_node = i->next;
         base_item_p bi = World_GetBaseItemByID(i->id);
@@ -640,6 +690,8 @@ void gui_InventoryManager::frameItems(float time)
         {
             if(ring_item_index == m_selected_item)
             {
+				need_to_close = false;
+
                 if(m_current_state == INVENTORY_ACTIVATING)
                 {
                     restoreItemAngle(time);
@@ -648,58 +700,86 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         ///@FIXME: need progressive curved move like in original TR (this move is correct but not original)
                         m_current_scale += time * 10.0f;
-                        m_item_offset_y += time * 80.0f;
-                        m_item_offset_z -= time * 80.0f;
+                        m_item_offset_y += time * 90.0f;
+                        m_item_offset_z -= time * 90.0f;
 
                         m_current_scale = (m_current_scale >= 2.0) ? (2.0f) : (m_current_scale);
 
                         if ((m_item_angle_z == 0.0f) && (m_current_scale >= 2.0f))
                         {
-                            m_item_offset_y = 80.0f;
-                            m_item_offset_z = 80.0f;
+                            m_item_offset_y = 90.0f;
+                            m_item_offset_z = 90.0f;
                             m_item_time = 0.0f;
                             
-                            switch (bi->id)
-                            {
-                                case ITEM_PASSPORT:
-                                case ITEM_LOAD:
-                                case ITEM_SAVE:
-                                case ITEM_COMPASS:
-                                case ITEM_VIDEO:
-                                case ITEM_AUDIO:
-                                case ITEM_CONTROLS:
-                                    m_current_state = INVENTORY_ACTIVATED;
-                                    break;
-                                case ITEM_SMALL_MEDIPACK:
-                                case ITEM_LARGE_MEDIPACK:
-                                    if ((ver == TR_IV || ver == TR_IV_DEMO) || (ver == TR_V))
-                                    {
-                                        m_current_state = INVENTORY_DEACTIVATING;
-                                        Item_Use(m_inventory, bi->id, m_owner_id);
-                                    }
-                                    else
-                                    {
-                                        m_current_state = INVENTORY_MEDI_EXIT;
-                                    }
-                                    break;
-                                default:
-                                    if ((ver == TR_IV || ver == TR_IV_DEMO) || (ver == TR_V))
-                                    {
-                                        m_current_state = INVENTORY_DEACTIVATING;
-                                        Item_Use(m_inventory, bi->id, m_owner_id);
-                                    }
-                                    else
-                                    {
-                                        m_current_state = INVENTORY_WEAPON_EXIT;
-                                        Item_Use(m_inventory, bi->id, m_owner_id);
-                                    }
-                                    break;
-                            }
+							switch (bi->type)
+							{
+								case ITEM_TYPE_QUEST:
+									m_command = GUI_COMMAND_DEACTIVATE;
+									m_current_state = INVENTORY_DEACTIVATING;
+									break;
+
+								case ITEM_TYPE_INVENTORY:
+									switch (bi->id)
+									{
+										case ITEM_SMALL_MEDIPACK:
+										case ITEM_LARGE_MEDIPACK:
+											if (Character_CompareHealth(player, 0, 1000))
+											{
+												if (ver > TR_III)
+												{
+													m_current_state = INVENTORY_DEACTIVATING;
+													Item_Use(m_inventory, bi->id, m_owner_id);
+												}
+												else
+												{
+													m_current_state = INVENTORY_MEDI_EXIT;
+												}
+											}
+											else
+											{
+												m_current_state = INVENTORY_DEACTIVATING;
+											}
+											break;
+										default:
+											if (ver > TR_III)
+											{
+												m_current_state = INVENTORY_DEACTIVATING;
+												Item_Use(m_inventory, bi->id, m_owner_id);
+											}
+											else
+											{
+												m_current_state = INVENTORY_WEAPON_EXIT;
+												Item_Use(m_inventory, bi->id, m_owner_id);
+											}
+											break;
+									}
+									break;
+
+								case ITEM_TYPE_AMMO:
+									///TODO: ammo select type not implemented !
+									m_current_state = INVENTORY_AMMO_SELECT;
+									break;
+
+								case ITEM_TYPE_SYSTEM:
+									m_command = GUI_COMMAND_ACTIVATE;
+									m_current_state = INVENTORY_ACTIVATED;
+									break;
+
+								default:
+									m_command = GUI_COMMAND_DEACTIVATE;
+									m_current_state = INVENTORY_DEACTIVATING;
+									break;
+							}
                         }
 
                         m_command = GUI_COMMAND_NONE;
                     }
                 }
+				else if (m_current_state == INVENTORY_AMMO_SELECT)
+				{
+					m_command = GUI_COMMAND_DEACTIVATE;
+					m_current_state = INVENTORY_DEACTIVATING;
+				}
                 else if (m_current_state == INVENTORY_MEDI_EXIT)
                 {
                     if (Character_CompareHealth(player, 0, 1000))
@@ -711,14 +791,15 @@ void gui_InventoryManager::frameItems(float time)
                         }
                         else if (bi->id == ITEM_LARGE_MEDIPACK)
                         {
-                            AnimateItem(bi, 18, 19, time, true);  // Medikit
+                            AnimateItem(bi, 18, 19, time, true);
                         }
                     }
                     else
                     {
-                        Audio_Send(TR_AUDIO_SOUND_NO, TR_AUDIO_EMITTER_ENTITY, player->id); // no lara_no launched with 
-                        m_command = GUI_COMMAND_CLOSE;
-                        m_current_state = INVENTORY_DEACTIVATING;
+						// lara_no launched if lara is full or dead
+                        //Audio_Send(TR_AUDIO_SOUND_NO, TR_AUDIO_EMITTER_ENTITY, player->id);
+                        //m_command = GUI_COMMAND_CLOSE;
+                        //m_current_state = INVENTORY_DEACTIVATING;
                     }
                 }
                 else if (m_current_state == INVENTORY_WEAPON_EXIT)
@@ -733,8 +814,8 @@ void gui_InventoryManager::frameItems(float time)
                     {
                         ///@FIXME: need progressive curved move inverted like in original TR
                         m_current_scale -= time * 10.0f;
-                        m_item_offset_y -= time * 80.0f;
-                        m_item_offset_z -= time * 80.0f;
+                        m_item_offset_y -= time * 90.0f;
+                        m_item_offset_z -= time * 90.0f;
 
                         m_current_scale = (m_current_scale <= 1.0) ? (1.0f) : (m_current_scale);
 
@@ -744,67 +825,65 @@ void gui_InventoryManager::frameItems(float time)
                             m_item_offset_z = 0.0f;
                             m_item_time = 0.0f;
                             
-                            switch (World_GetVersion())
-                            {
-                                case TR_I:
-                                case TR_II:
-                                case TR_III:
-                                    switch (bi->id)
-                                    {
-                                        case ITEM_PASSPORT:
-                                        case ITEM_LOAD:
-                                        case ITEM_SAVE:
-                                        case ITEM_COMPASS:
-                                        case ITEM_VIDEO:
-                                        case ITEM_AUDIO:
-                                        case ITEM_CONTROLS:
-                                            m_command = GUI_COMMAND_CLOSE;
-                                            m_current_state = INVENTORY_IDLE;
-                                            break;
-                                        default:
-                                            m_command = GUI_COMMAND_CLOSE;
-                                            m_current_state = INVENTORY_CLOSING;
-                                            break;
-                                    }
-                                    break;
-
-                                default:
-                                    m_command = GUI_COMMAND_CLOSE;
-                                    m_current_state = INVENTORY_CLOSING;
-                                    break;
-                            }
+							if (ver < TR_IV)
+							{
+								switch (bi->id)
+								{
+									case ITEM_PASSPORT:
+									case ITEM_LOAD:
+									case ITEM_SAVE:
+									case ITEM_COMPASS:
+									case ITEM_VIDEO:
+									case ITEM_AUDIO:
+									case ITEM_CONTROLS:
+										m_command = GUI_COMMAND_CLOSE;
+										m_current_state = INVENTORY_IDLE;
+										break;
+									default:
+										m_command = GUI_COMMAND_CLOSE;
+										m_current_state = INVENTORY_CLOSING;
+										break;
+								}
+							}
+							else
+							{
+								m_command = GUI_COMMAND_CLOSE;
+								m_current_state = INVENTORY_CLOSING;
+							}
                         }
-
                         m_command = GUI_COMMAND_NONE;
                     }
                 }
                 else if(m_current_state == INVENTORY_ACTIVATED)
                 {
-                    if(bi->id == ITEM_PASSPORT)
-                    {
-                        handlePassport(bi, time / 2.0f);
-                    }
-                    else if(bi->id == ITEM_COMPASS)
-                    {
-                        handleCompass(bi, time / 2.0f);
-                    }
-                    else if(bi->id == ITEM_CONTROLS)
-                    {
-                        handleControls(bi, time / 2.0f);
-                    }
-                    else if(m_command == GUI_COMMAND_ACTIVATE)
-                    {
-                        if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
-                        {
-                            m_command = GUI_COMMAND_CLOSE;
-                            m_current_state = INVENTORY_DEACTIVATING;
-                        }
-                        else
-                        {
-                            m_command = GUI_COMMAND_NONE;
-                            m_current_state = INVENTORY_DEACTIVATING;
-                        }
-                    }
+					// changed it to switch for a good view :x
+					switch (bi->id)
+					{
+						case ITEM_PASSPORT:
+							handlePassport(bi, time / 2.0f);
+							break;
+						case ITEM_COMPASS:
+							handleCompass(bi, time / 2.0f);
+							break;
+						case ITEM_CONTROLS:
+							handleControls(bi, time / 2.0f);
+							break;
+					}
+
+					// command_activate separated for instant interaction.
+					if (m_command == GUI_COMMAND_ACTIVATE)
+					{
+						if (0 < Item_Use(m_inventory, bi->id, m_owner_id))
+						{
+							m_command = GUI_COMMAND_CLOSE;
+							m_current_state = INVENTORY_DEACTIVATING;
+						}
+						else
+						{
+							m_command = GUI_COMMAND_NONE;
+							m_current_state = INVENTORY_DEACTIVATING;
+						}
+					}
                 }
             }
             else
@@ -816,13 +895,18 @@ void gui_InventoryManager::frameItems(float time)
         }
         i = next_node;
     }
+
+	if (need_to_close)
+	{
+		m_current_state = INVENTORY_CLOSING;
+	}
 }
 
 void gui_InventoryManager::AnimateItem(base_item_s *bi, int itemMaxFrame, int endFrame, float time, bool isMedikit)
 {
-    restoreItemAngle(time); // just for safe (no rotate item)
+    restoreItemAngle(time); // just for safe (and realistic)
 
-    if (m_item_angle_z == 0.0f) // for safe
+    if (m_item_angle_z == 0.0f) // align to 0
     {
         Item_Frame(bi->bf, time);
 
@@ -1184,8 +1268,8 @@ void gui_InventoryManager::render()
             if(bi && (bi->type == m_current_items_type))
             {
                 Mat4_E_macro(matrix);
-                matrix[12 + 2] = - m_base_ring_radius * 2.0f;
-                ang = (25.0f + m_ring_vertical_angle) * M_PI / 180.0f;
+                matrix[12 + 2] = -m_base_ring_radius * 2.0f;
+                ang = (25.0f + m_ring_vertical_angle) * M_PI / m_ring_vertical_angle_base;
                 Mat4_RotateX_SinCos(matrix, sinf(ang), cosf(ang));
                 ang = (m_ring_angle_step * (-m_selected_item + ring_item_index) + m_ring_angle) * M_PI / 180.0f;
                 Mat4_RotateY_SinCos(matrix, sinf(ang), cosf(ang));
@@ -1252,7 +1336,7 @@ void Gui_DrawInventory(float time)
     {
         BindWhiteTexture();
         qglBindBufferARB(GL_ARRAY_BUFFER_ARB, backgroundBuffer);
-        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)0);
+        qglVertexPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *) 0);
         qglColorPointer(4, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[2]));
         qglTexCoordPointer(2, GL_FLOAT, 8 * sizeof(GLfloat), (void *)sizeof(GLfloat[6]));
         qglDrawArrays(GL_TRIANGLE_FAN, 0, 4);

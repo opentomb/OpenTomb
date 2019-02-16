@@ -3,7 +3,8 @@
 print("level/tr1/level7b.tomb_of_tihocan->level_loaded !");
 
 level_PostLoad = function()
-    -- to do something
+    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
+	rewriteName(player, ITEM_KEY_3, ITEM_NAME_TR1_RUSTY_KEY);
 end;
 
 level_PreLoad = function()
