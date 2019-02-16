@@ -1,6 +1,6 @@
 function tr1_puma_init(id)
     basic_init(id);
-	
+    
     setEntityAnim(id, ANIM_TYPE_BASE, 0, 0);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_PUMA);
@@ -35,9 +35,9 @@ function tr1_puma_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
-	
-	entity_funcs[id].onLoop = nil;
+    
+    entity_funcs[id].onLoop = nil;
 end;

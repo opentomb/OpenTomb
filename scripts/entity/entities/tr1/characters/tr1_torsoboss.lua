@@ -1,6 +1,6 @@
 function tr1_torsoboss_init(id)
     basic_init(id);
-	
+    
     setCharacterParam(id, PARAM_HEALTH, TR1_TORSOBOSS, TR1_TORSOBOSS);
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_SPHERE, nil, nil, 128, nil, nil, 768);     -- base
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_TORSO_BOSS);
@@ -33,7 +33,7 @@ function tr1_torsoboss_init(id)
             local a = getEntityAnim(object_id, ANIM_TYPE_BASE);
             if(a ~= 13) then
                 setEntityCollision(object_id, false);
-				setCharacterTarget(activator_id, nil);
+                setCharacterTarget(activator_id, nil);
                 setEntityAnim(object_id, ANIM_TYPE_BASE, 13, 0);
             end;
         end;

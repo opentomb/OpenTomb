@@ -167,10 +167,10 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
         case TR_STATE_LARA_UNDERWATER_INERTIA:
         case TR_STATE_LARA_UNDERWATER_TURNAROUND:
         case TR_STATE_LARA_UNDERWATER_DIVING:
-		case TR_STATE_LARA_WADE_FORWARD:
-		case TR_STATE_LARA_ONWATER_BACK:
-		case TR_STATE_LARA_ONWATER_FORWARD:
-		case TR_STATE_LARA_ONWATER_STOP:
+        case TR_STATE_LARA_WADE_FORWARD:
+        case TR_STATE_LARA_ONWATER_BACK:
+        case TR_STATE_LARA_ONWATER_FORWARD:
+        case TR_STATE_LARA_ONWATER_STOP:
 
             if(ver < TR_II)
             {
@@ -3229,76 +3229,76 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
     if (ss_anim->model->animation_count == 4)
     {
         const float bone_dir[] = { 0.0f, 1.0f, 0.0f };
-		uint16_t targeted_bone_start = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
-		uint16_t targeted_bone_end = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_end) : (ent->character->bone_r_hand_end);
+        uint16_t targeted_bone_start = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_start) : (ent->character->bone_r_hand_start);
+        uint16_t targeted_bone_end = (ss_anim->type == ANIM_TYPE_WEAPON_LH) ? (ent->character->bone_l_hand_end) : (ent->character->bone_r_hand_end);
         entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
         ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool do_aim = ent->character->cmd.action;
-		float target_pos[3];
-		int inc_state = 0;
+        float target_pos[3];
+        int inc_state = 0;
         int32_t ver = World_GetVersion();
-		weapons_s weapon;
+        weapons_s weapon;
 
-		if (target)
-		{
-			float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.224f };
-			float target_pos[3];
+        if (target)
+        {
+            float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.224f };
+            float target_pos[3];
 
-			if (target->character)
-			{
-				float* v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
-				Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
-			}
-			else
-			{
-				vec3_copy(target_pos, target->obb->centre);
-			}
+            if (target->character)
+            {
+                float* v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
+                Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(target_pos, target->obb->centre);
+            }
 
-			if (ss_anim->type == ANIM_TYPE_WEAPON_LH)
-			{
-				vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
-			}
-			else
-			{
-				vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
-			}
+            if (ss_anim->type == ANIM_TYPE_WEAPON_LH)
+            {
+                vec3_RotateZ(targeting_limit, targeting_limit, 40.0f);
+            }
+            else
+            {
+                vec3_RotateZ(targeting_limit, targeting_limit, -40.0f);
+            }
 
-			SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
-			SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
+            SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
+            SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
 
-			if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
-			{
-				target = NULL;
-			}
+            if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
+            {
+                target = NULL;
+            }
 
-			do_aim |= (target != NULL);
-		}
+            do_aim |= (target != NULL);
+        }
 
         b_tag->is_targeted = 0x00;
 
-		switch (CurrentWeaponToItemID(ss_anim))
-		{
-			case ITEM_PISTOL:
-				weapon = getPistol();
-				break;
-			case ITEM_AUTOMAGS:
-				weapon = getAutomags();
-				break;
-			case ITEM_DESERTEAGLE:
-				weapon = getDesertEagle();
-				break;
-			case ITEM_MAGNUMS:
-				weapon = getMagnum();
-				break;
-			case ITEM_REVOLVER:
-				weapon = getRevolver();
-				break;
-			case ITEM_UZIS:
-				weapon = getUzi();
-				break;
-		}
+        switch (CurrentWeaponToItemID(ss_anim))
+        {
+            case ITEM_PISTOL:
+                weapon = getPistol();
+                break;
+            case ITEM_AUTOMAGS:
+                weapon = getAutomags();
+                break;
+            case ITEM_DESERTEAGLE:
+                weapon = getDesertEagle();
+                break;
+            case ITEM_MAGNUMS:
+                weapon = getMagnum();
+                break;
+            case ITEM_REVOLVER:
+                weapon = getRevolver();
+                break;
+            case ITEM_UZIS:
+                weapon = getUzi();
+                break;
+        }
 
-		SetCurrentWeaponAnimation(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim, targeted_bone_start, targeted_bone_end);
+        SetCurrentWeaponAnimation(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim, targeted_bone_start, targeted_bone_end);
     }
 
     return ss_anim->frame_changing_state;
@@ -3306,9 +3306,9 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
 
 int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animation_s *ss_anim, float time)
 {
-	if (ss_anim->model->animation_count > 4)
-	{
-		/*anims (TR_I - TR_V):
+    if (ss_anim->model->animation_count > 4)
+    {
+        /*anims (TR_I - TR_V):
         *shotgun, rifles, crossbow, harpoon, launchers (2 handed weapons)*/
 
         /*static float d_from[3] = { 0.0f, 0.0f, 0.0f };
@@ -3316,109 +3316,109 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         static float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
         renderer.debugDrawer->DrawLine(d_from, d_to, color, color);*/
 
-		entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
-		ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
-		bool do_aim = ent->character->cmd.action;
-		float target_pos[3];
-		int inc_state = NULL;
-		int32_t ver = World_GetVersion();
-		// Sound Weapon
-		weapons_s weapon;
+        entity_p target = (ent->character->target_id != ENTITY_ID_NONE) ? World_GetEntityByID(ent->character->target_id) : (NULL);
+        ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
+        bool do_aim = ent->character->cmd.action;
+        float target_pos[3];
+        int inc_state = NULL;
+        int32_t ver = World_GetVersion();
+        // Sound Weapon
+        weapons_s weapon;
 
-		// init weapon
-		switch (CurrentWeaponToItemID(ss_anim))
-		{
-			case ITEM_SHOTGUN:
-				weapon = getShotgun();
-				break;
-			case ITEM_MP5:
-				weapon = getMP5();
-				break;
-			case ITEM_M16:
-				weapon = getM16();
-				break;
-			case ITEM_CROSSBOW:
-				weapon = getCrossbowGun();
-				break;
-			case ITEM_GRENADEGUN:
-				weapon = getGrenadeGun();
-				break;
-			case ITEM_HARPOONGUN:
-				weapon = getHarpoonGun();
-				break;
-			case ITEM_ROCKETGUN:
-				weapon = getRocketGun();
-				break;
-			case ITEM_GRAPPLEGUN:
-				weapon = getGrapplinGun();
-				break;
-		}
+        // init weapon
+        switch (CurrentWeaponToItemID(ss_anim))
+        {
+            case ITEM_SHOTGUN:
+                weapon = getShotgun();
+                break;
+            case ITEM_MP5:
+                weapon = getMP5();
+                break;
+            case ITEM_M16:
+                weapon = getM16();
+                break;
+            case ITEM_CROSSBOW:
+                weapon = getCrossbowGun();
+                break;
+            case ITEM_GRENADEGUN:
+                weapon = getGrenadeGun();
+                break;
+            case ITEM_HARPOONGUN:
+                weapon = getHarpoonGun();
+                break;
+            case ITEM_ROCKETGUN:
+                weapon = getRocketGun();
+                break;
+            case ITEM_GRAPPLEGUN:
+                weapon = getGrapplinGun();
+                break;
+        }
 
-		if (target)
-		{
-			const float bone_dir[3] = { 0.0f, 1.0f, 0.0f };
-			const float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.624f };
+        if (target)
+        {
+            const float bone_dir[3] = { 0.0f, 1.0f, 0.0f };
+            const float targeting_limit[4] = { 0.0f, 1.0f, 0.0f, 0.624f };
 
-			if (target->character)
-			{
-				float* v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
-				Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
-			}
-			else
-			{
-				vec3_copy(target_pos, target->obb->centre);
-			}
+            if (target->character)
+            {
+                float* v = target->bf->bone_tags[target->character->bone_head].current_transform + 12;
+                Mat4_vec3_mul_macro(target_pos, target->transform.M4x4, v);
+            }
+            else
+            {
+                vec3_copy(target_pos, target->obb->centre);
+            }
 
-			SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
-			SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
+            SSBoneFrame_SetTarget(b_tag, target_pos, bone_dir);
+            SSBoneFrame_SetTargetingLimit(b_tag, targeting_limit);
 
-			if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
-			{
-				target = NULL;
-			}
+            if (!SSBoneFrame_CheckTargetBoneLimit(ent->bf, b_tag, target_pos))
+            {
+                target = NULL;
+            }
 
-			do_aim |= (target != NULL);
-		}
+            do_aim |= (target != NULL);
+        }
 
-		b_tag->is_targeted = 0x00;
+        b_tag->is_targeted = 0x00;
 
-		// animation
-		switch (CurrentWeaponToItemID(ss_anim))
-		{
-			case ITEM_SHOTGUN:
-				ShotgunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_M16:
-				M16Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_MP5:
-				MP5Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_GRENADEGUN:
-				GrenadeGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_ROCKETGUN:
-				RocketGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_HARPOONGUN:
-				HarpoonAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_CROSSBOW:
-				CrossbowAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-			case ITEM_GRAPPLEGUN:
-				GrapplinGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
-				break;
-		}
-	}
-	
+        // animation
+        switch (CurrentWeaponToItemID(ss_anim))
+        {
+            case ITEM_SHOTGUN:
+                ShotgunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_M16:
+                M16Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_MP5:
+                MP5Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_GRENADEGUN:
+                GrenadeGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_ROCKETGUN:
+                RocketGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_HARPOONGUN:
+                HarpoonAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_CROSSBOW:
+                CrossbowAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+            case ITEM_GRAPPLEGUN:
+                GrapplinGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                break;
+        }
+    }
+    
     return ss_anim->frame_changing_state;
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)
 {
     skeletal_model_p sm = World_GetModelByID(weapon_model);
-	int32_t ver = World_GetVersion();
+    int32_t ver = World_GetVersion();
 
     if(weapon_state < 0)
     {
@@ -3426,13 +3426,13 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
         {
             switch(it->type)
             {
-				case ANIM_TYPE_WEAPON_RH:
-				case ANIM_TYPE_WEAPON_LH:
-					it->onFrame = StateControl_LaraDoOneHandWeaponFrame;
-					break;
-				case ANIM_TYPE_WEAPON_TH:
-					it->onFrame = StateControl_LaraDoTwoHandWeaponFrame;
-					break;
+                case ANIM_TYPE_WEAPON_RH:
+                case ANIM_TYPE_WEAPON_LH:
+                    it->onFrame = StateControl_LaraDoOneHandWeaponFrame;
+                    break;
+                case ANIM_TYPE_WEAPON_TH:
+                    it->onFrame = StateControl_LaraDoTwoHandWeaponFrame;
+                    break;
             }
         }
         return;
@@ -3459,87 +3459,87 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
         {
             switch(it->type)
             {
-				case ANIM_TYPE_WEAPON_RH:
-					anim_rh = it;
-					break;
-				case ANIM_TYPE_WEAPON_LH:
-					anim_lh = it;
-					break;
-				case ANIM_TYPE_WEAPON_TH:
-					anim_th = it;
-					break;
+                case ANIM_TYPE_WEAPON_RH:
+                    anim_rh = it;
+                    break;
+                case ANIM_TYPE_WEAPON_LH:
+                    anim_lh = it;
+                    break;
+                case ANIM_TYPE_WEAPON_TH:
+                    anim_th = it;
+                    break;
             }
         }
-		
-		// hide weapon when not used !
-		if (ent->character->state.weapon_ready && (!weapon_state || (ent->character->weapon_id_req != ent->character->weapon_id)))
-		{
-			// left hand and right hand weapon
-			if ((anim_lh && anim_lh->enabled) || (anim_rh && anim_rh->enabled))
-			{
-				if ((anim_lh->current_animation == 0) || (anim_rh->current_animation == 0))
-				{
-					ent->character->state.weapon_ready = 0x00;
-					return;
-				}
-			}
-			// two hand
-			else if (anim_th && anim_th->enabled)
-			{
-				switch (anim_th->current_animation)
-				{
-					case 1:   // grenadegun
-						if (ver < TR_III)
-						{
-							if (anim_th->model->id == TR2_MODEL_GRENADEGUN)
-							{
-								ent->character->state.weapon_ready = 0x00;
-								return;
-							}
-						}
-						else if (ver < TR_IV)
-						{
-							if (anim_th->model->id == TR3_MODEL_GRENADEGUN)
-							{
-								ent->character->state.weapon_ready = 0x00;
-								return;
-							}
-						}
-						else if (ver <= TR_V)
-						{
-							if (anim_th->model->id == TR4C_MODEL_GRENADEGUN)
-							{
-								ent->character->state.weapon_ready = 0x00;
-								return;
-							}
-						}
-						break;
-					case 6:    // harpoon when in water
-						if (ver < TR_III)
-						{
-							if (anim_th->model->id == TR2_MODEL_HARPOONGUN)
-							{
-								ent->character->state.weapon_ready = 0x00;
-								return;
-							}
-						}
-						else if (ver < TR_IV)
-						{
-							if (anim_th->model->id == TR3_MODEL_HARPOONGUN)
-							{
-								ent->character->state.weapon_ready = 0x00;
-								return;
-							}
-						}
-						break;
-					// default can work too ?
-					case 0:   // other
-						ent->character->state.weapon_ready = 0x00;
-						return;
-				}
-			}
-		}
-		
+        
+        // hide weapon when not used !
+        if (ent->character->state.weapon_ready && (!weapon_state || (ent->character->weapon_id_req != ent->character->weapon_id)))
+        {
+            // left hand and right hand weapon
+            if ((anim_lh && anim_lh->enabled) || (anim_rh && anim_rh->enabled))
+            {
+                if ((anim_lh->current_animation == 0) || (anim_rh->current_animation == 0))
+                {
+                    ent->character->state.weapon_ready = 0x00;
+                    return;
+                }
+            }
+            // two hand
+            else if (anim_th && anim_th->enabled)
+            {
+                switch (anim_th->current_animation)
+                {
+                    case 1:   // grenadegun
+                        if (ver < TR_III)
+                        {
+                            if (anim_th->model->id == TR2_MODEL_GRENADEGUN)
+                            {
+                                ent->character->state.weapon_ready = 0x00;
+                                return;
+                            }
+                        }
+                        else if (ver < TR_IV)
+                        {
+                            if (anim_th->model->id == TR3_MODEL_GRENADEGUN)
+                            {
+                                ent->character->state.weapon_ready = 0x00;
+                                return;
+                            }
+                        }
+                        else if (ver <= TR_V)
+                        {
+                            if (anim_th->model->id == TR4C_MODEL_GRENADEGUN)
+                            {
+                                ent->character->state.weapon_ready = 0x00;
+                                return;
+                            }
+                        }
+                        break;
+                    case 6:    // harpoon when in water
+                        if (ver < TR_III)
+                        {
+                            if (anim_th->model->id == TR2_MODEL_HARPOONGUN)
+                            {
+                                ent->character->state.weapon_ready = 0x00;
+                                return;
+                            }
+                        }
+                        else if (ver < TR_IV)
+                        {
+                            if (anim_th->model->id == TR3_MODEL_HARPOONGUN)
+                            {
+                                ent->character->state.weapon_ready = 0x00;
+                                return;
+                            }
+                        }
+                        break;
+                    // default can work too ?
+                    case 0:   // other
+                        ent->character->state.weapon_ready = 0x00;
+                        return;
+                }
+            }
+        }
+        
         if((weapon_state < 2) && (ent->character->state.weapon_ready ||
            ((anim_th && anim_th->enabled) ||
             (anim_rh && anim_rh->enabled) ||
@@ -3594,44 +3594,44 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             if(!anim_th)
             {
                 anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_TH);
-				
-				if (ver < TR_III)
-				{
-					if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
-					{
-						anim_th->current_animation = anim_th->prev_animation = 0;
-					}
-					else
-					{
-						anim_th->current_animation = anim_th->prev_animation = 1;
-					}
-				}
-				else if (ver < TR_IV)
-				{
-					if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
-					{
-						anim_th->current_animation = anim_th->prev_animation = 0;
-					}
-					else
-					{
-						anim_th->current_animation = anim_th->prev_animation = 1;
-					}
-				}
-				else if (ver <= TR_V)
-				{
-					if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
-					{
-						anim_th->current_animation = anim_th->prev_animation = 0;
-					}
-					else
-					{
-						anim_th->current_animation = anim_th->prev_animation = 1;
-					}
-				}
-				else
-				{
-					anim_th->current_animation = anim_th->prev_animation = 1;
-				}
+                
+                if (ver < TR_III)
+                {
+                    if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 0;
+                    }
+                    else
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 1;
+                    }
+                }
+                else if (ver < TR_IV)
+                {
+                    if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 0;
+                    }
+                    else
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 1;
+                    }
+                }
+                else if (ver <= TR_V)
+                {
+                    if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 0;
+                    }
+                    else
+                    {
+                        anim_th->current_animation = anim_th->prev_animation = 1;
+                    }
+                }
+                else
+                {
+                    anim_th->current_animation = anim_th->prev_animation = 1;
+                }
                 anim_th->enabled = 0x00;
             }
             anim_th->model = sm;
@@ -3643,44 +3643,44 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             {
                 SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
                 ent->character->state.weapon_ready = (weapon_state) ? (0x01) : (0x00);
-				
-				if (ver < TR_III)
-				{
-					if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
-					{
-						Anim_SetAnimation(anim_th, 0, 0);
-					}
-					else
-					{
-						Anim_SetAnimation(anim_th, 1, 0);
-					}
-				}
-				else if (ver < TR_IV)
-				{
-					if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
-					{
-						Anim_SetAnimation(anim_th, 0, 0);
-					}
-					else
-					{
-						Anim_SetAnimation(anim_th, 1, 0);
-					}
-				}
-				else if (ver <= TR_V)
-				{
-					if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
-					{
-						Anim_SetAnimation(anim_th, 0, 0);
-					}
-					else
-					{
-						Anim_SetAnimation(anim_th, 1, 0);
-					}
-				}
-				else
-				{
-					Anim_SetAnimation(anim_th, 1, 0);
-				}
+                
+                if (ver < TR_III)
+                {
+                    if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
+                    {
+                        Anim_SetAnimation(anim_th, 0, 0);
+                    }
+                    else
+                    {
+                        Anim_SetAnimation(anim_th, 1, 0);
+                    }
+                }
+                else if (ver < TR_IV)
+                {
+                    if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
+                    {
+                        Anim_SetAnimation(anim_th, 0, 0);
+                    }
+                    else
+                    {
+                        Anim_SetAnimation(anim_th, 1, 0);
+                    }
+                }
+                else if (ver <= TR_V)
+                {
+                    if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
+                    {
+                        Anim_SetAnimation(anim_th, 0, 0);
+                    }
+                    else
+                    {
+                        Anim_SetAnimation(anim_th, 1, 0);
+                    }
+                }
+                else
+                {
+                    Anim_SetAnimation(anim_th, 1, 0);
+                }
             }
         }
     }

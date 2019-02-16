@@ -7,9 +7,9 @@ level_PostLoad = function()
     sectorAddTrigger(62, 9, 3, 0, TR_FD_TRIGTYPE_PICKUP, 0x1F, 0 , 0);          -- (room_id, index_x, index_y, function, sub_function, mask, once, timer)" 
     sectorAddTriggerCommand(62, 9, 3, TR_FD_TRIGFUNC_OBJECT, 0x49, 0);
     sectorAddTriggerCommand(62, 9, 3, TR_FD_TRIGFUNC_ENDLEVEL, 0, 0);           -- WORKAROUND: play cutscene first!
-	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
-	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_ANKH);
-	rewriteName(player, ITEM_PUZZLE_2, ITEM_NAME_TR1_PUZZLE_SCARAB);
+    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
+    rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_ANKH);
+    rewriteName(player, ITEM_PUZZLE_2, ITEM_NAME_TR1_PUZZLE_SCARAB);
 end;
 
 level_PreLoad = function()

@@ -6,9 +6,9 @@ level_PostLoad = function()
     anim_boat_init(2);
     anim_rotor_init(12);
     natla_cabin_init(84);
-	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_KEY_NATLA_MINE);
-	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_FUSE);
-	rewriteName(player, ITEM_PUZZLE_2, ITEM_NAME_TR1_PUZZLE_PYRAMID);
+    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_KEY_NATLA_MINE);
+    rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_FUSE);
+    rewriteName(player, ITEM_PUZZLE_2, ITEM_NAME_TR1_PUZZLE_PYRAMID);
 end;
 
 level_PreLoad = function()

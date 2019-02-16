@@ -46,7 +46,7 @@ function tr1_skateboardist_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
 

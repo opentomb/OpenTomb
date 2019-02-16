@@ -2,7 +2,7 @@ local level = getLevel();
 
 function tr1_mummy_init(id)
     tr1_winged_mutant_init(id); -- tr1_winged_mutant already have entitybone defined !
-	
+    
     setEntityBoneVisibility(id, 15, false);      -- wing
     setEntityBoneVisibility(id, 16, false);
     setEntityBoneVisibility(id, 17, false);

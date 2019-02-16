@@ -6,7 +6,7 @@ level_PostLoad = function()
     moveEntityLocal(player, 0, 0, 256);
     setEntityMoveType(player, MOVE_UNDERWATER);
     setEntityAnim(player, ANIM_TYPE_BASE, 108, 0);
-	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_GOLD_BAR);
+    rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_GOLD_BAR);
 end;
 
 level_PreLoad = function()

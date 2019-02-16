@@ -149,80 +149,80 @@
 // all weapon id
 enum weapon_item_e
 {
-	TYPE_NULL = 0,
-	TYPE_PISTOLS = 10,
-	TYPE_SHOTGUN = 11,
-	TYPE_MAGNUMS = 12,
-	TYPE_UZIS = 16,
-	TYPE_AUTOMAGS = 13,
-	TYPE_DESERTEAGLE = 14,
-	TYPE_REVOLVER = 15,
-	TYPE_M16 = 17,
-	TYPE_MP5 = 18,
-	TYPE_ROCKETGUN = 20,
-	TYPE_HARPOONGUN = 21,
-	TYPE_GRENADEGUN = 19,
-	TYPE_CROSSBOWGUN = 22,
-	TYPE_GRAPPLINGUN = 23
+    TYPE_NULL = 0,
+    TYPE_PISTOLS = 10,
+    TYPE_SHOTGUN = 11,
+    TYPE_MAGNUMS = 12,
+    TYPE_UZIS = 16,
+    TYPE_AUTOMAGS = 13,
+    TYPE_DESERTEAGLE = 14,
+    TYPE_REVOLVER = 15,
+    TYPE_M16 = 17,
+    TYPE_MP5 = 18,
+    TYPE_ROCKETGUN = 20,
+    TYPE_HARPOONGUN = 21,
+    TYPE_GRENADEGUN = 19,
+    TYPE_CROSSBOWGUN = 22,
+    TYPE_GRAPPLINGUN = 23
 };
 
 // all weapon ammo
 enum weapon_ammo_e
 {
-	AMMO_EMPTY = 0,
-	AMMO_UNLIMITED = -1,
-	AMMO_SHOTGUN = 28,                                // TR1 to TR3
-	AMMO_SHOTGUN_NORMAL = 29,                         // TR4+
-	AMMO_SHOTGUN_WIDE = 30,
-	AMMO_MAGNUM = 31,
-	AMMO_UZI = 35,
-	AMMO_AUTOMAGS = 33,
-	AMMO_DESERTEAGLE = 32,
-	AMMO_REVOLVER = 34,
-	AMMO_M16 = 36,
-	AMMO_MP5 = 37,
-	AMMO_ROCKETGUN = 42,
-	AMMO_HARPOON = 43,
-	AMMO_GRENADE = 39,                                 // TR1 to TR3
-	AMMO_GRENADE_NORMAL = 39,                          // TR4+
-	AMMO_GRENADE_SUPER = 40,
-	AMMO_GRENADE_FLASH = 41,
-	AMMO_CROSSBOW_NORMAL = 44,
-	AMMO_CROSSBOW_SUPER = 46,
-	AMMO_CROSSBOW_POISON = 45,
-	AMMO_GRAPPLIN = 47
+    AMMO_EMPTY = 0,
+    AMMO_UNLIMITED = -1,
+    AMMO_SHOTGUN = 28,                                // TR1 to TR3
+    AMMO_SHOTGUN_NORMAL = 29,                         // TR4+
+    AMMO_SHOTGUN_WIDE = 30,
+    AMMO_MAGNUM = 31,
+    AMMO_UZI = 35,
+    AMMO_AUTOMAGS = 33,
+    AMMO_DESERTEAGLE = 32,
+    AMMO_REVOLVER = 34,
+    AMMO_M16 = 36,
+    AMMO_MP5 = 37,
+    AMMO_ROCKETGUN = 42,
+    AMMO_HARPOON = 43,
+    AMMO_GRENADE = 39,                                 // TR1 to TR3
+    AMMO_GRENADE_NORMAL = 39,                          // TR4+
+    AMMO_GRENADE_SUPER = 40,
+    AMMO_GRENADE_FLASH = 41,
+    AMMO_CROSSBOW_NORMAL = 44,
+    AMMO_CROSSBOW_SUPER = 46,
+    AMMO_CROSSBOW_POISON = 45,
+    AMMO_GRAPPLIN = 47
 };
 
 // all weapon sound
 enum weapon_sound_e
 {
-	SND_NULL = -1,
-	SND_UNIVERSAL_RELOAD = TR_AUDIO_SOUND_RELOAD,
-	SND_UNIVERSAL_DRAW = TR_AUDIO_SOUND_HOLSTEROUT,
-	SND_UNIVERSAL_HIDE = TR_AUDIO_SOUND_HOLSTERIN,
-	SND_PISTOL = TR_AUDIO_SOUND_SHOTPISTOLS,
-	SND_SHOTGUN = TR_AUDIO_SOUND_SHOTSHOTGUN,
-	SND_UZI = TR_AUDIO_SOUND_SHOTUZI,
-	SND_UZI_STOP = TR_AUDIO_SOUND_SHOTUZI_END,
-	SND_MAGNUM = TR_AUDIO_SOUND_SHOTMAGNUM,
-	SND_AUTOMAGS = TR_AUDIO_SOUND_SHOTAUTOMAGS,
-	SND_DESERTEAGLE = TR_AUDIO_SOUND_SHOTDESERTEAGLE,
-	SND_REVOLVER = TR_AUDIO_SOUND_SHOTREVOLVER,
-	SND_M16 = TR_AUDIO_SOUND_SHOTM16,
-	SND_M16_STOP = TR_AUDIO_SOUND_SHOTM16_END,
-	SND_MP5 = TR_AUDIO_SOUND_SHOTMP5,
-	SND_ROCKETGUN = TR_AUDIO_SOUND_SHOTROCKETGUN,
-	SND_ROCKETGUN_RELOAD = TR_AUDIO_SOUND_RELOADROCKETGUN,
-	SND_HARPOON_LAND = TR_AUDIO_SOUND_SHOTHARPOON_G,
-	SND_HARPOON_WATER = TR_AUDIO_SOUND_SHOTHARPOON_W,
-	SND_HARPOON_RELOAD_LAND = TR_AUDIO_SOUND_RELOADHARPOON_G,
-	SND_HARPOON_RELOAD_WATER = TR_AUDIO_SOUND_RELOADHARPOON_W,
-	SND_GRENADEGUN = TR_AUDIO_SOUND_SHOTGRENADEGUN,
-	SND_TR2_3_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN,
-	SND_TR2_3_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN_LOCK,
-	SND_TR4_C_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN,
-	SND_TR4_C_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN_LOCK,
-	SND_CROSSBOWGUN = TR_AUDIO_SOUND_SHOTCROSSBOW
+    SND_NULL = -1,
+    SND_UNIVERSAL_RELOAD = TR_AUDIO_SOUND_RELOAD,
+    SND_UNIVERSAL_DRAW = TR_AUDIO_SOUND_HOLSTEROUT,
+    SND_UNIVERSAL_HIDE = TR_AUDIO_SOUND_HOLSTERIN,
+    SND_PISTOL = TR_AUDIO_SOUND_SHOTPISTOLS,
+    SND_SHOTGUN = TR_AUDIO_SOUND_SHOTSHOTGUN,
+    SND_UZI = TR_AUDIO_SOUND_SHOTUZI,
+    SND_UZI_STOP = TR_AUDIO_SOUND_SHOTUZI_END,
+    SND_MAGNUM = TR_AUDIO_SOUND_SHOTMAGNUM,
+    SND_AUTOMAGS = TR_AUDIO_SOUND_SHOTAUTOMAGS,
+    SND_DESERTEAGLE = TR_AUDIO_SOUND_SHOTDESERTEAGLE,
+    SND_REVOLVER = TR_AUDIO_SOUND_SHOTREVOLVER,
+    SND_M16 = TR_AUDIO_SOUND_SHOTM16,
+    SND_M16_STOP = TR_AUDIO_SOUND_SHOTM16_END,
+    SND_MP5 = TR_AUDIO_SOUND_SHOTMP5,
+    SND_ROCKETGUN = TR_AUDIO_SOUND_SHOTROCKETGUN,
+    SND_ROCKETGUN_RELOAD = TR_AUDIO_SOUND_RELOADROCKETGUN,
+    SND_HARPOON_LAND = TR_AUDIO_SOUND_SHOTHARPOON_G,
+    SND_HARPOON_WATER = TR_AUDIO_SOUND_SHOTHARPOON_W,
+    SND_HARPOON_RELOAD_LAND = TR_AUDIO_SOUND_RELOADHARPOON_G,
+    SND_HARPOON_RELOAD_WATER = TR_AUDIO_SOUND_RELOADHARPOON_W,
+    SND_GRENADEGUN = TR_AUDIO_SOUND_SHOTGRENADEGUN,
+    SND_TR2_3_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN,
+    SND_TR2_3_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN_LOCK,
+    SND_TR4_C_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN,
+    SND_TR4_C_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN_LOCK,
+    SND_CROSSBOWGUN = TR_AUDIO_SOUND_SHOTCROSSBOW
 };
 
 #define RATE_LOWEST 0.1f
@@ -259,29 +259,29 @@ enum weapon_sound_e
 
 struct weapons_s
 {
-	uint32_t item_id;
-	int ammo_counter;
-	int shot;
-	int draw;
-	int hide;
-	int echo;
-	int reload_1;     // classic reload
-	int reload_2;     // grenadegun reload lock
-	int damage = NULL;
-	int damage_water = NULL;
-	int damage_explosion = NULL;
-	float firerate;
-	int bullet;
-	float range;
-	uint32_t current_ammo;
-	int32_t version;                  // tomb raider version (not used)
-	bool haveGravity;                 // for grenade and harpoon (affected in water ?)
-	bool dealDmgAtImpact;             // for projectile ammo (and crossbow poison ?), if false bullet is normal
-	bool onWater;                     // weapon is in water ? (for sound or gravity check)
-	bool alternateAim;                // if weapon have an alternate aim (can change firerate) !
-	float muzzle_duration;              // time of the muzzle will rest in the world
-	float muzzle_pos[3];                // muzzle_pos([0] = x, [1] = y, [2] = z) (need float ?)
-	float muzzle_orient[3];             // muzzle_orient([0] = x, [1] = y, [2] = z) (need float ?)
+    uint32_t item_id;
+    int ammo_counter;
+    int shot;
+    int draw;
+    int hide;
+    int echo;
+    int reload_1;     // classic reload
+    int reload_2;     // grenadegun reload lock
+    int damage = NULL;
+    int damage_water = NULL;
+    int damage_explosion = NULL;
+    float firerate;
+    int bullet;
+    float range;
+    uint32_t current_ammo;
+    int32_t version;                  // tomb raider version (not used)
+    bool haveGravity;                 // for grenade and harpoon (affected in water ?)
+    bool dealDmgAtImpact;             // for projectile ammo (and crossbow poison ?), if false bullet is normal
+    bool onWater;                     // weapon is in water ? (for sound or gravity check)
+    bool alternateAim;                // if weapon have an alternate aim (can change firerate) !
+    float muzzle_duration;              // time of the muzzle will rest in the world
+    float muzzle_pos[3];                // muzzle_pos([0] = x, [1] = y, [2] = z) (need float ?)
+    float muzzle_orient[3];             // muzzle_orient([0] = x, [1] = y, [2] = z) (need float ?)
 };
 
 // init all weapons

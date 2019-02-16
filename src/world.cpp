@@ -5,9 +5,9 @@
 #include <SDL2/SDL_rwops.h>
 
 extern "C" {
-	#include <lua.h>
-	#include <lualib.h>
-	#include <lauxlib.h>
+    #include <lua.h>
+    #include <lualib.h>
+    #include <lauxlib.h>
 }
 
 #include "core/avl.h"
@@ -270,10 +270,10 @@ void World_Open(const char *path, int trv)
         global_world.tex_atlas = NULL;
     }
 
-	Gui_DrawLoadScreen(990);
-	weapon_init();
+    Gui_DrawLoadScreen(990);
+    weapon_init();
 
-	Gui_DrawLoadScreen(1000);
+    Gui_DrawLoadScreen(1000);
     delete tr;
 }
 

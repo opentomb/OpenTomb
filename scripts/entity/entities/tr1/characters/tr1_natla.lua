@@ -1,6 +1,6 @@
 function tr1_natla_init(id)
     basic_init(id);
-	
+    
     setCharacterParam(id, PARAM_HEALTH, TR1_NATLA, TR1_NATLA);
     setEntityGhostCollisionShape(id,  0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id,  1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -22,7 +22,7 @@ function tr1_natla_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil); -- need it ? (onLoop add full life after dead)
+            setCharacterTarget(activator_id, nil); -- need it ? (onLoop add full life after dead)
         end;
     end;
 

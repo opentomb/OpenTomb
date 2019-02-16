@@ -117,8 +117,8 @@ function setLaraWeaponDamage(id, object_id)
         elseif(weapon == TR2_MODEL_M16) then
             setCharacterParam(object_id, PARAM_HIT_DAMAGE, 21, 21);  -- deal more dmg but medium firerate
         elseif(weapon == TR2_MODEL_GRENADEGUN) then
-			setCharacterParam(object_id, PARAM_HIT_DAMAGE, 20, 20);
-		end;
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 20, 20);
+        end;
     -- Tomb Raider 3
     elseif(ver < TR_IV) then
         if(weapon == TR3_MODEL_DESERTEAGLE) then
@@ -132,8 +132,8 @@ function setLaraWeaponDamage(id, object_id)
         elseif(weapon == TR3_MODEL_HARPOONGUN) then
             setCharacterParam(object_id, PARAM_HIT_DAMAGE, 40, 40);
         elseif(weapon == TR3_MODEL_GRENADEGUN) then
-			setCharacterParam(object_id, PARAM_HIT_DAMAGE, 20, 20);
-		end;
+            setCharacterParam(object_id, PARAM_HIT_DAMAGE, 20, 20);
+        end;
     -- Tomb Raider 4 or Tomb Raider 5
     elseif(ver < TR_V or ver == TR_V) then
         if(weapon == TR4C_MODEL_UZI) then
@@ -142,7 +142,7 @@ function setLaraWeaponDamage(id, object_id)
             setCharacterParam(object_id, PARAM_HIT_DAMAGE, 5, 5);  -- 3 dmg for explosives
         elseif(weapon == TR4C_MODEL_GRENADEGUN) then
             setCharacterParam(object_id, PARAM_HIT_DAMAGE, 20, 20);
-		elseif(weapon == TR4C_MODEL_REVOLVER) then    -- can be revolver or desert eagle
+        elseif(weapon == TR4C_MODEL_REVOLVER) then    -- can be revolver or desert eagle
             setCharacterParam(object_id, PARAM_HIT_DAMAGE, 21, 21); -- same for the 2 guns in the game
         end;
     end;

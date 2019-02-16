@@ -3,7 +3,7 @@
 print("level/tr1/level3b.tomb_of_qualopec->level_loaded !");
 
 level_PostLoad = function()
-	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_COG);
+    rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_COG);
 end;
 
 level_PreLoad = function()
@@ -42,7 +42,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         return ENTITY_TRIGGERING_NOT_READY;
     end;
 
-	entity_funcs[id].onDeactivate = function(object_id, activator_id)
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) ~= 0) then
             setEntityActivity(object_id, true);
             playSound(64, object_id);

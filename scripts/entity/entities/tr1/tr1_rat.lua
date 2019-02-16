@@ -1,7 +1,7 @@
 -- floor & water
 function tr1_rat_init(id)
     basic_init(id);
-	
+    
     setCharacterParam(id, PARAM_HEALTH, TR1_RAT, TR1_RAT);
     setEntityGhostCollisionShape(id, 0,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
     setEntityGhostCollisionShape(id, 1,  COLLISION_SHAPE_BOX, nil, nil, nil, nil, nil, nil);
@@ -18,7 +18,7 @@ function tr1_rat_init(id)
             return "tr1_rat_init(" .. id .. ");\n";
         end;
     end;
-	
+    
     entity_funcs[id].onAttack = function(object_id, activator_id)
         local bone = entity_funcs[object_id].col_part_from;
         if(bone == 2 or bone == 3) then
@@ -34,9 +34,9 @@ function tr1_rat_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
-	
-	entity_funcs[id].onLoop = nil;
+    
+    entity_funcs[id].onLoop = nil;
 end;

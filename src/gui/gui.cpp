@@ -454,11 +454,11 @@ void Gui_DrawBars()
             Bar[BAR_HEALTH].Forced = true;
         }
 
-		if (main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
-			main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
-		{
-			Bar[BAR_HEALTH].Forced = true;
-		}
+        if (main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
+            main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
+        {
+            Bar[BAR_HEALTH].Forced = true;
+        }
 
         Bar[BAR_AIR].Show    (Character_GetParam(player, PARAM_AIR    ));
         Bar[BAR_STAMINA].Show(Character_GetParam(player, PARAM_STAMINA));
@@ -563,7 +563,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         {
             image_format = IMAGE_FORMAT_PNG;
         }
-		else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
+        else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PCX;
         }

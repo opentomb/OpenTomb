@@ -73,24 +73,24 @@ void Gui_RenderItem(struct ss_bone_frame_s *bf, float size, const float *mvMatri
  */
 class gui_InventoryManager
 {
-	enum inventoryState
-	{
-		INVENTORY_DISABLED = 0,
-		INVENTORY_IDLE,
-		INVENTORY_OPENING,
-		INVENTORY_CLOSING,
-		INVENTORY_R_LEFT,
-		INVENTORY_R_RIGHT,
-		INVENTORY_UP,
-		INVENTORY_DOWN,
-		INVENTORY_ACTIVATING,
-		INVENTORY_DEACTIVATING,
-		INVENTORY_ACTIVATED,
-		// enabled the animation when selected
-		INVENTORY_WEAPON_EXIT,
-		INVENTORY_MEDI_EXIT,
-		INVENTORY_AMMO_SELECT
-	};
+    enum inventoryState
+    {
+        INVENTORY_DISABLED = 0,
+        INVENTORY_IDLE,
+        INVENTORY_OPENING,
+        INVENTORY_CLOSING,
+        INVENTORY_R_LEFT,
+        INVENTORY_R_RIGHT,
+        INVENTORY_UP,
+        INVENTORY_DOWN,
+        INVENTORY_ACTIVATING,
+        INVENTORY_DEACTIVATING,
+        INVENTORY_ACTIVATED,
+        // enabled the animation when selected
+        INVENTORY_WEAPON_EXIT,
+        INVENTORY_MEDI_EXIT,
+        INVENTORY_AMMO_SELECT
+    };
     
 public:   
      gui_InventoryManager();
@@ -123,12 +123,12 @@ public:
     gl_text_line_t              m_label_item_name;
     char                        m_label_item_name_text[GUI_LINE_DEFAULTSIZE];
 
-	// get item_id by view or selected !
-	uint32_t getItemIdActualView();
+    // get item_id by view or selected !
+    uint32_t getItemIdActualView();
 
 private:
     int                         m_menu_mode;
-	struct inventory_node_s   **m_inventory;
+    struct inventory_node_s   **m_inventory;
     gui_object_p                m_current_menu;
     
     uint32_t                    m_owner_id;
@@ -143,7 +143,7 @@ private:
     float                       m_ring_rotate_period;
     float                       m_ring_time;
     float                       m_ring_angle;
-	float                       m_ring_vertical_angle_base;
+    float                       m_ring_vertical_angle_base;
     float                       m_ring_vertical_angle;
     float                       m_ring_angle_step;
     float                       m_base_ring_radius;
@@ -167,7 +167,7 @@ private:
     void handleControls(struct base_item_s *bi, float time);
     void restoreItemAngle(float time);
     void AnimateItem(struct base_item_s *bi, int itemMaxFrame, int endFrame, float time, bool isMedikit);
-	void setSpecificItemModelMeshHidden();
+    void setSpecificItemModelMeshHidden();
 };
 
 

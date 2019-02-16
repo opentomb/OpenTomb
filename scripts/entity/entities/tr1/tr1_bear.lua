@@ -7,10 +7,10 @@ function tr1_bear_init(id)
     setCharacterAIParams(id, 0xFF, ZONE_TYPE_1);
     setCharacterBones(id, 14, 0, 0, 0, 0, 0);  --head, torso, l_hand_first, l_hand_last, r_hand_first, r_hand_last
     setCharacterMoveSizes(id, 512.0, 256.0, 256.0, 256, 256);
-	
-	setEntityGhostCollisionShape(id,  14,  COLLISION_SHAPE_SPHERE, -256, -128, -256, 256, 256, 128);
     
-	if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
+    setEntityGhostCollisionShape(id,  14,  COLLISION_SHAPE_SPHERE, -256, -128, -256, 256, 256, 128);
+    
+    if(getEntityTypeFlag(id, ENTITY_TYPE_SPAWNED) ~= 0) then
         entity_funcs[id].onSave = function()
             return "tr1_bear_init(" .. id .. ");\n";
         end;
@@ -30,7 +30,7 @@ function tr1_bear_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -getCharacterParam(activator_id, PARAM_HIT_DAMAGE));
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
 end;

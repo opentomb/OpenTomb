@@ -1,6 +1,6 @@
 function tr1_wolf_init(id)
     basic_init(id);
-	
+    
     setEntityAnim(id, ANIM_TYPE_BASE, 0, -1);
     setEntityAnimState(id, ANIM_TYPE_BASE, 1);
     setCharacterStateControlFunctions(id, STATE_FUNCTIONS_WOLF);
@@ -36,9 +36,9 @@ function tr1_wolf_init(id)
     entity_funcs[id].onHit = function(object_id, activator_id)
         local damage = getCharacterParam(activator_id, PARAM_HIT_DAMAGE);
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
-		
+        
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
-			setEntityCollision(object_id, false);
+            setEntityCollision(object_id, false);
             setCharacterTarget(activator_id, nil);
         end;
     end;
@@ -47,7 +47,7 @@ function tr1_wolf_init(id)
 end;
 
 function setWolfModelFlag(id)
-	local m_id = getEntityModelID(id);
+    local m_id = getEntityModelID(id);
     setModelBodyPartFlag(m_id, 3, BODY_PART_HEAD);
     setModelBodyPartFlag(m_id, 0, BODY_PART_BODY_LOW);
     setModelBodyPartFlag(m_id, 1, BODY_PART_BODY_UPPER);

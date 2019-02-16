@@ -32,9 +32,9 @@ function tr1_centaur_init(id)
         changeCharacterParam(object_id, PARAM_HEALTH, -damage);
         if(getCharacterParam(object_id, PARAM_HEALTH) == 0) then
             setEntityCollision(object_id, false);
-			setCharacterTarget(activator_id, nil);
+            setCharacterTarget(activator_id, nil);
         end;
     end;
-	
-	entity_funcs[id].onLoop = nil;
+    
+    entity_funcs[id].onLoop = nil;
 end;

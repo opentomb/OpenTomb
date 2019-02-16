@@ -39,8 +39,7 @@ dofile(base_path .. "scripts/entity/entities/tr1/tr1_lara_mutant.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_dog.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_bat.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_rat.lua");
-dofile(base_path .. "scripts/entity/entities/tr1/tr1_crocodile_land.lua");
-dofile(base_path .. "scripts/entity/entities/tr1/tr1_crocodile_water.lua");     -- IA not finished!
+dofile(base_path .. "scripts/entity/entities/tr1/tr1_crocodile.lua");     -- IA not finished for water!
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_bear.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_raptor.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_trex.lua");
