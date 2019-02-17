@@ -55,6 +55,7 @@ function enableModelAnimReplaceFlags(m_id, copy_meshes_back)
 end;
 
 local ver = getLevelVersion();
+local level = getLevel();
 
 if (ver < TR_II) then
     enableModelAnimReplaceFlags(5, false);
@@ -300,8 +301,6 @@ print("autoexec.lua->misc loaded !");
 -----------------------------------
 --           Misc Code           --
 -----------------------------------
-local ver = getLevelVersion();
-
 setModelCollisionMap(0, 0, 0);              -- butt
 setModelCollisionMap(0, 1, 7);              -- body
 setModelCollisionMap(0, 2, 14);             -- head
@@ -342,9 +341,6 @@ print("autoexec.lua->starting_items loaded !");
 -----------------------------------
 --   Tomb Raider Starting Items
 -----------------------------------
-local ver = getLevelVersion();
-local level = getLevel();
-
 addItem(player, ITEM_KEY_1, 1);
 addItem(player, ITEM_KEY_2, 1);
 addItem(player, ITEM_KEY_3, 1);
