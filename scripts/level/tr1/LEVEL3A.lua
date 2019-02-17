@@ -7,10 +7,11 @@ print("level/tr1/level3a.lost_valley->level_loaded !");
 print("test hair not enabled (LEVEL3A.lua)");
 
 level_PostLoad = function()
-    rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_COG);
+	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_COG);
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

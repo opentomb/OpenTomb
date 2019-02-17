@@ -4,11 +4,12 @@ print("level/tr1/level2.city_of_vilcabamba->level_loaded !");
 
 -- overlapped list generates correctly
 level_PostLoad = function()
-    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_COG);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_KEY_SKULL);
+	rewriteName(player, ITEM_PUZZLE_1, ITEM_NAME_TR1_PUZZLE_GOLD_IDOL);
 end;
 
 level_PreLoad = function()
-    --------------------------------------------------------------------------------
+	--------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

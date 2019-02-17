@@ -3,10 +3,10 @@
 print("level/tr1/level4.st_francis_folly->level_loaded !");
 
 level_PostLoad = function()
-    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_KEY_THOR);
-    rewriteName(player, ITEM_KEY_2, ITEM_NAME_TR1_KEY_ATLAS);
-    rewriteName(player, ITEM_KEY_3, ITEM_NAME_TR1_KEY_DAMOCLES);
-    rewriteName(player, ITEM_KEY_4, ITEM_NAME_TR1_KEY_NEPTUNE);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_KEY_THOR);
+	rewriteName(player, ITEM_KEY_2, ITEM_NAME_TR1_KEY_ATLAS);
+	rewriteName(player, ITEM_KEY_3, ITEM_NAME_TR1_KEY_DAMOCLES);
+	rewriteName(player, ITEM_KEY_4, ITEM_NAME_TR1_KEY_NEPTUNE);
 end;
 
 level_PreLoad = function()

@@ -347,8 +347,6 @@ items_funcs[ITEM_PISTOL].onUse = function(id)
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
     elseif(ver < TR_IV) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
-    else
-        -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used ifis custom level).
     end;
     setCharacterCurrentWeapon(id, 1);
     return 1;

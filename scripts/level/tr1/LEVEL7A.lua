@@ -4,9 +4,9 @@ print("level/tr1/level7a.the_cistern->level_loaded !");
 
 level_PostLoad = function()
     playStream(58);
-    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
-    rewriteName(player, ITEM_KEY_2, ITEM_NAME_TR1_SILVER_KEY);
-    rewriteName(player, ITEM_KEY_3, ITEM_NAME_TR1_RUSTY_KEY);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_GOLD_KEY);
+	rewriteName(player, ITEM_KEY_2, ITEM_NAME_TR1_SILVER_KEY);
+	rewriteName(player, ITEM_KEY_3, ITEM_NAME_TR1_RUSTY_KEY);
 end;
 
 level_PreLoad = function()

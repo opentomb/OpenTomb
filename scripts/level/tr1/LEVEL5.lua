@@ -3,7 +3,7 @@
 print("level/tr1/level5.colosseum->level_loaded !");
 
 level_PostLoad = function()
-    rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_RUSTY_KEY);
+	rewriteName(player, ITEM_KEY_1, ITEM_NAME_TR1_RUSTY_KEY);
 end;
 
 level_PreLoad = function()
