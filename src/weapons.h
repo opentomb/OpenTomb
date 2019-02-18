@@ -267,9 +267,9 @@ struct weapons_s
     int echo;
     int reload_1;     // classic reload
     int reload_2;     // grenadegun reload lock
-    int damage = NULL;
-    int damage_water = NULL;
-    int damage_explosion = NULL;
+    int damage = 0;                   // not used (for future update ?) (classic damage by weapon (impact))
+    int damage_water = 0;             // not used (for future update ?) (damage in water.)
+    int damage_explosion = 0;         // not used (for future update ?) (damage of explosion (damage is not added)
     float firerate;
     int bullet;
     float range;

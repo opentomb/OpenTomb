@@ -27,10 +27,10 @@
 #include "../controls.h"
 #include "../engine_string.h"
 #include "../world.h"
+#include "../inventory.h"
 #include "gui.h"
 #include "gui_menu.h"
 #include "gui_inventory.h"
-#include "inventory.h"
 
 gui_ProgressBar         Bar[BAR_LASTINDEX];
 static gui_object_p     g_current_menu = NULL;
@@ -148,7 +148,7 @@ void Gui_InitBars()
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
                     Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
                     Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 255);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
@@ -170,7 +170,7 @@ void Gui_InitBars()
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
                     Bar[i].SetColor(BASE_MAIN, 153, 51, 102, 230);  // 255, 255, 127
                     Bar[i].SetColor(BASE_FADE, 153, 51, 102, 230);  // 255, 187, 136
-                    Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 100);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 100);
                     Bar[i].SetColor(BORDER_MAIN, 255, 255, 255, 80); // 200, 200, 200
                     Bar[i].SetColor(BORDER_FADE, 255, 255, 255, 80);    // 80, 80, 80
