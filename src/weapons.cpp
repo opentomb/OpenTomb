@@ -50,12 +50,12 @@ void weapon_init()
     pistol.dealDmgAtImpact = false;
     pistol.haveGravity = false;
     pistol.muzzle_duration = 3.0f;
-    pistol.muzzle_pos[0] = NULL;
-    pistol.muzzle_pos[1] = NULL;
-    pistol.muzzle_pos[2] = NULL;
-    pistol.muzzle_orient[0] = NULL;
-    pistol.muzzle_orient[1] = NULL;
-    pistol.muzzle_orient[2] = NULL;
+    pistol.muzzle_pos[0] = 0;
+    pistol.muzzle_pos[1] = 0;
+    pistol.muzzle_pos[2] = 0;
+    pistol.muzzle_orient[0] = 0;
+    pistol.muzzle_orient[1] = 0;
+    pistol.muzzle_orient[2] = 0;
 
     shotgun.item_id = TYPE_SHOTGUN;
     shotgun.shot = SND_SHOTGUN;
@@ -81,12 +81,12 @@ void weapon_init()
     shotgun.dealDmgAtImpact = false;
     shotgun.haveGravity = false;
     // shotgun not have muzzleflash but can be used for smoke
-    shotgun.muzzle_pos[0] = NULL;
-    shotgun.muzzle_pos[1] = NULL;
-    shotgun.muzzle_pos[2] = NULL;
-    shotgun.muzzle_orient[0] = NULL;
-    shotgun.muzzle_orient[1] = NULL;
-    shotgun.muzzle_orient[2] = NULL;
+    shotgun.muzzle_pos[0] = 0;
+    shotgun.muzzle_pos[1] = 0;
+    shotgun.muzzle_pos[2] = 0;
+    shotgun.muzzle_orient[0] = 0;
+    shotgun.muzzle_orient[1] = 0;
+    shotgun.muzzle_orient[2] = 0;
 	
     uzi.item_id = TYPE_UZIS;
     uzi.shot = SND_UZI;
@@ -103,12 +103,12 @@ void weapon_init()
     uzi.onWater = false;
     uzi.dealDmgAtImpact = false;
     uzi.haveGravity = false;
-    uzi.muzzle_pos[0] = NULL;
-    uzi.muzzle_pos[1] = NULL;
-    uzi.muzzle_pos[2] = NULL;
-    uzi.muzzle_orient[0] = NULL;
-    uzi.muzzle_orient[1] = NULL;
-    uzi.muzzle_orient[2] = NULL;
+    uzi.muzzle_pos[0] = 0;
+    uzi.muzzle_pos[1] = 0;
+    uzi.muzzle_pos[2] = 0;
+    uzi.muzzle_orient[0] = 0;
+    uzi.muzzle_orient[1] = 0;
+    uzi.muzzle_orient[2] = 0;
 
     magnum.item_id = TYPE_MAGNUMS;
     magnum.shot = SND_MAGNUM;
@@ -125,12 +125,12 @@ void weapon_init()
     magnum.onWater = false;
     magnum.dealDmgAtImpact = false;
     magnum.haveGravity = false;
-    magnum.muzzle_pos[0] = NULL;
-    magnum.muzzle_pos[1] = NULL;
-    magnum.muzzle_pos[2] = NULL;
-    magnum.muzzle_orient[0] = NULL;
-    magnum.muzzle_orient[1] = NULL;
-    magnum.muzzle_orient[2] = NULL;
+    magnum.muzzle_pos[0] = 0;
+    magnum.muzzle_pos[1] = 0;
+    magnum.muzzle_pos[2] = 0;
+    magnum.muzzle_orient[0] = 0;
+    magnum.muzzle_orient[1] = 0;
+    magnum.muzzle_orient[2] = 0;
 
     deserteagle.item_id = TYPE_DESERTEAGLE;
     deserteagle.shot = SND_DESERTEAGLE;
@@ -147,12 +147,12 @@ void weapon_init()
     deserteagle.onWater = false;
     deserteagle.dealDmgAtImpact = false;
     deserteagle.haveGravity = false;
-    deserteagle.muzzle_pos[0] = NULL;
-    deserteagle.muzzle_pos[1] = NULL;
-    deserteagle.muzzle_pos[2] = NULL;
-    deserteagle.muzzle_orient[0] = NULL;
-    deserteagle.muzzle_orient[1] = NULL;
-    deserteagle.muzzle_orient[2] = NULL;
+    deserteagle.muzzle_pos[0] = 0;
+    deserteagle.muzzle_pos[1] = 0;
+    deserteagle.muzzle_pos[2] = 0;
+    deserteagle.muzzle_orient[0] = 0;
+    deserteagle.muzzle_orient[1] = 0;
+    deserteagle.muzzle_orient[2] = 0;
 
     automags.item_id = TYPE_AUTOMAGS;
     automags.shot = SND_AUTOMAGS;
@@ -169,12 +169,12 @@ void weapon_init()
     automags.onWater = false;
     automags.dealDmgAtImpact = false;
     automags.haveGravity = false;
-    automags.muzzle_pos[0] = NULL;
-    automags.muzzle_pos[1] = NULL;
-    automags.muzzle_pos[2] = NULL;
-    automags.muzzle_orient[0] = NULL;
-    automags.muzzle_orient[1] = NULL;
-    automags.muzzle_orient[2] = NULL;
+    automags.muzzle_pos[0] = 0;
+    automags.muzzle_pos[1] = 0;
+    automags.muzzle_pos[2] = 0;
+    automags.muzzle_orient[0] = 0;
+    automags.muzzle_orient[1] = 0;
+    automags.muzzle_orient[2] = 0;
 
     revolver.item_id = TYPE_REVOLVER;
     revolver.shot = SND_REVOLVER;
@@ -191,12 +191,12 @@ void weapon_init()
     revolver.onWater = false;
     revolver.dealDmgAtImpact = false;
     revolver.haveGravity = false;
-    revolver.muzzle_pos[0] = NULL;
-    revolver.muzzle_pos[1] = NULL;
-    revolver.muzzle_pos[2] = NULL;
-    revolver.muzzle_orient[0] = NULL;
-    revolver.muzzle_orient[1] = NULL;
-    revolver.muzzle_orient[2] = NULL;
+    revolver.muzzle_pos[0] = 0;
+    revolver.muzzle_pos[1] = 0;
+    revolver.muzzle_pos[2] = 0;
+    revolver.muzzle_orient[0] = 0;
+    revolver.muzzle_orient[1] = 0;
+    revolver.muzzle_orient[2] = 0;
 
     m16.item_id = TYPE_M16;
     m16.shot = SND_M16;
@@ -214,12 +214,12 @@ void weapon_init()
     m16.dealDmgAtImpact = false;
     m16.haveGravity = false;
     m16.alternateAim = false;           // define it at animation (M16Anim())
-    m16.muzzle_pos[0] = NULL;
-    m16.muzzle_pos[1] = NULL;
-    m16.muzzle_pos[2] = NULL;
-    m16.muzzle_orient[0] = NULL;
-    m16.muzzle_orient[1] = NULL;
-    m16.muzzle_orient[2] = NULL;
+    m16.muzzle_pos[0] = 0;
+    m16.muzzle_pos[1] = 0;
+    m16.muzzle_pos[2] = 0;
+    m16.muzzle_orient[0] = 0;
+    m16.muzzle_orient[1] = 0;
+    m16.muzzle_orient[2] = 0;
 
     mp5.item_id = TYPE_MP5;
     mp5.shot = SND_MP5;
@@ -230,18 +230,18 @@ void weapon_init()
     mp5.reload_2 = SND_NULL;
     mp5.damage = 12;
     mp5.damage_explosion = 0;
-    mp5.firerate = RATE_MP5;
+    mp5.firerate = (mp5.alternateAim) ? RATE_MP5_ALT : RATE_MP5;
     mp5.bullet = 1;
     mp5.current_ammo = AMMO_MP5;
     mp5.onWater = false;
     mp5.dealDmgAtImpact = false;
     mp5.haveGravity = false;
-    mp5.muzzle_pos[0] = NULL;
-    mp5.muzzle_pos[1] = NULL;
-    mp5.muzzle_pos[2] = NULL;
-    mp5.muzzle_orient[0] = NULL;
-    mp5.muzzle_orient[1] = NULL;
-    mp5.muzzle_orient[2] = NULL;
+    mp5.muzzle_pos[0] = 0;
+    mp5.muzzle_pos[1] = 0;
+    mp5.muzzle_pos[2] = 0;
+    mp5.muzzle_orient[0] = 0;
+    mp5.muzzle_orient[1] = 0;
+    mp5.muzzle_orient[2] = 0;
 
     rocketgun.item_id = TYPE_ROCKETGUN;
     rocketgun.shot = SND_ROCKETGUN;
@@ -258,12 +258,12 @@ void weapon_init()
     rocketgun.onWater = false;
     rocketgun.dealDmgAtImpact = false;
     rocketgun.haveGravity = false;
-    rocketgun.muzzle_pos[0] = NULL;
-    rocketgun.muzzle_pos[1] = NULL;
-    rocketgun.muzzle_pos[2] = NULL;
-    rocketgun.muzzle_orient[0] = NULL;
-    rocketgun.muzzle_orient[1] = NULL;
-    rocketgun.muzzle_orient[2] = NULL;
+    rocketgun.muzzle_pos[0] = 0;
+    rocketgun.muzzle_pos[1] = 0;
+    rocketgun.muzzle_pos[2] = 0;
+    rocketgun.muzzle_orient[0] = 0;
+    rocketgun.muzzle_orient[1] = 0;
+    rocketgun.muzzle_orient[2] = 0;
 
     grenadegun.item_id = TYPE_GRENADEGUN;
     grenadegun.shot = SND_GRENADEGUN;
@@ -287,12 +287,12 @@ void weapon_init()
     grenadegun.onWater = false;
     grenadegun.dealDmgAtImpact = false;
     grenadegun.haveGravity = true;
-    grenadegun.muzzle_pos[0] = NULL;
-    grenadegun.muzzle_pos[1] = NULL;
-    grenadegun.muzzle_pos[2] = NULL;
-    grenadegun.muzzle_orient[0] = NULL;
-    grenadegun.muzzle_orient[1] = NULL;
-    grenadegun.muzzle_orient[2] = NULL;
+    grenadegun.muzzle_pos[0] = 0;
+    grenadegun.muzzle_pos[1] = 0;
+    grenadegun.muzzle_pos[2] = 0;
+    grenadegun.muzzle_orient[0] = 0;
+    grenadegun.muzzle_orient[1] = 0;
+    grenadegun.muzzle_orient[2] = 0;
 
     harpoongun.item_id = TYPE_HARPOONGUN;
     harpoongun.shot = (player->move_type == MOVE_UNDERWATER) ? SND_HARPOON_WATER : SND_HARPOON_LAND;
@@ -310,12 +310,12 @@ void weapon_init()
     harpoongun.onWater = (player->move_type == MOVE_UNDERWATER) ? true : false;
     harpoongun.haveGravity = (player->move_type == MOVE_UNDERWATER) ? false : true;
     harpoongun.dealDmgAtImpact = false;
-    harpoongun.muzzle_pos[0] = NULL;
-    harpoongun.muzzle_pos[1] = NULL;
-    harpoongun.muzzle_pos[2] = NULL;
-    harpoongun.muzzle_orient[0] = NULL;
-    harpoongun.muzzle_orient[1] = NULL;
-    harpoongun.muzzle_orient[2] = NULL;
+    harpoongun.muzzle_pos[0] = 0;
+    harpoongun.muzzle_pos[1] = 0;
+    harpoongun.muzzle_pos[2] = 0;
+    harpoongun.muzzle_orient[0] = 0;
+    harpoongun.muzzle_orient[1] = 0;
+    harpoongun.muzzle_orient[2] = 0;
 
     crossbowgun.item_id = TYPE_CROSSBOWGUN;
     crossbowgun.shot = SND_CROSSBOWGUN;
@@ -332,12 +332,12 @@ void weapon_init()
     crossbowgun.onWater = false;
     crossbowgun.dealDmgAtImpact = false;
     crossbowgun.haveGravity = false;
-    crossbowgun.muzzle_pos[0] = NULL;
-    crossbowgun.muzzle_pos[1] = NULL;
-    crossbowgun.muzzle_pos[2] = NULL;
-    crossbowgun.muzzle_orient[0] = NULL;
-    crossbowgun.muzzle_orient[1] = NULL;
-    crossbowgun.muzzle_orient[2] = NULL;
+    crossbowgun.muzzle_pos[0] = 0;
+    crossbowgun.muzzle_pos[1] = 0;
+    crossbowgun.muzzle_pos[2] = 0;
+    crossbowgun.muzzle_orient[0] = 0;
+    crossbowgun.muzzle_orient[1] = 0;
+    crossbowgun.muzzle_orient[2] = 0;
 
     grapplingun.item_id = TYPE_GRAPPLINGUN;
     // this "weapon" have sound ?
@@ -355,12 +355,12 @@ void weapon_init()
     grapplingun.dealDmgAtImpact = false;
     grapplingun.haveGravity = false;
     // no muzzleflash for this ?
-    grapplingun.muzzle_pos[0] = NULL;
-    grapplingun.muzzle_pos[1] = NULL;
-    grapplingun.muzzle_pos[2] = NULL;
-    grapplingun.muzzle_orient[0] = NULL;
-    grapplingun.muzzle_orient[1] = NULL;
-    grapplingun.muzzle_orient[2] = NULL;
+    grapplingun.muzzle_pos[0] = 0;
+    grapplingun.muzzle_pos[1] = 0;
+    grapplingun.muzzle_pos[2] = 0;
+    grapplingun.muzzle_orient[0] = 0;
+    grapplingun.muzzle_orient[1] = 0;
+    grapplingun.muzzle_orient[2] = 0;
 }
 
 // if you define (UNLIMITED) the item have unlimited ammo
@@ -519,7 +519,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
     }
 
     // no id found
-    return NULL;
+    return 0;
 }
 
 int SetCurrentWeaponAnimation(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end)
@@ -1416,7 +1416,6 @@ bool OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
     return false;
 }
 
-#pragma region weapons
 struct weapons_s getPistol()
 {
     return pistol;
@@ -1486,41 +1485,3 @@ struct weapons_s getGrapplinGun()
 {
     return grapplingun;
 }
-
-/* 
- * - used to get all weapon in one function
- *- 0: pistol;
- *- 1: shotgun;
- *- 2: magnum;
- *- 3: uzi;
- *- 4: automags;
- *- 5: desert_eagle;
- *- 6: revolver;
- *- 7: m16;
- *- 8: mp5;
- *- 9: rocketgun;
- *- 10: harpoongun;
- *- 11: grenadegun; 
- *- 12: crossbowgun;
- *- 13: grapplingun;
- */
-struct weapons_s *getAll()
-{
-    weapons_s weapons[14];
-    weapons[0] = pistol;
-    weapons[1] = shotgun;
-    weapons[2] = magnum;
-    weapons[3] = uzi;
-    weapons[4] = automags;
-    weapons[5] = deserteagle;
-    weapons[6] = revolver;
-    weapons[7] = m16;
-    weapons[8] = mp5;
-    weapons[9] = rocketgun;
-    weapons[10] = harpoongun;
-    weapons[11] = grenadegun;
-    weapons[12] = crossbowgun;
-    weapons[13] = grapplingun;
-    return weapons;
-}
-#pragma endregion

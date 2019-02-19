@@ -236,6 +236,7 @@ enum weapon_sound_e
 #define RATE_M16 1.0f
 #define RATE_M16_ALT 1.5f
 #define RATE_MP5 2.0f
+#define RATE_MP5_ALT 2.5f
 #define RATE_ROCKETGUN 1.0f
 #define RATE_HARPOONGUN 1.0f
 #define RATE_GRENADEGUN 1.0f
@@ -267,9 +268,9 @@ struct weapons_s
     int echo;
     int reload_1;     // classic reload
     int reload_2;     // grenadegun reload lock
-    int damage = 0;                   // not used (for future update ?) (classic damage by weapon (impact))
-    int damage_water = 0;             // not used (for future update ?) (damage in water.)
-    int damage_explosion = 0;         // not used (for future update ?) (damage of explosion (damage is not added)
+    int damage;                   // not used (for future update ?) (classic damage by weapon (impact))
+    int damage_water;             // not used (for future update ?) (damage in water.)
+	int damage_explosion;         // not used (for future update ?) (damage of explosion (damage is not added)
     float firerate;
     int bullet;
     float range;
@@ -362,7 +363,6 @@ bool OneHand_Firing(struct entity_s* ent, struct ss_animation_s* ss_anim, ss_bon
 #define TWOHAND_FIRING(anim_firing, anim_firing_to_idle, anim_idle) TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, anim_firing, anim_firing_to_idle, anim_idle)
 bool TwoHand_Firing(struct entity_s* ent, struct ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, struct weapons_s weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle);
 
-#pragma region weapons
 struct weapons_s getPistol();
 struct weapons_s getShotgun();
 struct weapons_s getMagnum();
@@ -377,6 +377,4 @@ struct weapons_s getHarpoonGun();
 struct weapons_s getGrenadeGun();
 struct weapons_s getCrossbowGun();
 struct weapons_s getGrapplinGun();
-struct weapons_s* getAll();
-#pragma endregion
 #endif

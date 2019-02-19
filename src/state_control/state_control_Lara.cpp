@@ -3320,7 +3320,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + ent->character->bone_torso;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
-        int inc_state = NULL;
+        int inc_state = 0;
         int32_t ver = World_GetVersion();
         // Sound Weapon
         weapons_s weapon;
