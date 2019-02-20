@@ -447,6 +447,8 @@ void Gui_DrawCrosshair()
 void Gui_DrawBars()
 {
     entity_p player = World_GetPlayer();
+    int32_t ver = World_GetVersion();
+
     if(player && player->character)
     {
         if(player->character->state.weapon_ready)
@@ -457,7 +459,10 @@ void Gui_DrawBars()
         if (main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
             main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
         {
-            Bar[BAR_HEALTH].Forced = true;
+            if (ver < TR_IV)
+            {
+                Bar[BAR_HEALTH].Forced = true;
+            }
         }
 
         Bar[BAR_AIR].Show    (Character_GetParam(player, PARAM_AIR    ));

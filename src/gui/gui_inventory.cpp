@@ -39,7 +39,7 @@ gui_InventoryManager  *main_inventory_manager = NULL;
 
 void Gui_InitNotifier()
 {
-    Notifier.SetRot(0.0f, 180.0f);
+    Notifier.SetRot(180.0f, 360.0f);
     Notifier.SetSize(128.0f);
     Notifier.SetRotateTime(2048.0f);
 }
@@ -610,10 +610,12 @@ void gui_InventoryManager::frameStates(float time)
     }
 }
 
+// hide specific mesh in inventory
 void gui_InventoryManager::setSpecificItemModelMeshHidden()
 {
     int32_t ver = World_GetVersion();
-    // hide specific mesh in inventory
+    weapons_s revolver = getRevolver();
+    weapons_s crossbow = getCrossbowGun();
     int ring_item_index = 0;
 
     for (inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
@@ -623,7 +625,7 @@ void gui_InventoryManager::setSpecificItemModelMeshHidden()
         if (bi)
         {
             // Tomb Raider 1 -> 3
-            if (ver < TR_IV)
+            if (getVersion(TR_I_II_III))
             {
                 switch (bi->id)
                 {
@@ -636,6 +638,60 @@ void gui_InventoryManager::setSpecificItemModelMeshHidden()
                             bi->bf->bone_tags[0].is_hidden = 0x01;
                         }
                         break;
+                }
+            }
+            else if (getVersion(TR_IV_V))
+            {
+                // hide the lasersight in inventory (and if equiped unhide it !)
+                if (bi->id == ITEM_REVOLVER)
+                {
+                    // item is equiped ?
+                    if (!revolver.itemIsEquipped)
+                    {
+                        // support for mesh 2 and 3
+                        if (bi->bf->bone_tags[1].is_hidden == 0x00)
+                        {
+                            bi->bf->bone_tags[1].is_hidden = 0x01;
+                        }
+                        
+                        // light
+                        if (bi->bf->bone_tags[2].is_hidden == 0x00)
+                        {
+                            bi->bf->bone_tags[2].is_hidden = 0x01;
+                        }
+
+                        // lasersight
+                        if (bi->bf->bone_tags[3].is_hidden == 0x00)
+                        {
+                            bi->bf->bone_tags[3].is_hidden = 0x01;
+                        }
+                    }
+                    else if (revolver.itemIsEquipped)
+                    {
+                        // support for mesh 2 and 3
+                        if (bi->bf->bone_tags[1].is_hidden == 0x01)
+                        {
+                            bi->bf->bone_tags[1].is_hidden = 0x00;
+                        }
+
+                        // lasersight
+                        if (bi->bf->bone_tags[3].is_hidden == 0x01)
+                        {
+                            bi->bf->bone_tags[3].is_hidden = 0x00;
+                        }
+                    }
+
+                }
+                else if (bi->id == ITEM_CROSSBOW)
+                {
+                    if (!crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x00))
+                    {
+                        bi->bf->bone_tags[1].is_hidden = 0x01;
+                    }
+                    else if (crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x01))
+                    {
+                        bi->bf->bone_tags[1].is_hidden = 0x00;
+                    }
                 }
             }
 

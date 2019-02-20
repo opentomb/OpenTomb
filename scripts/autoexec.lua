@@ -59,14 +59,14 @@ local level = getLevel();
 
 if (ver < TR_II) then
     enableModelAnimReplaceFlags(5, false);
-	
+    
     -- pistols
     setDefaultModelAnimReplaceFlag(1);
     setModelMeshReplaceFlag(1, 10, 0x01);
     setModelMeshReplaceFlag(1, 13, 0x01);
     setModelMeshReplaceFlag(1, 1, 0x01);
     setModelMeshReplaceFlag(1, 4, 0x01);
-	
+    
     -- shotgun
     setDefaultModelAnimReplaceFlag(2);
     setModelMeshReplaceFlag(2, 10, 0x01);
@@ -80,7 +80,7 @@ if (ver < TR_II) then
     setModelMeshReplaceFlag(3, 13, 0x01);
     setModelMeshReplaceFlag(3, 1, 0x01);
     setModelMeshReplaceFlag(3, 4, 0x01);
-	
+    
     -- uzi
     setDefaultModelAnimReplaceFlag(4);
     copyModelAnimations(4, 1);
@@ -139,7 +139,7 @@ elseif (ver < TR_III) then
     setDefaultModelAnimReplaceFlag(8);
     setModelMeshReplaceFlag(8, 10, 0x01);
     setModelMeshReplaceFlag(8, 14, 0x02);      -- 0x02 slot mesh model: draws with original mesh
-	
+    
     -- flare
     setModelAnimReplaceFlag(9, 11, 0x01);
     setModelAnimReplaceFlag(9, 12, 0x01);
@@ -157,7 +157,7 @@ elseif (ver < TR_IV) then
     setDefaultModelAnimReplaceFlag(3);
     setModelMeshReplaceFlag(3, 10, 0x01);
     setModelMeshReplaceFlag(3, 14, 0x02);
-	
+    
     -- desert eagle
     setDefaultModelAnimReplaceFlag(4);
     setModelMeshReplaceFlag(4, 10, 0x01);
@@ -245,7 +245,6 @@ elseif (ver < TR_V) then
     setModelAnimReplaceFlag(7, 13, 0x01);
     setModelMeshReplaceFlag(7, 13, 0x01);
 elseif(ver == TR_V) then
-	local lvl = getLevel();
     -- pistols
     copyMeshFromModelToModel(1, 14, 1, 4);
     copyMeshFromModelToModel(1, 14, 4, 8);
@@ -275,11 +274,11 @@ elseif(ver == TR_V) then
     setModelMeshReplaceFlag(4, 14, 0x02);
     -- the firing animation are empty !!!
 
-	-- mp5
+    -- mp5
     setDefaultModelAnimReplaceFlag(5);
     setModelMeshReplaceFlag(5, 10, 0x01);
     setModelMeshReplaceFlag(5, 14, 0x02);
-	-- mp5 override model anim (movement)
+    -- mp5 override model anim (movement)
     setModelAnimReplaceFlag(5, 7,  0x01);  -- needed for animation
     setModelAnimReplaceFlag(5, 14, 0x01);  -- needed for animation (weapon)
 
@@ -341,6 +340,7 @@ print("autoexec.lua->starting_items loaded !");
 -----------------------------------
 --   Tomb Raider Starting Items
 -----------------------------------
+
 addItem(player, ITEM_KEY_1, 1);
 addItem(player, ITEM_KEY_2, 1);
 addItem(player, ITEM_KEY_3, 1);

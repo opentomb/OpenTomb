@@ -80,7 +80,7 @@ function genBaseItems()
         createBaseItem(ITEM_SMALL_MEDIPACK, 171, 171, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_SMALL_MEDIPACK);
         createBaseItem(ITEM_LARGE_MEDIPACK, 172, 172, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_LARGE_MEDIPACK);
         createBaseItem(ITEM_FLARES, 173, 173, ITEM_TYPE_INVENTORY, 6, ITEM_NAME_FLARES);
-        createBaseItem(ITEM_SINGLE_FLARE, 152, 152, ITEM_TYPE_INVENTORY, 1);
+        createBaseItem(ITEM_SINGLE_FLARE, 152, 152, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_FLARES);
 
         createBaseItem(ITEM_PUZZLE_1, 178, 178, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_PUZZLE_2, 179, 179, ITEM_TYPE_QUEST, 1);
@@ -126,7 +126,7 @@ function genBaseItems()
         createBaseItem(ITEM_SMALL_MEDIPACK, 201, 176, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_SMALL_MEDIPACK);
         createBaseItem(ITEM_LARGE_MEDIPACK, 202, 177, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_LARGE_MEDIPACK);
         createBaseItem(ITEM_FLARES, 203, 178, ITEM_TYPE_INVENTORY, 8, ITEM_NAME_FLARES);
-        createBaseItem(ITEM_SINGLE_FLARE, 179, 179, ITEM_TYPE_INVENTORY, 1);
+        createBaseItem(ITEM_SINGLE_FLARE, 179, 179, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_FLARES);
 
         createBaseItem(ITEM_KEY_1, 224, 224, ITEM_TYPE_QUEST, 1);
         createBaseItem(ITEM_KEY_2, 225, 225, ITEM_TYPE_QUEST, 1);
@@ -170,7 +170,7 @@ function genBaseItems()
         createBaseItem(ITEM_LARGE_MEDIPACK, 368, 368, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_LARGE_MEDIPACK);
         
         createBaseItem(ITEM_FLARES, 373, 373, ITEM_TYPE_INVENTORY, 12, ITEM_NAME_FLARES);
-        createBaseItem(ITEM_SINGLE_FLARE, 372, 372, ITEM_TYPE_INVENTORY, 1);
+        createBaseItem(ITEM_SINGLE_FLARE, 372, 372, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_FLARES);
         createBaseItem(ITEM_TORCH, 247, 247, ITEM_TYPE_INVENTORY, 1);
 
         createBaseItem(ITEM_KEY_1, 203, 203, ITEM_TYPE_QUEST, 1);
@@ -286,7 +286,7 @@ function genBaseItems()
         createBaseItem(ITEM_LARGE_MEDIPACK, 349, 349, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_LARGE_MEDIPACK);
         createBaseItem(ITEM_SMALL_MEDIPACK, 350, 350, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_SMALL_MEDIPACK);
         createBaseItem(ITEM_FLARES, 355, 355, ITEM_TYPE_INVENTORY, 6, ITEM_NAME_FLARES);
-        createBaseItem(ITEM_SINGLE_FLARE, 354, 354, ITEM_TYPE_INVENTORY, 1);
+        createBaseItem(ITEM_SINGLE_FLARE, 354, 354, ITEM_TYPE_INVENTORY, 1, ITEM_NAME_FLARES);
         createBaseItem(ITEM_TORCH, 241, 241, ITEM_TYPE_INVENTORY, 1);
         
         createBaseItem(ITEM_KEY_1, 196, 196, ITEM_TYPE_QUEST, 1);
@@ -347,6 +347,8 @@ items_funcs[ITEM_PISTOL].onUse = function(id)
         playSound(getGlobalSound(2, GLOBALID_MENUWEAPON));
     elseif(ver < TR_IV) then
         playSound(getGlobalSound(3, GLOBALID_MENUWEAPON));
+    else
+        -- playSound(getGlobalSound(4, GLOBALID_MENUWEAPON)); -- Cant be used on TR_IV, TR_V (can be used ifis custom level).
     end;
     setCharacterCurrentWeapon(id, 1);
     return 1;

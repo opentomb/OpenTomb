@@ -10,29 +10,33 @@
 #include "world.h"
 
 #include "character_controller.h"
-#include "inventory.h"
 #include "state_control/state_control_Lara.h"
 
-weapons_s pistol;
-weapons_s shotgun;
-weapons_s uzi;
-weapons_s magnum;
-weapons_s automags;
-weapons_s deserteagle;
-weapons_s revolver;
-weapons_s m16;
-weapons_s mp5;
-weapons_s rocketgun;
-weapons_s grenadegun;
-weapons_s harpoongun;
-weapons_s crossbowgun;
-weapons_s grapplingun;
+struct weapons_s pistol;
+struct weapons_s shotgun;
+struct weapons_s uzi;
+struct weapons_s magnum;
+struct weapons_s automags;
+struct weapons_s deserteagle;
+struct weapons_s revolver;
+struct weapons_s m16;
+struct weapons_s mp5;
+struct weapons_s rocket;
+struct weapons_s grenade;
+struct weapons_s harpoon;
+struct weapons_s crossbow;
+struct weapons_s grapplin;
 
-void weapon_init()
+/*=============================================//
+//             WEAPON CLASS INIT               //
+//=============================================*/
+void World_WeaponInit()
 {
-    int32_t world = World_GetVersion();
     entity_s* player = World_GetPlayer();
 
+    //=============================================//
+    //                PISTOLS GUN                  //
+    //=============================================//
     pistol.item_id = TYPE_PISTOLS;
     pistol.shot = SND_PISTOL;
     pistol.draw = SND_UNIVERSAL_DRAW;
@@ -41,14 +45,10 @@ void weapon_init()
     pistol.reload_1 = SND_UNIVERSAL_RELOAD;
     pistol.reload_2 = SND_NULL;
     pistol.damage = 1;
-    pistol.damage_explosion = 0;
     pistol.firerate = RATE_PISTOL;
     pistol.bullet = 2;
     pistol.current_ammo = AMMO_UNLIMITED;
     pistol.range = RANGE_PISTOL;
-    pistol.onWater = false;
-    pistol.dealDmgAtImpact = false;
-    pistol.haveGravity = false;
     pistol.muzzle_duration = 3.0f;
     pistol.muzzle_pos[0] = 0;
     pistol.muzzle_pos[1] = 0;
@@ -57,6 +57,9 @@ void weapon_init()
     pistol.muzzle_orient[1] = 0;
     pistol.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                SHOTGUN GUN                  //
+    //=============================================//
     shotgun.item_id = TYPE_SHOTGUN;
     shotgun.shot = SND_SHOTGUN;
     shotgun.draw = SND_UNIVERSAL_HIDE;
@@ -65,44 +68,43 @@ void weapon_init()
     shotgun.reload_1 = SND_UNIVERSAL_RELOAD;
     shotgun.reload_2 = SND_NULL;
     shotgun.damage = 3;
-    shotgun.damage_explosion = 0;
     shotgun.firerate = RATE_SHOTGUN;
     shotgun.bullet = (shotgun.current_ammo == AMMO_SHOTGUN_WIDE) ? 5 : 6; // wide have 5 bullet
-    if (world < TR_IV)
+
+    if (getVersion(TR_I_II_III))
     {
         shotgun.current_ammo = AMMO_SHOTGUN;
     }
-    else
+    else if (getVersion(TR_IV_V))
     {
         shotgun.current_ammo = AMMO_SHOTGUN_NORMAL;
     }
+
     shotgun.range = RANGE_SHOTGUN;
-    shotgun.onWater = false;
-    shotgun.dealDmgAtImpact = false;
-    shotgun.haveGravity = false;
     // shotgun not have muzzleflash but can be used for smoke
+    shotgun.muzzle_duration = 0.0f;
     shotgun.muzzle_pos[0] = 0;
     shotgun.muzzle_pos[1] = 0;
     shotgun.muzzle_pos[2] = 0;
     shotgun.muzzle_orient[0] = 0;
     shotgun.muzzle_orient[1] = 0;
     shotgun.muzzle_orient[2] = 0;
-	
+    
+    //=============================================//
+    //                   UZI GUN                   //
+    //=============================================//
     uzi.item_id = TYPE_UZIS;
     uzi.shot = SND_UZI;
     uzi.draw = SND_UNIVERSAL_DRAW;
     uzi.hide = SND_UNIVERSAL_HIDE;
-    uzi.echo = (world >= TR_II) ? SND_UZI_STOP : SND_NULL;
+    uzi.echo = (getVersion(TR_II_TO_V)) ? SND_UZI_STOP : SND_NULL;
     uzi.reload_1 = SND_UNIVERSAL_RELOAD;
     uzi.reload_2 = SND_NULL;
     uzi.damage = 1;
-    uzi.damage_explosion = 0;
     uzi.firerate = RATE_UZI;
     uzi.bullet = 2;
     uzi.current_ammo = AMMO_UZI;
-    uzi.onWater = false;
-    uzi.dealDmgAtImpact = false;
-    uzi.haveGravity = false;
+    uzi.muzzle_duration = 1.0f;
     uzi.muzzle_pos[0] = 0;
     uzi.muzzle_pos[1] = 0;
     uzi.muzzle_pos[2] = 0;
@@ -110,6 +112,9 @@ void weapon_init()
     uzi.muzzle_orient[1] = 0;
     uzi.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                 MAGNUM GUN                  //
+    //=============================================//
     magnum.item_id = TYPE_MAGNUMS;
     magnum.shot = SND_MAGNUM;
     magnum.draw = SND_UNIVERSAL_DRAW;
@@ -118,13 +123,10 @@ void weapon_init()
     magnum.reload_1 = SND_UNIVERSAL_RELOAD;
     magnum.reload_2 = SND_NULL;
     magnum.damage = 21;
-    magnum.damage_explosion = 0;
     magnum.firerate = RATE_MAGNUM;
     magnum.bullet = 2;
     magnum.current_ammo = AMMO_MAGNUM;
-    magnum.onWater = false;
-    magnum.dealDmgAtImpact = false;
-    magnum.haveGravity = false;
+    magnum.muzzle_duration = 3.0f;
     magnum.muzzle_pos[0] = 0;
     magnum.muzzle_pos[1] = 0;
     magnum.muzzle_pos[2] = 0;
@@ -132,6 +134,9 @@ void weapon_init()
     magnum.muzzle_orient[1] = 0;
     magnum.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //             DESERT EAGLE GUN                //
+    //=============================================//
     deserteagle.item_id = TYPE_DESERTEAGLE;
     deserteagle.shot = SND_DESERTEAGLE;
     deserteagle.draw = SND_UNIVERSAL_DRAW;
@@ -140,13 +145,10 @@ void weapon_init()
     deserteagle.reload_1 = SND_UNIVERSAL_RELOAD;
     deserteagle.reload_2 = SND_NULL;
     deserteagle.damage = 21;
-    deserteagle.damage_explosion = 0;
     deserteagle.firerate = RATE_DESERTEAGLE;
     deserteagle.bullet = 1;
     deserteagle.current_ammo = AMMO_DESERTEAGLE;
-    deserteagle.onWater = false;
-    deserteagle.dealDmgAtImpact = false;
-    deserteagle.haveGravity = false;
+    deserteagle.muzzle_duration = 3.0f;
     deserteagle.muzzle_pos[0] = 0;
     deserteagle.muzzle_pos[1] = 0;
     deserteagle.muzzle_pos[2] = 0;
@@ -154,6 +156,9 @@ void weapon_init()
     deserteagle.muzzle_orient[1] = 0;
     deserteagle.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                AUTOMAGS GUN                 //
+    //=============================================//
     automags.item_id = TYPE_AUTOMAGS;
     automags.shot = SND_AUTOMAGS;
     automags.draw = SND_UNIVERSAL_DRAW;
@@ -162,13 +167,10 @@ void weapon_init()
     automags.reload_1 = SND_UNIVERSAL_RELOAD;
     automags.reload_2 = SND_NULL;
     automags.damage = 12;
-    automags.damage_explosion = 0;
     automags.firerate = RATE_AUTOMAGS;
     automags.bullet = 2;
     automags.current_ammo = AMMO_AUTOMAGS;
-    automags.onWater = false;
-    automags.dealDmgAtImpact = false;
-    automags.haveGravity = false;
+    automags.muzzle_duration = 3.0f;
     automags.muzzle_pos[0] = 0;
     automags.muzzle_pos[1] = 0;
     automags.muzzle_pos[2] = 0;
@@ -176,6 +178,9 @@ void weapon_init()
     automags.muzzle_orient[1] = 0;
     automags.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                REVOLVER GUN                 //
+    //=============================================//
     revolver.item_id = TYPE_REVOLVER;
     revolver.shot = SND_REVOLVER;
     revolver.draw = SND_UNIVERSAL_DRAW;
@@ -184,13 +189,11 @@ void weapon_init()
     revolver.reload_1 = SND_UNIVERSAL_RELOAD;
     revolver.reload_2 = SND_NULL;
     revolver.damage = 21;
-    revolver.damage_explosion = 0;
     revolver.firerate = RATE_REVOLVER;
     revolver.bullet = 1;
     revolver.current_ammo = AMMO_REVOLVER;
-    revolver.onWater = false;
-    revolver.dealDmgAtImpact = false;
-    revolver.haveGravity = false;
+    revolver.itemIsEquipped = false;         // can be equiped of the lasersight !
+    revolver.muzzle_duration = 3.0f;
     revolver.muzzle_pos[0] = 0;
     revolver.muzzle_pos[1] = 0;
     revolver.muzzle_pos[2] = 0;
@@ -198,22 +201,22 @@ void weapon_init()
     revolver.muzzle_orient[1] = 0;
     revolver.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                  M16 GUN                    //
+    //=============================================//
     m16.item_id = TYPE_M16;
     m16.shot = SND_M16;
     m16.draw = SND_UNIVERSAL_HIDE;
-    m16.hide = SND_UNIVERSAL_HIDE;
+    m16.hide = SND_NULL;
     m16.echo = SND_M16_STOP;
     m16.reload_1 = SND_NULL;
     m16.reload_2 = SND_NULL;
     m16.damage = 12;
-    m16.damage_explosion = 0;
-    m16.firerate = (m16.alternateAim) ? RATE_M16_ALT : RATE_M16;
+    m16.firerate = (mp5.alternateAim) ? RATE_M16_ALT : RATE_M16;
     m16.bullet = 1;
     m16.current_ammo = AMMO_M16;
-    m16.onWater = false;
-    m16.dealDmgAtImpact = false;
-    m16.haveGravity = false;
-    m16.alternateAim = false;           // define it at animation (M16Anim())
+    m16.alternateAim = false;           // define it at animation (M16Anim()) ?
+    m16.muzzle_duration = 3.0f;
     m16.muzzle_pos[0] = 0;
     m16.muzzle_pos[1] = 0;
     m16.muzzle_pos[2] = 0;
@@ -221,6 +224,9 @@ void weapon_init()
     m16.muzzle_orient[1] = 0;
     m16.muzzle_orient[2] = 0;
 
+    //=============================================//
+    //                  MP5 GUN                    //
+    //=============================================//
     mp5.item_id = TYPE_MP5;
     mp5.shot = SND_MP5;
     mp5.draw = SND_UNIVERSAL_HIDE;
@@ -233,9 +239,7 @@ void weapon_init()
     mp5.firerate = (mp5.alternateAim) ? RATE_MP5_ALT : RATE_MP5;
     mp5.bullet = 1;
     mp5.current_ammo = AMMO_MP5;
-    mp5.onWater = false;
-    mp5.dealDmgAtImpact = false;
-    mp5.haveGravity = false;
+    mp5.alternateAim = false;
     mp5.muzzle_pos[0] = 0;
     mp5.muzzle_pos[1] = 0;
     mp5.muzzle_pos[2] = 0;
@@ -243,136 +247,147 @@ void weapon_init()
     mp5.muzzle_orient[1] = 0;
     mp5.muzzle_orient[2] = 0;
 
-    rocketgun.item_id = TYPE_ROCKETGUN;
-    rocketgun.shot = SND_ROCKETGUN;
-    rocketgun.draw = SND_UNIVERSAL_HIDE;
-    rocketgun.hide = SND_UNIVERSAL_HIDE;
-    rocketgun.echo = SND_NULL;
-    rocketgun.reload_1 = SND_ROCKETGUN_RELOAD;
-    rocketgun.reload_2 = SND_NULL;
-    rocketgun.damage = 0;
-    rocketgun.damage_explosion = 100;
-    rocketgun.firerate = RATE_ROCKETGUN;
-    rocketgun.bullet = 1;
-    rocketgun.current_ammo = AMMO_ROCKETGUN;
-    rocketgun.onWater = false;
-    rocketgun.dealDmgAtImpact = false;
-    rocketgun.haveGravity = false;
-    rocketgun.muzzle_pos[0] = 0;
-    rocketgun.muzzle_pos[1] = 0;
-    rocketgun.muzzle_pos[2] = 0;
-    rocketgun.muzzle_orient[0] = 0;
-    rocketgun.muzzle_orient[1] = 0;
-    rocketgun.muzzle_orient[2] = 0;
+    //=============================================//
+    //                 ROCKET GUN                  //
+    //=============================================//
+    rocket.item_id = TYPE_ROCKETGUN;
+    rocket.shot = SND_ROCKETGUN;
+    rocket.draw = SND_UNIVERSAL_HIDE;
+    rocket.hide = SND_UNIVERSAL_HIDE;
+    rocket.echo = SND_NULL;
+    rocket.reload_1 = SND_ROCKETGUN_RELOAD;
+    rocket.reload_2 = SND_NULL;
+    rocket.damage_explosion = 100;
+    rocket.firerate = RATE_ROCKETGUN;
+    rocket.bullet = 1;
+    rocket.current_ammo = AMMO_ROCKETGUN;
+    rocket.onWater = false;
+    rocket.dealDmgAtImpact = false;
+    rocket.haveGravity = false;
+    // rocket not have muzzleflash but smoke is used
+    rocket.muzzle_duration = 0.0f;
+    rocket.muzzle_pos[0] = 0;
+    rocket.muzzle_pos[1] = 0;
+    rocket.muzzle_pos[2] = 0;
+    rocket.muzzle_orient[0] = 0;
+    rocket.muzzle_orient[1] = 0;
+    rocket.muzzle_orient[2] = 0;
 
-    grenadegun.item_id = TYPE_GRENADEGUN;
-    grenadegun.shot = SND_GRENADEGUN;
-    grenadegun.draw = SND_UNIVERSAL_HIDE;
-    grenadegun.hide = SND_UNIVERSAL_HIDE;
-    grenadegun.echo = SND_NULL;
-    if (world > TR_I_UB && world < TR_IV)
+    //=============================================//
+    //                GRENADE GUN                  //
+    //=============================================//
+    grenade.item_id = TYPE_GRENADEGUN;
+    grenade.shot = SND_GRENADEGUN;
+    grenade.draw = SND_UNIVERSAL_HIDE;
+    grenade.hide = SND_UNIVERSAL_HIDE;
+    grenade.echo = SND_NULL;
+    if (getVersion(TR_II_III))
     {
-        grenadegun.reload_1 = SND_TR2_3_GRENADEGUN_RELOAD;
-        grenadegun.reload_2 = SND_TR2_3_GRENADEGUN_LOCK;
+        grenade.reload_1 = SND_TR2_3_GRENADEGUN_RELOAD;
+        grenade.reload_2 = SND_TR2_3_GRENADEGUN_LOCK;
     }
-    else if (world >= TR_IV)
+    else if (getVersion(TR_IV_V))
     {
-        grenadegun.reload_1 = SND_TR4_C_GRENADEGUN_RELOAD;
-        grenadegun.reload_2 = SND_TR4_C_GRENADEGUN_LOCK;
+        grenade.reload_1 = SND_TR4_C_GRENADEGUN_RELOAD;
+        grenade.reload_2 = SND_TR4_C_GRENADEGUN_LOCK;
     }
-    grenadegun.damage = 1;
-    grenadegun.firerate = RATE_GRENADEGUN;
-    grenadegun.bullet = 1;
-    grenadegun.current_ammo = AMMO_GRENADE;
-    grenadegun.onWater = false;
-    grenadegun.dealDmgAtImpact = false;
-    grenadegun.haveGravity = true;
-    grenadegun.muzzle_pos[0] = 0;
-    grenadegun.muzzle_pos[1] = 0;
-    grenadegun.muzzle_pos[2] = 0;
-    grenadegun.muzzle_orient[0] = 0;
-    grenadegun.muzzle_orient[1] = 0;
-    grenadegun.muzzle_orient[2] = 0;
+    grenade.damage_explosion = 40;
+    grenade.firerate = RATE_GRENADEGUN;
+    grenade.bullet = 1;
 
-    harpoongun.item_id = TYPE_HARPOONGUN;
-    harpoongun.shot = (player->move_type == MOVE_UNDERWATER) ? SND_HARPOON_WATER : SND_HARPOON_LAND;
-    harpoongun.draw = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : SND_UNIVERSAL_HIDE;
-    harpoongun.hide = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : SND_UNIVERSAL_HIDE;
-    harpoongun.echo = SND_NULL;
-    harpoongun.reload_1 = (player->move_type == MOVE_UNDERWATER) ? SND_HARPOON_RELOAD_WATER : SND_HARPOON_RELOAD_LAND;
-    harpoongun.damage = 10;
-    harpoongun.damage_explosion = 0;
-    harpoongun.damage_water = 20;
-    harpoongun.firerate = RATE_HARPOONGUN;
-    harpoongun.bullet = 1;
-    harpoongun.ammo_counter = 4;
-    harpoongun.current_ammo = AMMO_HARPOON;
-    harpoongun.onWater = (player->move_type == MOVE_UNDERWATER) ? true : false;
-    harpoongun.haveGravity = (player->move_type == MOVE_UNDERWATER) ? false : true;
-    harpoongun.dealDmgAtImpact = false;
-    harpoongun.muzzle_pos[0] = 0;
-    harpoongun.muzzle_pos[1] = 0;
-    harpoongun.muzzle_pos[2] = 0;
-    harpoongun.muzzle_orient[0] = 0;
-    harpoongun.muzzle_orient[1] = 0;
-    harpoongun.muzzle_orient[2] = 0;
+    if (getVersion(TR_II_III))
+    {
+        grenade.current_ammo = AMMO_GRENADE;
+    }
+    else if (getVersion(TR_IV_V))
+    {
+        grenade.current_ammo = AMMO_GRENADE_NORMAL;
+    }
 
-    crossbowgun.item_id = TYPE_CROSSBOWGUN;
-    crossbowgun.shot = SND_CROSSBOWGUN;
-    crossbowgun.draw = SND_UNIVERSAL_HIDE;
-    crossbowgun.hide = SND_UNIVERSAL_HIDE;
-    crossbowgun.echo = SND_NULL;
-    crossbowgun.reload_1 = SND_UNIVERSAL_RELOAD;
-    crossbowgun.reload_2 = SND_NULL;
-    crossbowgun.damage = 12;
-    crossbowgun.firerate = RATE_CROSSBOWGUN;
-    crossbowgun.bullet = 1;
-    crossbowgun.ammo_counter = 1;
-    crossbowgun.current_ammo = AMMO_CROSSBOW_NORMAL;
-    crossbowgun.onWater = false;
-    crossbowgun.dealDmgAtImpact = false;
-    crossbowgun.haveGravity = false;
-    crossbowgun.muzzle_pos[0] = 0;
-    crossbowgun.muzzle_pos[1] = 0;
-    crossbowgun.muzzle_pos[2] = 0;
-    crossbowgun.muzzle_orient[0] = 0;
-    crossbowgun.muzzle_orient[1] = 0;
-    crossbowgun.muzzle_orient[2] = 0;
+    grenade.haveGravity = true;
+    // smoke is used but no muzzleflash
+    grenade.muzzle_duration = 0.0f;
+    grenade.muzzle_pos[0] = 0;
+    grenade.muzzle_pos[1] = 0;
+    grenade.muzzle_pos[2] = 0;
+    grenade.muzzle_orient[0] = 0;
+    grenade.muzzle_orient[1] = 0;
+    grenade.muzzle_orient[2] = 0;
 
-    grapplingun.item_id = TYPE_GRAPPLINGUN;
+    //=============================================//
+    //                HARPOON GUN                  //
+    //=============================================//
+    harpoon.item_id = TYPE_HARPOONGUN;
+    harpoon.shot = (player->move_type == MOVE_UNDERWATER) ? SND_HARPOON_WATER : SND_HARPOON_LAND;
+    harpoon.draw = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : SND_UNIVERSAL_HIDE;
+    harpoon.hide = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : SND_UNIVERSAL_HIDE;
+    harpoon.echo = SND_NULL;
+    harpoon.reload_1 = (player->move_type == MOVE_UNDERWATER) ? SND_HARPOON_RELOAD_WATER : SND_HARPOON_RELOAD_LAND;
+    harpoon.damage = 10;
+    harpoon.damage_explosion = 0;
+    harpoon.damage_water = 20;
+    harpoon.firerate = RATE_HARPOONGUN;
+    harpoon.bullet = 1;
+    harpoon.ammo_counter = 4;
+    harpoon.current_ammo = AMMO_HARPOON;
+    harpoon.onWater = (player->move_type == MOVE_UNDERWATER) ? true : false;
+    harpoon.haveGravity = (player->move_type == MOVE_UNDERWATER) ? false : true;
+    harpoon.dealDmgAtImpact = false;
+    // harpoon have no muzzleflash else if smoke
+
+    //=============================================//
+    //                CROSSBOW GUN                 //
+    //=============================================//
+    crossbow.item_id = TYPE_CROSSBOWGUN;
+    crossbow.shot = SND_CROSSBOWGUN;
+    crossbow.draw = SND_UNIVERSAL_HIDE;
+    crossbow.hide = SND_UNIVERSAL_HIDE;
+    crossbow.echo = SND_NULL;
+    crossbow.reload_1 = SND_UNIVERSAL_RELOAD;
+    crossbow.reload_2 = SND_NULL;
+    crossbow.damage = 12;
+    crossbow.firerate = RATE_CROSSBOWGUN;
+    crossbow.bullet = 1;
+    crossbow.ammo_counter = 1;
+    crossbow.current_ammo = AMMO_CROSSBOW_NORMAL;
+    crossbow.onWater = false;
+    crossbow.dealDmgAtImpact = false;
+    crossbow.haveGravity = false;
+    crossbow.itemIsEquipped = false;             // can be equiped of the lasersight
+    // same as harpoon
+
+    //=============================================//
+    //                GRAPPLIN GUN                 //
+    //=============================================//
+    grapplin.item_id = TYPE_GRAPPLINGUN;
     // this "weapon" have sound ?
-    grapplingun.shot = SND_NULL;
-    grapplingun.draw = SND_NULL;
-    grapplingun.hide = SND_NULL;
-    grapplingun.echo = SND_NULL;
-    grapplingun.reload_1 = SND_NULL;
-    grapplingun.reload_2 = SND_NULL;
-    grapplingun.damage = 0;
-    grapplingun.firerate = RATE_GRAPPINGUN;
-    grapplingun.bullet = 1;
-    grapplingun.current_ammo = AMMO_GRAPPLIN;
-    grapplingun.onWater = false;
-    grapplingun.dealDmgAtImpact = false;
-    grapplingun.haveGravity = false;
+    grapplin.shot = SND_NULL;
+    grapplin.draw = SND_NULL;
+    grapplin.hide = SND_NULL;
+    grapplin.echo = SND_NULL;
+    grapplin.reload_1 = SND_NULL;
+    grapplin.reload_2 = SND_NULL;
+    grapplin.damage = 0;
+    grapplin.firerate = RATE_GRAPPINGUN;
+    grapplin.bullet = 1;
+    grapplin.current_ammo = AMMO_GRAPPLIN;
+    grapplin.onWater = false;
+    grapplin.dealDmgAtImpact = false;
+    grapplin.haveGravity = false;
     // no muzzleflash for this ?
-    grapplingun.muzzle_pos[0] = 0;
-    grapplingun.muzzle_pos[1] = 0;
-    grapplingun.muzzle_pos[2] = 0;
-    grapplingun.muzzle_orient[0] = 0;
-    grapplingun.muzzle_orient[1] = 0;
-    grapplingun.muzzle_orient[2] = 0;
+    // same as harpoon and crossbow
 }
 
-// if you define (UNLIMITED) the item have unlimited ammo
-bool checkCanShoot(struct weapons_s item_id)
+// if you define (AMMO_UNLIMITED) the item have unlimited ammo
+bool checkCanShoot(weapons_s item_id)
 {
     entity_s* player = World_GetPlayer();
 
-    if (item_id.current_ammo == -1)
+    if (item_id.current_ammo == AMMO_UNLIMITED)
     {
         return true;
     }
-    // ammo are empty when is 0 or go to negative ?
+    // ammo are empty when is 0 else if go to negative ?
     else if (Inventory_GetItemsCount(player->inventory, item_id.current_ammo) > AMMO_EMPTY)
     {
         return true;
@@ -381,7 +396,7 @@ bool checkCanShoot(struct weapons_s item_id)
     return false;
 }
 
-bool consumeAmmo(struct weapons_s weapon)
+bool consumeAmmo(weapons_s weapon)
 {
     entity_p player = World_GetPlayer();
 
@@ -389,7 +404,7 @@ bool consumeAmmo(struct weapons_s weapon)
     if (Inventory_GetItemsCount(player->inventory, weapon.current_ammo) > AMMO_EMPTY)
     {
         // checking if the current ammo is equal to ammo you want to consume !
-        if (NOT_EMPTY_OR_UNLIMITED)
+        if (weapon.current_ammo != AMMO_EMPTY && weapon.current_ammo != AMMO_UNLIMITED)
         {
             // consume item
             Inventory_RemoveItem(&player->inventory, weapon.current_ammo, 1);
@@ -397,24 +412,22 @@ bool consumeAmmo(struct weapons_s weapon)
         }
     }
 
-    // item not found or not equal to current ammo
+    // item not found else if not equal to current ammo
     return false;
 }
 
-int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
+int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
 {
-    int32_t ver = World_GetVersion();
-
     if (GET_MODEL(TR_MODEL_PISTOL))
     {
         return ITEM_PISTOL;
     }
-    else if ((ver > TR_I_UB) && GET_MODEL(TR_MODEL_SHOTGUN))
+    else if ((getVersion(TR_II_TO_V)) && GET_MODEL(TR_MODEL_SHOTGUN))
     {
         return ITEM_SHOTGUN;
     }
 
-    if (ver < TR_II)  // tomb raider 1
+    if (getVersion(TR_I))  // tomb raider 1
     {
         if (GET_MODEL(TR1_MODEL_SHOTGUN))
         {
@@ -429,7 +442,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
             return ITEM_UZIS;
         }
     }
-    else if (ver < TR_III) // tomb raider 2
+    else if (getVersion(TR_II)) // tomb raider 2
     {
         if (GET_MODEL(TR2_MODEL_AUTOMAGS))
         {
@@ -452,7 +465,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
             return ITEM_HARPOONGUN;
         }
     }
-    else if (ver < TR_IV) // tomb raider 3
+    else if (getVersion(TR_III)) // tomb raider 3
     {
         if (GET_MODEL(TR3_MODEL_DESERTEAGLE))
         {
@@ -479,7 +492,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
             return ITEM_HARPOONGUN;
         }
     }
-    else if (ver < TR_V)         // tomb raider 4 and 5
+    else if (getVersion(TR_IV))         // tomb raider 4 and 5
     {
         if (GET_MODEL(TR4C_MODEL_UZI))
         {
@@ -498,7 +511,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
             return ITEM_REVOLVER;
         }
     }
-    else if (ver == TR_V)
+    else if (getVersion(TR_V))
     {
         if (GET_MODEL(TR4C_MODEL_UZI))
         {
@@ -510,7 +523,7 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
         }
         else if (GET_MODEL(TR4C_MODEL_GRENADEGUN))
         {
-            return ITEM_MP5;  // it's h&k gun !
+            return ITEM_MP5;         // it's h&k gun !
         }
         else if (GET_MODEL(TR4C_MODEL_REVOLVER))
         {
@@ -522,124 +535,168 @@ int CurrentWeaponToItemID(struct ss_animation_s* ss_anim)
     return 0;
 }
 
-int SetCurrentWeaponAnimation(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end)
+// if ammo is empty and you try to firing.
+void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time)
+{
+    // needed
+    ent->character->state.weapon_ready = 0;
+
+    // animation only for one hand !
+    if (ss_anim->model->animation_count == 4)
+    {
+        Anim_SetAnimation(ss_anim, 2, -1);  // hide and draw
+    }
+    else if (ss_anim->model->animation_count > 4)
+    {
+        Anim_SetAnimation(ss_anim, 3, 0);   // hide (back)
+    }
+
+    // when animation is finished, change weapon to model_id
+    if (Anim_IncTime(ss_anim, time))
+    {
+        Character_ChangeWeapon(ent, model_id);
+    }
+}
+
+// get the current version without ">" else if "<" !
+// - for id use classic define (TR_I, TR_II etc..)
+// - for the new define (like TR_IV_V) is in weapons.h (TR_ flag)
+// - returned -1 if not found !
+int32_t getVersion(int id)
+{
+    int32_t ver = World_GetVersion();
+
+    switch (id)
+    {
+    case TR_I:
+    case TR_I_DEMO:
+    case TR_I_UB:
+        return (ver >= TR_I && ver < TR_II);
+    case TR_II:
+    case TR_II_DEMO:
+        return (ver > TR_I_UB && ver < TR_III);
+    case TR_III:
+        return (ver > TR_II && ver < TR_IV);
+    case TR_IV:
+    case TR_IV_DEMO:
+        return (ver > TR_III && ver < TR_V);
+    case TR_V:
+        return (ver == TR_V);
+    case TR_IV_V:
+        return (ver > TR_III && ver <= TR_V);
+    case TR_I_II_III:
+        return (ver >= TR_I && ver < TR_IV);
+    case TR_II_III:
+        return (ver >= TR_II && ver < TR_IV);
+    case TR_II_TO_V:
+        return (ver >= TR_II && ver <= TR_V);
+    }
+
+    return -1;
+}
+
+void SetCurrentWeaponAnimation(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end)
 {
     b_tag->is_targeted = (target) ? (0x01) : (0x00);
 
     switch (ss_anim->current_animation)
     {
         case ANIM_IDLE_TO_FIRING:
-            ONEHAND_IDLE_TO_FIRING;
-            return IS_IDLE;
+            OneHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time);
+            break;
 
         case ANIM_HIDE_TO_IDLE:
-            ONEHAND_HIDE_TO_IDLE;
-            return IS_DRAW;
+            OneHand_HideToIdle(ent, ss_anim, weapon, time);
+            break;
 
         case ANIM_IDLE_AND_HIDE:
-            ONEHAND_HIDE_AND_IDLE;
-            return IS_SPECIAL;
+            OneHand_HideAndIdle(ent, ss_anim, weapon, time);
+            break;
 
         case ANIM_FIRING:
             if (checkCanShoot(weapon))
             {
-                ONEHAND_FIRING(ANIM_FIRING, ANIM_IDLE_TO_FIRING);
-                return IS_FIRING;
+                OneHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, targeted_bone_start, targeted_bone_end, ANIM_FIRING, ANIM_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
             break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int ShotgunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void ShotgunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
-    int32_t ver = World_GetVersion();
-
     switch (ss_anim->current_animation)
     {
         case SHOTGUN_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(SHOTGUN_IDLE_TO_HIDE, SHOTGUN_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, SHOTGUN_IDLE_TO_HIDE, SHOTGUN_FIRING);
+            break;
 
         case SHOTGUN_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(SHOTGUN_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, SHOTGUN_IDLE_TO_FIRING);
+            break;
 
         case SHOTGUN_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(SHOTGUN_FIRING, SHOTGUN_FIRING_TO_IDLE, SHOTGUN_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, SHOTGUN_FIRING, SHOTGUN_FIRING_TO_IDLE, SHOTGUN_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
-            return IS_NOT_DEFINED;
+            break;
 
         case SHOTGUN_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case SHOTGUN_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(SHOTGUN_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, SHOTGUN_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int GrenadeGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void GrenadeGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
-    int32_t ver = World_GetVersion();
-
     switch (ss_anim->current_animation)
     {
-        case GRENADEGUN_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(GRENADEGUN_IDLE_TO_FIRING);
-            return IS_DRAW;
-
         case GRENADEGUN_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(GRENADEGUN_IDLE_TO_HIDE, GRENADEGUN_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, GRENADEGUN_IDLE_TO_HIDE, GRENADEGUN_FIRING);
+            break;
+
+        case GRENADEGUN_HIDE_TO_IDLE:
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, GRENADEGUN_IDLE_TO_FIRING);
+            break;
 
         case GRENADEGUN_FIRING_RELOAD:
             switch (ss_anim->current_frame)
             {
                 case 26:
-                    if (ver > TR_I_UB && ver < TR_IV)
+                    if (getVersion(TR_II_III))
                     {
                         Audio_Send(SND_TR2_3_GRENADEGUN_RELOAD, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        return IS_SOUND;
                     }
-                    else
+                    else if (getVersion(TR_IV_V))
                     {
                         Audio_Send(SND_TR4_C_GRENADEGUN_RELOAD, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        return IS_SOUND;
                     }
-                    return IS_NOT_DEFINED;
+                    break;
 
                 case 33:
-                    if (ver > TR_I_UB && ver < TR_IV)
+                    if (getVersion(TR_II_III))
                     {
                         Audio_Send(SND_TR2_3_GRENADEGUN_LOCK, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        return IS_SOUND;
                     }
-                    else
+                    else if (getVersion(TR_IV_V))
                     {
                         Audio_Send(SND_TR4_C_GRENADEGUN_LOCK, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                        return IS_SOUND;
                     }
-                    return IS_NOT_DEFINED;
+                    break;
             }
             
             if (Anim_IncTime(ss_anim, time))
@@ -653,34 +710,30 @@ int GrenadeGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float t
                     Anim_SetAnimation(ss_anim, GRENADEGUN_FIRING_TO_IDLE, 0);
                 }
             }
-            return IS_RELOAD;
+            break;
 
         case GRENADEGUN_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(GRENADEGUN_FIRING_RELOAD, GRENADEGUN_FIRING_TO_IDLE, GRENADEGUN_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, GRENADEGUN_FIRING_RELOAD, GRENADEGUN_FIRING_TO_IDLE, GRENADEGUN_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
-            return IS_FIRING;
+            break;
 
         case GRENADEGUN_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(GRENADEGUN_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, GRENADEGUN_IDLE_TO_FIRING);
+            break;
 
         case GRENADEGUN_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_GRENADEGUN_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_GRENADEGUN_IS_END);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int HarpoonAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
@@ -691,44 +744,40 @@ int HarpoonAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time
             }
             else
             {
-                ANIM_STATE;
-                TWOHAND_IDLE_TO_FIRING(HARPOON_LAND_IDLE_TO_HIDE, HARPOON_LAND_FIRING);
-                return IS_IDLE;
+                inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+                TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, HARPOON_LAND_IDLE_TO_HIDE, HARPOON_LAND_FIRING);
             }
-            return IS_NOT_DEFINED;
+            break;
 
         case HARPOON_LAND_HIDE_TO_IDLE:
             if (ent->move_type == MOVE_UNDERWATER)
             {
-                TWOHAND_HIDE_TO_IDLE(HARPOON_WATER_IDLE_TO_FIRING);
-                return IS_DRAW;
+                TwoHand_HideToIdle(ent, ss_anim, weapon, time, HARPOON_WATER_IDLE_TO_FIRING);
             }
             else
             {
-                TWOHAND_HIDE_TO_IDLE(HARPOON_LAND_IDLE_TO_FIRING);
-                return IS_DRAW;
+                TwoHand_HideToIdle(ent, ss_anim, weapon, time, HARPOON_LAND_IDLE_TO_FIRING);
             }
-            return IS_NOT_DEFINED;
+            break;
 
         case HARPOON_LAND_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(HARPOON_LAND_FIRING, HARPOON_LAND_FIRING_TO_IDLE, HARPOON_LAND_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, HARPOON_LAND_FIRING, HARPOON_LAND_FIRING_TO_IDLE, HARPOON_LAND_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
             }
-            return IS_FIRING;
+            break;
 
         case HARPOON_LAND_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case HARPOON_LAND_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(HARPOON_LAND_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, HARPOON_LAND_IDLE_TO_FIRING);
+            break;
 
         case HARPOON_RELOAD:
             if (Anim_IncTime(ss_anim, time))
@@ -742,678 +791,476 @@ int HarpoonAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time
                     Anim_SetAnimation(ss_anim, HARPOON_LAND_IDLE_TO_FIRING, 0);
                 }
             }
-            return IS_RELOAD;
+            break;
 
         case HARPOON_WATER_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(HARPOON_WATER_IDLE_TO_HIDE, HARPOON_WATER_FIRING);
-            return IS_SPECIAL;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, HARPOON_WATER_IDLE_TO_HIDE, HARPOON_WATER_FIRING);
+            break;
 
         case HARPOON_WATER_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(HARPOON_WATER_IDLE_TO_FIRING);
-            return IS_SPECIAL;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, HARPOON_WATER_IDLE_TO_FIRING);
+            break;
 
         case HARPOON_WATER_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(HARPOON_WATER_FIRING, HARPOON_WATER_FIRING_TO_IDLE, HARPOON_WATER_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, HARPOON_WATER_FIRING, HARPOON_WATER_FIRING_TO_IDLE, HARPOON_WATER_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
-            return IS_SPECIAL;
+            break;
 
         case HARPOON_WATER_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_SPECIAL;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int MP5Anim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void MP5Anim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
         case MP5_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(MP5_IDLE_TO_HIDE, MP5_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, MP5_IDLE_TO_HIDE, MP5_FIRING);
+            break;
 
         case MP5_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(MP5_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, MP5_IDLE_TO_FIRING);
+            break;
 
         case MP5_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(MP5_FIRING, MP5_FIRING_TO_IDLE, MP5_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, MP5_FIRING, MP5_FIRING_TO_IDLE, MP5_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
-            return IS_NOT_DEFINED;
+            break;
 
         case MP5_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case MP5_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(MP5_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, MP5_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int M16Anim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void M16Anim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
         case M16_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(M16_IDLE_TO_HIDE, M16_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, M16_IDLE_TO_HIDE, M16_FIRING);
+            break;
 
         case M16_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(M16_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, M16_IDLE_TO_FIRING);
+            break;
 
         case M16_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(M16_FIRING, M16_FIRING_TO_IDLE, M16_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, M16_FIRING, M16_FIRING_TO_IDLE, M16_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
-            return IS_NOT_DEFINED;
+            break;
 
         case M16_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case M16_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(M16_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, M16_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int RocketGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void RocketGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
         case ROCKETGUN_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(ROCKETGUN_IDLE_TO_HIDE, ROCKETGUN_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, ROCKETGUN_IDLE_TO_HIDE, ROCKETGUN_FIRING);
+            break;
 
         case ROCKETGUN_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(ROCKETGUN_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, ROCKETGUN_IDLE_TO_FIRING);
+            break;
 
         case ROCKETGUN_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(ROCKETGUN_FIRING, ROCKETGUN_FIRING_TO_IDLE, ROCKETGUN_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, ROCKETGUN_FIRING, ROCKETGUN_FIRING_TO_IDLE, ROCKETGUN_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
             break;
 
         case ROCKETGUN_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case ROCKETGUN_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(ROCKETGUN_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, ROCKETGUN_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int CrossbowAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void CrossbowAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
         case CROSSBOW_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(CROSSBOW_IDLE_TO_HIDE, CROSSBOW_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, CROSSBOW_IDLE_TO_HIDE, CROSSBOW_FIRING);
+            break;
 
         case CROSSBOW_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(CROSSBOW_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, CROSSBOW_IDLE_TO_FIRING);
+            break;
 
         case CROSSBOW_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(CROSSBOW_FIRING, CROSSBOW_FIRING_TO_IDLE, CROSSBOW_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, CROSSBOW_FIRING, CROSSBOW_FIRING_TO_IDLE, CROSSBOW_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
             break;
         case CROSSBOW_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case CROSSBOW_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(CROSSBOW_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, CROSSBOW_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-int GrapplinGunAnim(struct entity_s* ent, struct ss_animation_s* ss_anim, float time, struct weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
+void GrapplinGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
     switch (ss_anim->current_animation)
     {
         case GRAPPLING_IDLE_TO_FIRING:
-            ANIM_STATE;
-            TWOHAND_IDLE_TO_FIRING(GRAPPLING_IDLE_TO_HIDE, GRAPPLING_FIRING);
-            return IS_IDLE;
+            inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
+            TwoHand_IdleToFiring(ent, ss_anim, weapon, b_tag, target, do_aim, time, inc_state, GRAPPLING_IDLE_TO_HIDE, GRAPPLING_FIRING);
+            break;
 
         case GRAPPLING_HIDE_TO_IDLE:
-            TWOHAND_HIDE_TO_IDLE(GRAPPLING_IDLE_TO_FIRING);
-            return IS_DRAW;
+            TwoHand_HideToIdle(ent, ss_anim, weapon, time, GRAPPLING_IDLE_TO_FIRING);
+            break;
 
         case GRAPPLING_FIRING:
             if (checkCanShoot(weapon))
             {
-                TWOHAND_FIRING(GRAPPLING_FIRING, GRAPPLING_FIRING_TO_IDLE, GRAPPLING_IDLE_TO_FIRING);
-                return IS_FIRING;
+                TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, GRAPPLING_FIRING, GRAPPLING_FIRING_TO_IDLE, GRAPPLING_IDLE_TO_FIRING);
             }
             else
             {
                 AutoSelect(TR_MODEL_PISTOL, ss_anim, ent, time);
-                return IS_HIDE;
             }
             break;
 
         case GRAPPLING_IDLE_TO_HIDE:
-            TWOHAND_IDLE_TO_HIDE(TW_FRAME_IS_END, false);
-            return IS_HIDE;
+            TwoHand_IdleToHide(ent, ss_anim, weapon, time, TW_FRAME_IS_END);
+            break;
 
         case GRAPPLING_FIRING_TO_IDLE:
-            TWOHAND_FIRING_TO_IDLE(GRAPPLING_IDLE_TO_FIRING);
-            return IS_FIRING_TO_IDLE;
+            TwoHand_FiringToIdle(ent, ss_anim, weapon, time, GRAPPLING_IDLE_TO_FIRING);
+            break;
     }
-
-    return IS_NOT_DEFINED;
 }
 
-// if ammo is empty and you try to firing.
-void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time)
+void OneHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time)
 {
-    // needed
-    ent->character->state.weapon_ready = 0;
+    int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
 
-    // animation only for one hand !
-    if (ss_anim->model->animation_count == 4)
+    if ((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
     {
-        Anim_SetAnimation(ss_anim, 2, -1);
+        ///@FIXME: animation launch one time and do nothing (sound, ammo consume, shoot)
+        Anim_SetAnimation(ss_anim, ANIM_FIRING, 0);
     }
-    else
+    else if (ent->character->state.weapon_ready && !ent->character->cmd.action && (-time))
     {
-        Anim_SetAnimation(ss_anim, 3, 0);
-    }
+        if (ss_anim->current_frame == 3)
+        {
+            Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
-    // when animation is finished, change weapon t
-    if (Anim_IncTime(ss_anim, time))
+            if (getVersion(TR_II) && GET_MODEL(TR2_MODEL_UZI) && ANIM_REVERSE)
+            {
+                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            else if (getVersion(TR_III) && GET_MODEL(TR3_MODEL_UZI) && ANIM_REVERSE)
+            {
+                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+            else if (getVersion(TR_IV_V) && GET_MODEL(TR4C_MODEL_UZI) && ANIM_REVERSE)
+            {
+                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+            }
+        }
+    }
+    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
     {
-        Character_ChangeWeapon(ent, model_id);
+        // fix exit fire loop bug (after pressing 
+        Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+        Anim_SetAnimation(ss_anim, ANIM_IDLE_AND_HIDE, -1);
     }
 }
 
-// get the current version without ">" or "<" !
-// - for checking the TR4 and TR5 in same if, use TR_IV_V !
-// - returned -1 if not found !
-// use GET_VERSION(game_id) 
-int32_t getVersion(int id)
-{
-    int32_t ver = World_GetVersion();
-
-    switch (id)
-    {
-        case TR_I:
-        case TR_I_DEMO:
-        case TR_I_UB:
-            return (ver < TR_II);
-        case TR_II:
-        case TR_II_DEMO:
-            return (ver > TR_I_UB && ver < TR_III);
-        case TR_III:
-            return (ver > TR_II && ver < TR_IV);
-        case TR_IV:
-        case TR_IV_DEMO:
-            return (ver > TR_III && ver < TR_V);
-        case TR_V:
-            return (ver == TR_V);
-        case TR_IV_V:
-            return (ver > TR_III && ver <= TR_V);
-    }
-
-    return -1;
-}
-
-bool OneHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time)
+void TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time, int inc_state, int anim_hide, int anim_firing)
 {
     b_tag->is_targeted = (target) ? (0x01) : (0x00);
-    int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
 
-    if (ss_anim->model->animation_count == 4)
+    if ((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
     {
-        switch (inc_state)
-        {
-        case ARMED:
-            if (ent->character->state.weapon_ready && ent->character->cmd.action)
-            {
-                ///@FIXME: animation launch one time and do nothing (sound, ammo consume, shoot)
-                Anim_SetAnimation(ss_anim, ANIM_FIRING, 0);
-            }
-            return true;
-
-        case UNARMED:
-            if (!ent->character->state.weapon_ready)
-            {
-                // fix exit fire loop bug
-                Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                Anim_SetAnimation(ss_anim, ANIM_IDLE_AND_HIDE, -1);
-                return true;
-            }
-            return false;
-        }
-
-        if (ent->character->state.weapon_ready && !ent->character->cmd.action)
-        {
-            if (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE)
-            {
-                switch (ss_anim->current_frame)
-                {
-                case 3:
-                    if (GET_VERSION(TR_II) && GET_MODEL(TR2_MODEL_UZI))
-                    {
-                        Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    }
-                    else if (GET_VERSION(TR_III) && GET_MODEL(TR3_MODEL_UZI))
-                    {
-                        Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    }
-                    else if (GET_VERSION(TR_IV_V) && GET_MODEL(TR4C_MODEL_UZI))
-                    {
-                        Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    }
-                    return true;
-
-                case 4:
-                    Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                    return true;
-                }
-            }
-        }
+        Anim_SetAnimation(ss_anim, anim_firing, 0);
     }
-
-    return false;
+    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    {
+        // fix exit fire loop bug
+        Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+        Anim_SetAnimation(ss_anim, anim_hide, 0);
+    }
 }
 
-bool TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time, int inc_state, int anim_hide, int anim_firing)
+void TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle_to_firing)
 {
-    if (ss_anim->model->animation_count > 4)
+    if (ss_anim->current_frame == 1)
     {
-        b_tag->is_targeted = (target) ? (0x01) : (0x00);
-
-        switch (inc_state)
+        Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+    }
+    else if (ss_anim->current_frame == 3 && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+    {
+        if (getVersion(TR_II) && GET_MODEL(TR2_MODEL_M16))
         {
-        case ARMED:
-            if (ent->character->state.weapon_ready && ent->character->cmd.action)
-            {
-                ///@FIXME: animation launch one time and do nothing (sound, ammo consume, shoot)
-                Anim_SetAnimation(ss_anim, anim_firing, 0);
-                return true;
-            }
-            return false;
-        case UNARMED:
-            if (!ent->character->state.weapon_ready)
-            {
-                // fix exit fire loop bug
-                Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                Anim_SetAnimation(ss_anim, anim_hide, 0);
-                return true;
-            }
-            return false;
+            Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
         }
     }
-
-    return false;
+    
+    if (Anim_IncTime(ss_anim, time))
+    {
+        Anim_SetAnimation(ss_anim, anim_idle_to_firing, 0);
+    }
 }
 
-bool TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle_to_firing)
+void TwoHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int frame_to_hide)
 {
-    if (ss_anim->model->animation_count > 4)
+    if (Anim_IncTime(ss_anim, time))
     {
-        switch (ss_anim->prev_frame)
-        {
-            case 1:
-                // delete sound (loop mode killer)
-                Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                break;
-            case 3:
-                // echo sound
-                if (GET_VERSION(TR_II) && GET_MODEL(TR2_MODEL_M16))
-                {
-                    Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                }
-                break;
-        }
+        SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
 
-        if (Anim_IncTime(ss_anim, time))
+        // fix animation of two hand if weapon have no ammo (AutoSelect not work with Two Hand after Hide)
+        // when animation is finished and if weapon not have ammo, change weapon to model_id
+        if (Inventory_GetItemsCount(ent->inventory, weapon.current_ammo) <= 0)
         {
-            Anim_SetAnimation(ss_anim, anim_idle_to_firing, 0);
-            return true;
+            Character_ChangeWeapon(ent, TR_MODEL_PISTOL);
         }
     }
 
-    return false;
-}
-
-bool OneHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, bool do_aim)
-{
-    int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
-
-    if (ss_anim->model->animation_count == 4)
+    if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == frame_to_hide))
     {
-        switch (inc_state)
-        {
-        case ARMED:
-            if (ent->character->state.weapon_ready)
-            {
-                Anim_SetAnimation(ss_anim, ANIM_IDLE_TO_FIRING, 0);
-                return true;
-            }
-            return false;
+        if (getVersion(TR_I))
+            StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR1_BACK_WEAPON);
+        else
+            StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR2_BACK_WEAPON);
 
-        case UNARMED:
-            if (!ent->character->state.weapon_ready)
-            {
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HOLSTER_RIGHT);
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HOLSTER_LEFT);
-                StateControl_SetWeaponMeshOff(ent->bf, HAND_RIGHT);
-                StateControl_SetWeaponMeshOff(ent->bf, HAND_LEFT);
-                Anim_SetAnimation(ss_anim, ANIM_HIDE_TO_IDLE, -1);
-                Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                return true;
-            }
-            return false;
-        }
+        StateControl_SetWeaponMeshOff(ent->bf, HAND_RIGHT);
+        Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
-
-    return false;
 }
 
-bool TwoHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int inc_state, int frame_to_hide)
-{
-    if (ss_anim->model->animation_count > 4)
-    {
-        if (Anim_IncTime(ss_anim, time))
-        {
-            SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
-        }
-
-        if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == frame_to_hide))
-        {
-            if (GET_VERSION(TR_I))
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR1_BACK_WEAPON);
-            else
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR2_BACK_WEAPON);
-
-            StateControl_SetWeaponMeshOff(ent->bf, HAND_RIGHT);
-            Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
-        }
-        return true;
-    }
-
-    return false;
-}
-
-bool OneHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time)
+void OneHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time)
 {
     int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
 
-    if (ss_anim->model->animation_count == 4)
+    if ((inc_state == ARMED) && ent->character->state.weapon_ready)
     {
-        switch (inc_state)
-        {
-        case ARMED:
-            if (ent->character->state.weapon_ready)
-            {
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_LEFT);
-                StateControl_SetWeaponMeshOff(ent->bf, HOLSTER_RIGHT);
-                StateControl_SetWeaponMeshOff(ent->bf, HOLSTER_LEFT);
-
-                Anim_SetAnimation(ss_anim, ANIM_IDLE_AND_HIDE, 0);
-                Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                return true;
-            }
-            return false;
-
-        case UNARMED:
-            if (!ent->character->state.weapon_ready)
-            {
-                SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
-                ent->character->state.weapon_ready = 0;
-                return true;
-            }
-            return false;
-        }
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_LEFT);
+        StateControl_SetWeaponMeshOff(ent->bf, HOLSTER_RIGHT);
+        StateControl_SetWeaponMeshOff(ent->bf, HOLSTER_LEFT);
+        Anim_SetAnimation(ss_anim, ANIM_IDLE_AND_HIDE, 0);
+        Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
-
-    return false;
+    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    {
+        SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
+        ent->character->state.weapon_ready = 0;
+    }
 }
 
-bool TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int inc_state, int anim_idle)
+void TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle)
 {
-    if (ss_anim->model->animation_count > 4)
+    if (Anim_IncTime(ss_anim, time))
     {
-        if (Anim_IncTime(ss_anim, time))
-        {
-            Anim_SetAnimation(ss_anim, anim_idle, 0);  // to idle
-        }
-
-        if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == TW_FRAME))
-        {
-            StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
-            if (GET_VERSION(TR_I))
-            {
-                StateControl_SetWeaponMeshOff(ent->bf, TR1_BACK_WEAPON);
-            }
-            else
-            {
-                StateControl_SetWeaponMeshOff(ent->bf, TR2_BACK_WEAPON);
-            }
-            Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
-            return true;
-        }
+        Anim_SetAnimation(ss_anim, anim_idle, 0);  // to idle
     }
 
-    return false;
+    if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == TW_FRAME))
+    {
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
+        if (getVersion(TR_I))
+        {
+            StateControl_SetWeaponMeshOff(ent->bf, TR1_BACK_WEAPON);
+        }
+        else
+        {
+            StateControl_SetWeaponMeshOff(ent->bf, TR2_BACK_WEAPON);
+        }
+        Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
+    }
 }
 
-bool OneHand_HideAndIdle(entity_s * ent, ss_animation_s * ss_anim, weapons_s weapon, float time)
+void OneHand_HideAndIdle(entity_s * ent, ss_animation_s * ss_anim, weapons_s weapon, float time)
 {
     int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
 
-    if (ss_anim->model->animation_count == 4)
+    if ((inc_state == ARMED) && ent->character->state.weapon_ready)
     {
-        switch (inc_state)
-        {
-        case ARMED:
-            if (ent->character->state.weapon_ready)
-            {
-                Anim_SetAnimation(ss_anim, ANIM_IDLE_TO_FIRING, 0);
-                return true;
-            }
-            break;
-        case UNARMED:
-            if (!ent->character->state.weapon_ready)
-            {
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 1);
-                StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 4);
-                StateControl_SetWeaponMeshOff(ent->bf, 10);
-                StateControl_SetWeaponMeshOff(ent->bf, 13);
-                Anim_SetAnimation(ss_anim, ANIM_HIDE_TO_IDLE, -1);
-                Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
-                return true;
-            }
-            break;
-        }
+        Anim_SetAnimation(ss_anim, ANIM_IDLE_TO_FIRING, 0);
     }
-
-    return false;
+    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    {
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 1);
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 4);
+        StateControl_SetWeaponMeshOff(ent->bf, 10);
+        StateControl_SetWeaponMeshOff(ent->bf, 13);
+        Anim_SetAnimation(ss_anim, ANIM_HIDE_TO_IDLE, -1);
+        Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
+    }
 }
 
-bool TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle)
+void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle)
 {
     if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
     {
         if (ent->character->state.weapon_ready && ent->character->cmd.action)
         {
+            collision_result_t cs;
+            float from[3], to[3], tr[16], dir[3], t;
+            ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
+
             Anim_SetAnimation(ss_anim, anim_firing, 0);
             ss_anim->frame_changing_state = 0x01;
             Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
             consumeAmmo(weapon);
 
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
+            vec3_copy(from, tr + 12);
+
+            if (target && (bt->mod.current_slerp) > 0.99f)
             {
-                collision_result_t cs;
-                float from[3], to[3], tr[16], dir[3], t;
-                ss_bone_tag_p bt = ent->bf->bone_tags + ent->character->bone_r_hand_end;
+                vec3_sub(dir, target_pos, from);
+                vec3_norm(dir, t);
+            }
+            else
+            {
+                vec3_copy_inv(dir, tr + 8);
+            }
 
-                Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
-                vec3_copy(from, tr + 12);
+            // adding range
+            vec3_add_mul(to, from, dir, weapon.range);
 
-                if (target && (bt->mod.current_slerp) > 0.99f)
+            for (int i = 1; i <= weapon.bullet; ++i)
+            {
+                //vec3_copy(d_from, from);
+                //vec3_copy(d_to, to);
+                t = (weapon.range * i) / weapon.bullet;
+                vec3_add_mul(to, from, dir, t);
+                t = 8.0f * i;
+
+                switch (i % 4)
                 {
-                    vec3_sub(dir, target_pos, from);
-                    vec3_norm(dir, t);
-                }
-                else
-                {
-                    vec3_copy_inv(dir, tr + 8);
-                }
-
-                // adding range
-                vec3_add_mul(to, from, dir, weapon.range);
-
-                for (int i = 1; i <= weapon.bullet; ++i)
-                {
-                    //vec3_copy(d_from, from);
-                    //vec3_copy(d_to, to);
-                    t = (weapon.range * i) / weapon.bullet;
-                    vec3_add_mul(to, from, dir, t);
-                    t = 8.0f * i;
-
-                    switch (i % 4)
-                    {
                     case 0: vec3_add_mul(to, to, tr + 0, t); break;
                     case 1: vec3_add_mul(to, to, tr + 4, t); break;
                     case 2: vec3_add_mul(to, to, tr + 0, -t); break;
                     case 3: vec3_add_mul(to, to, tr + 4, -t); break;
-                    }
-
-                    if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
-                    {
-                        target = (entity_p)cs.obj->object;
-                        Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
-                        return true;
-                    }
-                }
-            }
-
-            // the reload sound is here !!!!
-            // Audio_Send(weapon.reload_1, TR_AUDIO_EMITTER_ENTITY, ent->id);
-        }
-        else if (target)
-        {
-            // if you have a target -> lock the enemie
-            Anim_SetAnimation(ss_anim, anim_idle, -1);
-            return true;
-        }
-        else
-        {
-            // to idle animation
-            Anim_SetAnimation(ss_anim, anim_firing_to_idle, 0);
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, uint16_t targeted_bone_start, uint16_t targeted_bone_end, int anim_firing, int anim_firing_to_idle)
-{
-    if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
-    {
-        if (ent->character->state.weapon_ready && ent->character->cmd.action)
-        {
-            Anim_SetAnimation(ss_anim, anim_firing, 0);
-            ss_anim->frame_changing_state = 0x01;
-            Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
-            consumeAmmo(weapon);
-
-            {
-                collision_result_t cs;
-                float from[3], to[3], tr[16];
-                ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_start;
-
-                Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
-                Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
-
-                if (target && (bt->mod.current_slerp > 0.99))
-                {
-                    vec3_copy(to, bt->mod.target_pos);
-                }
-                else
-                {
-                    vec3_add_mul(to, from, tr + 8, -32768.0f);
                 }
 
                 if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                 {
                     target = (entity_p)cs.obj->object;
                     Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
-                    return true;
                 }
+            }
+        }
+        else if (target)
+        {
+            // if you have a target -> lock the enemie
+            Anim_SetAnimation(ss_anim, anim_idle, -1);
+        }
+        else
+        {
+            // to idle animation
+            Anim_SetAnimation(ss_anim, anim_firing_to_idle, 0);
+        }
+    }
+
+    if ((ss_anim->frame_changing_state == 0x01) && (weapon.reload_1))
+    {
+        if (ss_anim->prev_frame == 2)
+        {
+            Audio_Send(weapon.reload_1, TR_AUDIO_EMITTER_ENTITY, ent->id);
+        }
+    }
+}
+
+void OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, uint16_t targeted_bone_start, uint16_t targeted_bone_end, int anim_firing, int anim_firing_to_idle)
+{
+    if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
+    {
+        if (ent->character->state.weapon_ready && ent->character->cmd.action)
+        {
+            collision_result_t cs;
+            float from[3], to[3], tr[16];
+            ss_bone_tag_p bt = ent->bf->bone_tags + targeted_bone_start;
+
+            Anim_SetAnimation(ss_anim, anim_firing, 0);
+            ss_anim->frame_changing_state = 0x01;
+            Audio_Send(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
+            consumeAmmo(weapon);
+
+            Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
+            Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
+
+            if (target && (bt->mod.current_slerp > 0.99))
+            {
+                vec3_copy(to, bt->mod.target_pos);
+            }
+            else
+            {
+                vec3_add_mul(to, from, tr + 8, -32768.0f);
+            }
+
+            if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+            {
+                target = (entity_p)cs.obj->object;
+                Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
             }
         }
         else
         {
             Anim_SetAnimation(ss_anim, anim_firing_to_idle, -1);
-            return true;
         }
     }
-
-    return false;
 }
 
 struct weapons_s getPistol()
@@ -1463,25 +1310,25 @@ struct weapons_s getMP5()
 
 struct weapons_s getRocketGun()
 {
-    return rocketgun;
+    return rocket;
 }
 
 struct weapons_s getHarpoonGun()
 {
-    return harpoongun;
+    return harpoon;
 }
 
 struct weapons_s getGrenadeGun()
 {
-    return grenadegun;
+    return grenade;
 }
 
 struct weapons_s getCrossbowGun()
 {
-    return crossbowgun;
+    return crossbow;
 }
 
 struct weapons_s getGrapplinGun()
 {
-    return grapplingun;
+    return grapplin;
 }

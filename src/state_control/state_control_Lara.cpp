@@ -159,7 +159,6 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
 
 static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model)
 {
-    int32_t ver = World_GetVersion();
     switch(Anim_GetCurrentState(&ent->bf->animations))
     {
         case TR_STATE_LARA_UNDERWATER_STOP:
@@ -172,19 +171,19 @@ static bool StateControl_LaraCanUseWeapon(struct entity_s *ent, int weapon_model
         case TR_STATE_LARA_ONWATER_FORWARD:
         case TR_STATE_LARA_ONWATER_STOP:
 
-            if(ver < TR_II)
+            if(getVersion(TR_I))
             {
                 return false;
             }
-
-            if(ver < TR_III)
+            
+            if(getVersion(TR_II))
             {
                 if(weapon_model != TR2_MODEL_HARPOONGUN)
                 {
                     return false;
                 }
             }
-            else if(ver < TR_IV)
+            else if(getVersion(TR_III))
             {
                 if(weapon_model != TR3_MODEL_HARPOONGUN)
                 {
@@ -1087,7 +1086,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     (i < CHARACTER_STEP_DOWN_BIG || i > CHARACTER_STEP_UP_BIG) ||
                     (next_fc.floor_hit.normale[2] < ent->character->critical_slant_z_component))
             {
-                // too high or slide
+                // too high else if slide
                 ent->dir_flag = ENT_STAY;
                 Entity_SetAnimation(ent, ANIM_TYPE_BASE, TR_ANIMATION_LARA_STAY_IDLE, 0);
             }
@@ -1161,7 +1160,7 @@ int StateControl_Lara(struct entity_s *ent, struct ss_animation_s *ss_anim)
                     ent->move_type = MOVE_ON_WATER;
                 }
             }
-            else                                                                // no water, stay or run / walk
+            else                                                                // no water, stay else if run / walk
             {
                 if((cmd->move[0] == 1) && (!state->wall_collide))
                 {
@@ -3235,7 +3234,6 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
-        int inc_state = 0;
         int32_t ver = World_GetVersion();
         weapons_s weapon;
 
@@ -3276,7 +3274,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
 
         b_tag->is_targeted = 0x00;
 
-        switch (CurrentWeaponToItemID(ss_anim))
+        switch (CurrentWeaponModelToItemID(ss_anim))
         {
             case ITEM_PISTOL:
                 weapon = getPistol();
@@ -3298,7 +3296,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
                 break;
         }
 
-        SetCurrentWeaponAnimation(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim, targeted_bone_start, targeted_bone_end);
+        SetCurrentWeaponAnimation(ent, ss_anim, time, weapon, b_tag, target, target_pos, do_aim, targeted_bone_start, targeted_bone_end);
     }
 
     return ss_anim->frame_changing_state;
@@ -3326,7 +3324,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         weapons_s weapon;
 
         // init weapon
-        switch (CurrentWeaponToItemID(ss_anim))
+        switch (CurrentWeaponModelToItemID(ss_anim))
         {
             case ITEM_SHOTGUN:
                 weapon = getShotgun();
@@ -3383,7 +3381,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         b_tag->is_targeted = 0x00;
 
         // animation
-        switch (CurrentWeaponToItemID(ss_anim))
+        switch (CurrentWeaponModelToItemID(ss_anim))
         {
             case ITEM_SHOTGUN:
                 ShotgunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
@@ -3413,6 +3411,40 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
     }
     
     return ss_anim->frame_changing_state;
+}
+
+// set the current starting animation for weapon
+void setStartingWeaponAnimation(struct entity_s *ent, ss_animation_p ss_anim, int model_id, int animation, bool isReset)
+{
+    if (!isReset)
+    {
+        if (ent->character->weapon_id == model_id)
+        {
+            Anim_SetAnimation(ss_anim, animation, 0);
+        }
+        else
+        {
+            Anim_SetAnimation(ss_anim, 1, 0); // when animation is not working set default one
+        }
+    }
+    else
+    {
+        if (ent->character->weapon_id == model_id)
+        {
+            ss_anim->current_animation = ss_anim->prev_animation = animation;
+        }
+        else
+        {
+            ss_anim->current_animation = ss_anim->prev_animation = 1;
+        }
+    }
+}
+
+// hide the current weapon
+void setCurrentWeaponExit(struct entity_s *ent)
+{
+    ent->character->state.weapon_ready = 0x00;
+    return;
 }
 
 void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int weapon_state)
@@ -3455,6 +3487,7 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
         ss_animation_p anim_rh = NULL;
         ss_animation_p anim_lh = NULL;
         ss_animation_p anim_th = NULL;
+
         for(ss_animation_p it = ent->bf->animations.next; it; it = it->next)
         {
             switch(it->type)
@@ -3471,10 +3504,10 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             }
         }
         
-        // hide weapon when not used !
+        // hide weapon
         if (ent->character->state.weapon_ready && (!weapon_state || (ent->character->weapon_id_req != ent->character->weapon_id)))
         {
-            // left hand and right hand weapon
+            // left hand and right hand
             if ((anim_lh && anim_lh->enabled) || (anim_rh && anim_rh->enabled))
             {
                 if ((anim_lh->current_animation == 0) || (anim_rh->current_animation == 0))
@@ -3486,56 +3519,47 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             // two hand
             else if (anim_th && anim_th->enabled)
             {
-                switch (anim_th->current_animation)
+                // grenade gun idle animation
+                if (anim_th->current_animation == 1)
                 {
-                    case 1:   // grenadegun
-                        if (ver < TR_III)
-                        {
-                            if (anim_th->model->id == TR2_MODEL_GRENADEGUN)
-                            {
-                                ent->character->state.weapon_ready = 0x00;
-                                return;
-                            }
-                        }
-                        else if (ver < TR_IV)
-                        {
-                            if (anim_th->model->id == TR3_MODEL_GRENADEGUN)
-                            {
-                                ent->character->state.weapon_ready = 0x00;
-                                return;
-                            }
-                        }
-                        else if (ver <= TR_V)
-                        {
-                            if (anim_th->model->id == TR4C_MODEL_GRENADEGUN)
-                            {
-                                ent->character->state.weapon_ready = 0x00;
-                                return;
-                            }
-                        }
-                        break;
-                    case 6:    // harpoon when in water
-                        if (ver < TR_III)
-                        {
-                            if (anim_th->model->id == TR2_MODEL_HARPOONGUN)
-                            {
-                                ent->character->state.weapon_ready = 0x00;
-                                return;
-                            }
-                        }
-                        else if (ver < TR_IV)
-                        {
-                            if (anim_th->model->id == TR3_MODEL_HARPOONGUN)
-                            {
-                                ent->character->state.weapon_ready = 0x00;
-                                return;
-                            }
-                        }
-                        break;
-                    // default can work too ?
-                    case 0:   // other
-                        ent->character->state.weapon_ready = 0x00;
-                        return;
+                    if (getVersion(TR_II) && anim_th->model->id == TR2_MODEL_GRENADEGUN)
+                    {
+                        setCurrentWeaponExit(ent);
+                    }
+                    else if (getVersion(TR_III) && anim_th->model->id == TR3_MODEL_GRENADEGUN)
+                    {
+                        setCurrentWeaponExit(ent);
+                    }
+                    else if (getVersion(TR_IV_V) && anim_th->model->id == TR4C_MODEL_GRENADEGUN)
+                    {
+                        setCurrentWeaponExit(ent);
+                    }
+                }
+                // harpoon gun underwater idle animation
+                else if (anim_th->current_animation == 6)
+                {
+                    if (getVersion(TR_II) && anim_th->model->id == TR2_MODEL_HARPOONGUN)
+                    {
+                        setCurrentWeaponExit(ent);
+                    }
+                    else if (getVersion(TR_III) && anim_th->model->id == TR3_MODEL_HARPOONGUN)
+                    {
+                        setCurrentWeaponExit(ent);
+                    }
+                }
+                // default idle animation
+                else if (anim_th->current_animation == 0)
+                {
+                    // check if weapon is not grenadegun to hide the weapon
+                    if (getVersion(TR_II) && anim_th->model->id != TR2_MODEL_GRENADEGUN ||
+                        getVersion(TR_III) && anim_th->model->id != TR3_MODEL_GRENADEGUN ||
+                        getVersion(TR_IV_V) && anim_th->model->id != TR4C_MODEL_GRENADEGUN ||
+                        getVersion(TR_I) && anim_th->model->id == TR1_MODEL_SHOTGUN
+                       )
+                    {
+                        // only for tr (1: shotgun)/2/3/4/5
+                        setCurrentWeaponExit(ent);
+                    }
                 }
             }
         }
@@ -3591,47 +3615,29 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
         else
         {
             ent->character->weapon_id = weapon_model;
+
             if(!anim_th)
             {
                 anim_th = SSBoneFrame_AddOverrideAnim(ent->bf, sm, ANIM_TYPE_WEAPON_TH);
                 
-                if (ver < TR_III)
+                if (getVersion(TR_II))
                 {
-                    if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 0;
-                    }
-                    else
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 1;
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR2_MODEL_GRENADEGUN, 0, true);
                 }
-                else if (ver < TR_IV)
+                else if (getVersion(TR_III))
                 {
-                    if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 0;
-                    }
-                    else
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 1;
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR3_MODEL_GRENADEGUN, 0, true);
                 }
-                else if (ver <= TR_V)
+                else if (getVersion(TR_IV_V))
                 {
-                    if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 0;
-                    }
-                    else
-                    {
-                        anim_th->current_animation = anim_th->prev_animation = 1;
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR4C_MODEL_GRENADEGUN, 0, true);
                 }
+                // default
                 else
                 {
                     anim_th->current_animation = anim_th->prev_animation = 1;
                 }
+
                 anim_th->enabled = 0x00;
             }
             anim_th->model = sm;
@@ -3639,44 +3645,25 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
             anim_th->onFrame = StateControl_LaraDoTwoHandWeaponFrame;
 
             StateControl_SetWeaponMeshOn(ent->bf, sm, 7);
+
             if(weapon_state)
             {
                 SSBoneFrame_EnableOverrideAnim(ent->bf, anim_th);
                 ent->character->state.weapon_ready = (weapon_state) ? (0x01) : (0x00);
                 
-                if (ver < TR_III)
+                if (getVersion(TR_II))
                 {
-                    if (ent->character->weapon_id == TR2_MODEL_GRENADEGUN)
-                    {
-                        Anim_SetAnimation(anim_th, 0, 0);
-                    }
-                    else
-                    {
-                        Anim_SetAnimation(anim_th, 1, 0);
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR2_MODEL_GRENADEGUN, 0, false);
                 }
-                else if (ver < TR_IV)
+                else if (getVersion(TR_III))
                 {
-                    if (ent->character->weapon_id == TR3_MODEL_GRENADEGUN)
-                    {
-                        Anim_SetAnimation(anim_th, 0, 0);
-                    }
-                    else
-                    {
-                        Anim_SetAnimation(anim_th, 1, 0);
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR3_MODEL_GRENADEGUN, 0, false);
                 }
-                else if (ver <= TR_V)
+                else if (getVersion(TR_IV_V))
                 {
-                    if (ent->character->weapon_id == TR4C_MODEL_GRENADEGUN)
-                    {
-                        Anim_SetAnimation(anim_th, 0, 0);
-                    }
-                    else
-                    {
-                        Anim_SetAnimation(anim_th, 1, 0);
-                    }
+                    setStartingWeaponAnimation(ent, anim_th, TR4C_MODEL_GRENADEGUN, 0, false);
                 }
+                // default
                 else
                 {
                     Anim_SetAnimation(anim_th, 1, 0);

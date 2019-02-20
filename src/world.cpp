@@ -264,17 +264,21 @@ void World_Open(const char *path, int trv)
     World_UpdateFlipCollisions();
     Gui_DrawLoadScreen(970);
 
+    // Free atlas textures
     if(global_world.tex_atlas)
     {
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
-
+    Gui_DrawLoadScreen(980);
+    
+    // Init weapons
+    World_WeaponInit();
     Gui_DrawLoadScreen(990);
-    weapon_init();
 
-    Gui_DrawLoadScreen(1000);
+    // Free the level
     delete tr;
+    Gui_DrawLoadScreen(1000);
 }
 
 
@@ -427,6 +431,7 @@ void World_Clear()
         free(global_world.anim_sequences);
         global_world.anim_sequences = NULL;
     }
+
     global_world.version = -1;
 }
 
