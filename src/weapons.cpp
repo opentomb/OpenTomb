@@ -333,7 +333,7 @@ void World_WeaponInit()
     harpoon.onWater = (player->move_type == MOVE_UNDERWATER) ? true : false;
     harpoon.haveGravity = (player->move_type == MOVE_UNDERWATER) ? false : true;
     harpoon.dealDmgAtImpact = false;
-    // harpoon have no muzzleflash else if smoke
+    // harpoon have no muzzleflash or smoke
 
     //=============================================//
     //                CROSSBOW GUN                 //
@@ -387,7 +387,7 @@ bool checkCanShoot(weapons_s item_id)
     {
         return true;
     }
-    // ammo are empty when is 0 else if go to negative ?
+    // ammo are empty when is 0 or go to negative ?
     else if (Inventory_GetItemsCount(player->inventory, item_id.current_ammo) > AMMO_EMPTY)
     {
         return true;
@@ -403,7 +403,7 @@ bool consumeAmmo(weapons_s weapon)
     // checking if ammo exists before consume !
     if (Inventory_GetItemsCount(player->inventory, weapon.current_ammo) > AMMO_EMPTY)
     {
-        // checking if the current ammo is equal to ammo you want to consume !
+        // checking if the current ammo is not empty or unlimited !
         if (weapon.current_ammo != AMMO_EMPTY && weapon.current_ammo != AMMO_UNLIMITED)
         {
             // consume item
@@ -545,22 +545,22 @@ void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time
     if (ss_anim->model->animation_count == 4)
     {
         Anim_SetAnimation(ss_anim, 2, -1);  // hide and draw
+        
+        // when animation is finished, change weapon to model_id
+        if (Anim_IncTime(ss_anim, time))
+        {
+            Character_ChangeWeapon(ent, model_id);
+        }
     }
     else if (ss_anim->model->animation_count > 4)
     {
         Anim_SetAnimation(ss_anim, 3, 0);   // hide (back)
     }
-
-    // when animation is finished, change weapon to model_id
-    if (Anim_IncTime(ss_anim, time))
-    {
-        Character_ChangeWeapon(ent, model_id);
-    }
 }
 
 // get the current version without ">" else if "<" !
 // - for id use classic define (TR_I, TR_II etc..)
-// - for the new define (like TR_IV_V) is in weapons.h (TR_ flag)
+// - for the new define (like TR_IV_V), is in weapons.h (TR_ flag)
 // - returned -1 if not found !
 int32_t getVersion(int id)
 {
