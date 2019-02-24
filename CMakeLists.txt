@@ -208,6 +208,8 @@ set(OPENTOMB_SRCS
     src/skeletal_model.c
     src/trigger.cpp
     src/trigger.h
+	src/weapons.cpp
+	src/weapons.h
     src/world.cpp
     src/world.h
 )
