@@ -50,7 +50,7 @@ void SkeletalModel_GenParentsIndexes(skeletal_model_p model)
 {
     int stack = 0;
 #ifndef __GNUC__
-    uint16_t *parents = malloc(sizeof(model->mesh_count));
+    uint16_t *parents = malloc(model->mesh_count * sizeof(uint16_t));
 #else
     uint16_t parents[model->mesh_count];
 #endif
