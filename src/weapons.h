@@ -8,13 +8,6 @@
 #include "inventory.h"
 #include "entity.h"
 
-
-/// flag for getVersion()
-#define TR_IV_V     14  // return TR4 and TR5
-#define TR_II_III   15  // return TR2 and TR3
-#define TR_I_II_III 16  // return TR1 to TR3
-#define TR_II_TO_V  17  // return TR2 to TR5
-
 /// "inc_state" state
 #define ARMED 1
 #define UNARMED 2
@@ -303,7 +296,6 @@ bool consumeAmmo(weapons_s weapon);
 int CurrentWeaponModelToItemID(ss_animation_s* ss_anim); // this function can be found in state_control_weapons
 // auto change weapon to model_id assigned
 void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time);
-int32_t getVersion(int id);
 
 // One Hand Weapon Animation Controller
 void SetCurrentWeaponAnimation(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end);

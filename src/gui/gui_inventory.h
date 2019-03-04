@@ -93,8 +93,8 @@ class gui_InventoryManager
     };
     
 public:   
-     gui_InventoryManager();
-    ~gui_InventoryManager();
+    gui_InventoryManager();
+   ~gui_InventoryManager();
 
     bool isEnabled()
     {

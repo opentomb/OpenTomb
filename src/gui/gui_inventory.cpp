@@ -348,13 +348,13 @@ void gui_InventoryManager::frameStates(float time)
             m_command = GUI_COMMAND_NONE;
             m_ring_time += time;
             m_ring_angle = m_ring_angle_step * m_ring_time / m_ring_rotate_period;
-            if (m_ring_time >= m_ring_rotate_period)
+            if(m_ring_time >= m_ring_rotate_period)
             {
                 m_ring_time = 0.0f;
                 m_ring_angle = 0.0f;
                 m_current_state = INVENTORY_IDLE;
                 m_selected_item--;
-                if (m_selected_item < 0)
+                if(m_selected_item < 0)
                 {
                     m_selected_item = m_current_items_count - 1;
                 }
@@ -423,7 +423,7 @@ void gui_InventoryManager::frameStates(float time)
                     restoreItemAngle(time);
                     if(m_current_items_type < GUI_MENU_ITEMTYPE_QUEST)
                     {
-                        if (World_GetVersion() < TR_IV)
+                        if(World_GetVersion() < TR_IV)
                         {
                             Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         }
@@ -439,9 +439,9 @@ void gui_InventoryManager::frameStates(float time)
 
                 case GUI_COMMAND_DOWN:
                     restoreItemAngle(time);
-                    if (m_current_items_type > 0)
+                    if(m_current_items_type > 0)
                     {
-                        if (World_GetVersion() < TR_IV)
+                        if(World_GetVersion() < TR_IV)
                         {
                             Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUCLOSE));
                         }
@@ -502,7 +502,7 @@ void gui_InventoryManager::frameStates(float time)
             {
                 if(m_ring_time - time <= m_ring_rotate_period)
                 {
-                    if (World_GetVersion() < TR_IV)
+                    if(World_GetVersion() < TR_IV)
                     {
                         Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     }
@@ -537,7 +537,7 @@ void gui_InventoryManager::frameStates(float time)
             {
                 if(m_ring_time - time <= m_ring_rotate_period)
                 {
-                    if (World_GetVersion() < TR_IV)
+                    if(World_GetVersion() < TR_IV)
                     {
                         Audio_Send(Script_GetGlobalSound(engine_lua, TR_AUDIO_SOUND_GLOBALID_MENUOPEN));
                     }
@@ -615,15 +615,16 @@ void gui_InventoryManager::setSpecificItemModelMeshHidden()
     weapons_s revolver = getRevolver();
     weapons_s crossbow = getCrossbowGun();
     int ring_item_index = 0;
-
+    int32_t ver = World_GetVersion();
+    
     for (inventory_node_p i = (m_inventory) ? (*m_inventory) : (NULL); m_inventory && i; i = i->next)
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
 
-        if (bi)
+        if(bi)
         {
             // Tomb Raider 1 -> 3
-            if (getVersion(TR_I_II_III))
+            if(ver < TR_IV)
             {
                 switch (bi->id)
                 {
@@ -631,62 +632,62 @@ void gui_InventoryManager::setSpecificItemModelMeshHidden()
                     case ITEM_MAGNUMS:
                     case ITEM_AUTOMAGS:
                     case ITEM_UZIS:
-                        if (bi->bf->bone_tags[0].is_hidden == 0x00)
+                        if(bi->bf->bone_tags[0].is_hidden == 0x00)
                         {
                             bi->bf->bone_tags[0].is_hidden = 0x01;
                         }
                         break;
                 }
             }
-            else if (getVersion(TR_IV_V))
+            else if(ver >= TR_IV)
             {
                 // hide the lasersight in inventory (and if equiped unhide it !)
-                if (bi->id == ITEM_REVOLVER)
+                if(bi->id == ITEM_REVOLVER)
                 {
                     // item is equiped ?
-                    if (!revolver.itemIsEquipped)
+                    if(!revolver.itemIsEquipped)
                     {
                         // support for mesh 2 and 3
-                        if (bi->bf->bone_tags[1].is_hidden == 0x00)
+                        if(bi->bf->bone_tags[1].is_hidden == 0x00)
                         {
                             bi->bf->bone_tags[1].is_hidden = 0x01;
                         }
                         
                         // light
-                        if (bi->bf->bone_tags[2].is_hidden == 0x00)
+                        if(bi->bf->bone_tags[2].is_hidden == 0x00)
                         {
                             bi->bf->bone_tags[2].is_hidden = 0x01;
                         }
 
                         // lasersight
-                        if (bi->bf->bone_tags[3].is_hidden == 0x00)
+                        if(bi->bf->bone_tags[3].is_hidden == 0x00)
                         {
                             bi->bf->bone_tags[3].is_hidden = 0x01;
                         }
                     }
-                    else if (revolver.itemIsEquipped)
+                    else if(revolver.itemIsEquipped)
                     {
                         // support for mesh 2 and 3
-                        if (bi->bf->bone_tags[1].is_hidden == 0x01)
+                        if(bi->bf->bone_tags[1].is_hidden == 0x01)
                         {
                             bi->bf->bone_tags[1].is_hidden = 0x00;
                         }
 
                         // lasersight
-                        if (bi->bf->bone_tags[3].is_hidden == 0x01)
+                        if(bi->bf->bone_tags[3].is_hidden == 0x01)
                         {
                             bi->bf->bone_tags[3].is_hidden = 0x00;
                         }
                     }
 
                 }
-                else if (bi->id == ITEM_CROSSBOW)
+                else if(bi->id == ITEM_CROSSBOW)
                 {
-                    if (!crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x00))
+                    if(!crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x00))
                     {
                         bi->bf->bone_tags[1].is_hidden = 0x01;
                     }
-                    else if (crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x01))
+                    else if(crossbow.itemIsEquipped && (bi->bf->bone_tags[1].is_hidden == 0x01))
                     {
                         bi->bf->bone_tags[1].is_hidden = 0x00;
                     }
@@ -707,9 +708,9 @@ uint32_t gui_InventoryManager::getItemIdActualView()
     {
         base_item_p bi = World_GetBaseItemByID(i->id);
 
-        if (bi && (bi->type == m_current_items_type))
+        if(bi && (bi->type == m_current_items_type))
         {
-            if (ring_item_index == m_selected_item)
+            if(ring_item_index == m_selected_item)
             {
                 return bi->id;
             }
@@ -745,7 +746,7 @@ void gui_InventoryManager::frameItems(float time)
                 {
                     restoreItemAngle(time);
                     
-                    if (m_item_angle_z == 0.0f)
+                    if(m_item_angle_z == 0.0f)
                     {
                         ///@FIXME: need progressive curved move like in original TR (this move is correct but not original)
                         m_current_scale += time * 10.0f;
@@ -754,7 +755,7 @@ void gui_InventoryManager::frameItems(float time)
 
                         m_current_scale = (m_current_scale >= 2.0) ? (2.0f) : (m_current_scale);
 
-                        if ((m_item_angle_z == 0.0f) && (m_current_scale >= 2.0f))
+                        if((m_item_angle_z == 0.0f) && (m_current_scale >= 2.0f))
                         {
                             m_item_offset_y = 90.0f;
                             m_item_offset_z = 90.0f;
@@ -772,9 +773,9 @@ void gui_InventoryManager::frameItems(float time)
                                     {
                                         case ITEM_SMALL_MEDIPACK:
                                         case ITEM_LARGE_MEDIPACK:
-                                            if (Character_CompareHealth(player, 0, 1000))
+                                            if(Character_CompareHealth(player, 0, 1000))
                                             {
-                                                if (ver > TR_III)
+                                                if(ver > TR_III)
                                                 {
                                                     m_current_state = INVENTORY_DEACTIVATING;
                                                     Item_Use(m_inventory, bi->id, m_owner_id);
@@ -790,7 +791,7 @@ void gui_InventoryManager::frameItems(float time)
                                             }
                                             break;
                                         default:
-                                            if (ver > TR_III)
+                                            if(ver > TR_III)
                                             {
                                                 m_current_state = INVENTORY_DEACTIVATING;
                                                 Item_Use(m_inventory, bi->id, m_owner_id);
@@ -824,21 +825,21 @@ void gui_InventoryManager::frameItems(float time)
                         m_command = GUI_COMMAND_NONE;
                     }
                 }
-                else if (m_current_state == INVENTORY_AMMO_SELECT)
+                else if(m_current_state == INVENTORY_AMMO_SELECT)
                 {
                     m_command = GUI_COMMAND_DEACTIVATE;
                     m_current_state = INVENTORY_DEACTIVATING;
                 }
-                else if (m_current_state == INVENTORY_MEDI_EXIT)
+                else if(m_current_state == INVENTORY_MEDI_EXIT)
                 {
-                    if (Character_CompareHealth(player, 0, 1000))
+                    if(Character_CompareHealth(player, 0, 1000))
                     {
                         // need because medipack have no same frame time
-                        if (bi->id == ITEM_SMALL_MEDIPACK)
+                        if(bi->id == ITEM_SMALL_MEDIPACK)
                         {
                             AnimateItem(bi, 24, 25, time, true);
                         }
-                        else if (bi->id == ITEM_LARGE_MEDIPACK)
+                        else if(bi->id == ITEM_LARGE_MEDIPACK)
                         {
                             AnimateItem(bi, 18, 19, time, true);
                         }
@@ -851,7 +852,7 @@ void gui_InventoryManager::frameItems(float time)
                         //m_current_state = INVENTORY_DEACTIVATING;
                     }
                 }
-                else if (m_current_state == INVENTORY_WEAPON_EXIT)
+                else if(m_current_state == INVENTORY_WEAPON_EXIT)
                 {
                     AnimateItem(bi, 10, 11, time, false);  // Weapon
                 }
@@ -859,7 +860,7 @@ void gui_InventoryManager::frameItems(float time)
                 {
                     restoreItemAngle(time);
                     
-                    if (m_item_angle_z == 0.0f)
+                    if(m_item_angle_z == 0.0f)
                     {
                         ///@FIXME: need progressive curved move inverted like in original TR
                         m_current_scale -= time * 10.0f;
@@ -868,13 +869,13 @@ void gui_InventoryManager::frameItems(float time)
 
                         m_current_scale = (m_current_scale <= 1.0) ? (1.0f) : (m_current_scale);
 
-                        if ((m_item_angle_z == 0.0f) && (m_current_scale <= 1.0f))
+                        if((m_item_angle_z == 0.0f) && (m_current_scale <= 1.0f))
                         {
                             m_item_offset_y = 0.0f;
                             m_item_offset_z = 0.0f;
                             m_item_time = 0.0f;
                             
-                            if (ver < TR_IV)
+                            if(ver < TR_IV)
                             {
                                 switch (bi->id)
                                 {
@@ -920,9 +921,9 @@ void gui_InventoryManager::frameItems(float time)
                     }
 
                     // command_activate separated for instant interaction.
-                    if (m_command == GUI_COMMAND_ACTIVATE)
+                    if(m_command == GUI_COMMAND_ACTIVATE)
                     {
-                        if (0 < Item_Use(m_inventory, bi->id, m_owner_id))
+                        if(0 < Item_Use(m_inventory, bi->id, m_owner_id))
                         {
                             m_command = GUI_COMMAND_CLOSE;
                             m_current_state = INVENTORY_DEACTIVATING;
@@ -954,18 +955,18 @@ void gui_InventoryManager::AnimateItem(base_item_s *bi, int itemMaxFrame, int en
 {
     restoreItemAngle(time); // just for safe (and realistic)
 
-    if (m_item_angle_z == 0.0f) // align to 0
+    if(m_item_angle_z == 0.0f) // align to 0
     {
         Item_Frame(bi->bf, time);
 
-        if (bi->bf->animations.current_frame > itemMaxFrame)
+        if(bi->bf->animations.current_frame > itemMaxFrame)
         {
             Anim_SetAnimation(&bi->bf->animations, 0, endFrame);
             Item_Frame(bi->bf, 0.0f);
             m_current_state = INVENTORY_DEACTIVATING;
 
             // to use medikit after animation !
-            if (isMedikit)
+            if(isMedikit)
             {
                 Item_Use(m_inventory, bi->id, m_owner_id);
             }

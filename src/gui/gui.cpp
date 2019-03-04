@@ -456,10 +456,10 @@ void Gui_DrawBars()
             Bar[BAR_HEALTH].Forced = true;
         }
 
-        if (main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
-            main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
+        if(main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
+           main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
         {
-            if (ver < TR_IV)
+            if(ver < TR_IV)
             {
                 Bar[BAR_HEALTH].Forced = true;
             }

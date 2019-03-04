@@ -33,6 +33,7 @@ struct weapons_s grapplin;
 void World_WeaponInit()
 {
     entity_s* player = World_GetPlayer();
+    int32_t ver = World_GetVersion();
 
     //=============================================//
     //                PISTOLS GUN                  //
@@ -71,11 +72,11 @@ void World_WeaponInit()
     shotgun.firerate = RATE_SHOTGUN;
     shotgun.bullet = (shotgun.current_ammo == AMMO_SHOTGUN_WIDE) ? 5 : 6; // wide have 5 bullet
 
-    if (getVersion(TR_I_II_III))
+    if(ver < TR_IV)
     {
         shotgun.current_ammo = AMMO_SHOTGUN;
     }
-    else if (getVersion(TR_IV_V))
+    else if((ver >= TR_IV))
     {
         shotgun.current_ammo = AMMO_SHOTGUN_NORMAL;
     }
@@ -97,7 +98,7 @@ void World_WeaponInit()
     uzi.shot = SND_UZI;
     uzi.draw = SND_UNIVERSAL_DRAW;
     uzi.hide = SND_UNIVERSAL_HIDE;
-    uzi.echo = (getVersion(TR_II_TO_V)) ? SND_UZI_STOP : SND_NULL;
+    uzi.echo = (!IS_TR_I(ver)) ? SND_UZI_STOP : SND_NULL;
     uzi.reload_1 = SND_UNIVERSAL_RELOAD;
     uzi.reload_2 = SND_NULL;
     uzi.damage = 1;
@@ -281,12 +282,12 @@ void World_WeaponInit()
     grenade.draw = SND_UNIVERSAL_HIDE;
     grenade.hide = SND_UNIVERSAL_HIDE;
     grenade.echo = SND_NULL;
-    if (getVersion(TR_II_III))
+    if((ver >= TR_II) && (ver < TR_IV))
     {
         grenade.reload_1 = SND_TR2_3_GRENADEGUN_RELOAD;
         grenade.reload_2 = SND_TR2_3_GRENADEGUN_LOCK;
     }
-    else if (getVersion(TR_IV_V))
+    else if(ver >= TR_IV)
     {
         grenade.reload_1 = SND_TR4_C_GRENADEGUN_RELOAD;
         grenade.reload_2 = SND_TR4_C_GRENADEGUN_LOCK;
@@ -295,11 +296,11 @@ void World_WeaponInit()
     grenade.firerate = RATE_GRENADEGUN;
     grenade.bullet = 1;
 
-    if (getVersion(TR_II_III))
+    if((ver >= TR_II) && (ver < TR_IV))
     {
         grenade.current_ammo = AMMO_GRENADE;
     }
-    else if (getVersion(TR_IV_V))
+    else if((ver >= TR_IV))
     {
         grenade.current_ammo = AMMO_GRENADE_NORMAL;
     }
@@ -418,16 +419,17 @@ bool consumeAmmo(weapons_s weapon)
 
 int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
 {
-    if (GET_MODEL(TR_MODEL_PISTOL))
+    int32_t ver = World_GetVersion();
+    if(GET_MODEL(TR_MODEL_PISTOL))
     {
         return ITEM_PISTOL;
     }
-    else if ((getVersion(TR_II_TO_V)) && GET_MODEL(TR_MODEL_SHOTGUN))
+    else if((ver >= TR_II) && GET_MODEL(TR_MODEL_SHOTGUN))
     {
         return ITEM_SHOTGUN;
     }
 
-    if (getVersion(TR_I))  // tomb raider 1
+    if(IS_TR_I(ver))
     {
         if (GET_MODEL(TR1_MODEL_SHOTGUN))
         {
@@ -442,7 +444,7 @@ int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
             return ITEM_UZIS;
         }
     }
-    else if (getVersion(TR_II)) // tomb raider 2
+    else if(IS_TR_II(ver))
     {
         if (GET_MODEL(TR2_MODEL_AUTOMAGS))
         {
@@ -465,7 +467,7 @@ int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
             return ITEM_HARPOONGUN;
         }
     }
-    else if (getVersion(TR_III)) // tomb raider 3
+    else if(IS_TR_III(ver))
     {
         if (GET_MODEL(TR3_MODEL_DESERTEAGLE))
         {
@@ -492,7 +494,7 @@ int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
             return ITEM_HARPOONGUN;
         }
     }
-    else if (getVersion(TR_IV))         // tomb raider 4 and 5
+    else if(IS_TR_IV(ver))
     {
         if (GET_MODEL(TR4C_MODEL_UZI))
         {
@@ -511,7 +513,7 @@ int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
             return ITEM_REVOLVER;
         }
     }
-    else if (getVersion(TR_V))
+    else if(IS_TR_V(ver))
     {
         if (GET_MODEL(TR4C_MODEL_UZI))
         {
@@ -556,43 +558,6 @@ void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time
     {
         Anim_SetAnimation(ss_anim, 3, 0);   // hide (back)
     }
-}
-
-// get the current version without ">" else if "<" !
-// - for id use classic define (TR_I, TR_II etc..)
-// - for the new define (like TR_IV_V), is in weapons.h (TR_ flag)
-// - returned -1 if not found !
-int32_t getVersion(int id)
-{
-    int32_t ver = World_GetVersion();
-
-    switch (id)
-    {
-    case TR_I:
-    case TR_I_DEMO:
-    case TR_I_UB:
-        return (ver >= TR_I && ver < TR_II);
-    case TR_II:
-    case TR_II_DEMO:
-        return (ver > TR_I_UB && ver < TR_III);
-    case TR_III:
-        return (ver > TR_II && ver < TR_IV);
-    case TR_IV:
-    case TR_IV_DEMO:
-        return (ver > TR_III && ver < TR_V);
-    case TR_V:
-        return (ver == TR_V);
-    case TR_IV_V:
-        return (ver > TR_III && ver <= TR_V);
-    case TR_I_II_III:
-        return (ver >= TR_I && ver < TR_IV);
-    case TR_II_III:
-        return (ver >= TR_II && ver < TR_IV);
-    case TR_II_TO_V:
-        return (ver >= TR_II && ver <= TR_V);
-    }
-
-    return -1;
 }
 
 void SetCurrentWeaponAnimation(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end)
@@ -662,6 +627,7 @@ void ShotgunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
 
 void GrenadeGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim)
 {
+    int32_t ver = World_GetVersion();
     switch (ss_anim->current_animation)
     {
         case GRENADEGUN_IDLE_TO_FIRING:
@@ -677,22 +643,22 @@ void GrenadeGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_
             switch (ss_anim->current_frame)
             {
                 case 26:
-                    if (getVersion(TR_II_III))
+                    if((ver >= TR_II) && (ver < TR_IV))
                     {
                         Audio_Send(SND_TR2_3_GRENADEGUN_RELOAD, TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
-                    else if (getVersion(TR_IV_V))
+                    else if(ver >= TR_IV)
                     {
                         Audio_Send(SND_TR4_C_GRENADEGUN_RELOAD, TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
                     break;
 
                 case 33:
-                    if (getVersion(TR_II_III))
+                    if((ver >= TR_II) && (ver < TR_IV))
                     {
                         Audio_Send(SND_TR2_3_GRENADEGUN_LOCK, TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
-                    else if (getVersion(TR_IV_V))
+                    else if(ver >= TR_IV)
                     {
                         Audio_Send(SND_TR4_C_GRENADEGUN_LOCK, TR_AUDIO_EMITTER_ENTITY, ent->id);
                     }
@@ -991,8 +957,8 @@ void GrapplinGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons
 void OneHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time)
 {
     int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready && do_aim) ? (time) : (-time));
-
-    if ((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
+    int32_t ver = World_GetVersion();
+    if((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
     {
         ///@FIXME: animation launch one time and do nothing (sound, ammo consume, shoot)
         Anim_SetAnimation(ss_anim, ANIM_FIRING, 0);
@@ -1003,15 +969,15 @@ void OneHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
         {
             Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
-            if (getVersion(TR_II) && GET_MODEL(TR2_MODEL_UZI) && ANIM_REVERSE)
+            if(IS_TR_II(ver) && GET_MODEL(TR2_MODEL_UZI) && ANIM_REVERSE)
             {
                 Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
-            else if (getVersion(TR_III) && GET_MODEL(TR3_MODEL_UZI) && ANIM_REVERSE)
+            else if(IS_TR_III(ver) && GET_MODEL(TR3_MODEL_UZI) && ANIM_REVERSE)
             {
                 Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
-            else if (getVersion(TR_IV_V) && GET_MODEL(TR4C_MODEL_UZI) && ANIM_REVERSE)
+            else if((ver >= TR_IV) && GET_MODEL(TR4C_MODEL_UZI) && ANIM_REVERSE)
             {
                 Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
             }
@@ -1043,13 +1009,14 @@ void TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
 
 void TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle_to_firing)
 {
+    int32_t ver = World_GetVersion();
     if (ss_anim->current_frame == 1)
     {
         Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
     else if (ss_anim->current_frame == 3 && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
     {
-        if (getVersion(TR_II) && GET_MODEL(TR2_MODEL_M16))
+        if(IS_TR_II(ver) && GET_MODEL(TR2_MODEL_M16))
         {
             Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
         }
@@ -1077,11 +1044,8 @@ void TwoHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon
 
     if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == frame_to_hide))
     {
-        if (getVersion(TR_I))
-            StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR1_BACK_WEAPON);
-        else
-            StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, TR2_BACK_WEAPON);
-
+        int32_t ver = World_GetVersion();
+        StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, IS_TR_I(ver) ? TR1_BACK_WEAPON : TR2_BACK_WEAPON);
         StateControl_SetWeaponMeshOff(ent->bf, HAND_RIGHT);
         Audio_Send(weapon.hide, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
@@ -1116,8 +1080,9 @@ void TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon
 
     if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == TW_FRAME))
     {
+        int32_t ver = World_GetVersion();
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
-        if (getVersion(TR_I))
+        if(IS_TR_I(ver))
         {
             StateControl_SetWeaponMeshOff(ent->bf, TR1_BACK_WEAPON);
         }

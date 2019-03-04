@@ -17,4 +17,10 @@
 #define TR_V            (8)
 #define TR_UNKNOWN      (127)
 
+#define IS_TR_I(v)      ((v) < TR_II)
+#define IS_TR_II(v)     ((v) >= TR_II && (v) < TR_III)
+#define IS_TR_III(v)    ((v) >= TR_III && (v) < TR_IV)
+#define IS_TR_IV(v)     ((v) >= TR_IV && (v) < TR_V)
+#define IS_TR_V(v)      ((v) == TR_V)
+
 #endif // _TR_VERSIONS_H_

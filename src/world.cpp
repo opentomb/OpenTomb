@@ -1216,7 +1216,7 @@ bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id)
         {
             snprintf(buf, 256, "if(entity_funcs[%d]==nil) then entity_funcs[%d]={} end", entity_id, entity_id);
             luaL_loadstring(lua, buf);
-            if (lua_CallAndLog(lua, 0, LUA_MULTRET, 0))
+            if(lua_CallAndLog(lua, 0, LUA_MULTRET, 0))
             {
                 lua_pushinteger(lua, entity_id);
                 lua_CallAndLog(lua, 1, 0, 0);
@@ -1244,7 +1244,7 @@ void World_SetEntityModelProperties(struct entity_s *ent)
         {
             lua_pushinteger(engine_lua, global_world.version);                  // engine version
             lua_pushinteger(engine_lua, ent->bf->animations.model->id);         // entity model id
-            if (lua_CallAndLog(engine_lua, 2, 3, 0))
+            if(lua_CallAndLog(engine_lua, 2, 3, 0))
             {
                 ent->self->collision_group = lua_tointeger(engine_lua, -3);     // get collision type flag
                 ent->self->collision_shape = lua_tointeger(engine_lua, -2);     // get collision shape flag
@@ -1296,7 +1296,7 @@ void World_SetEntityFunction(struct entity_s *ent)
         {
             lua_pushinteger(engine_lua, global_world.version);                  // engine version
             lua_pushinteger(engine_lua, ent->bf->animations.model->id);         // entity model id
-            if (lua_CallAndLog(engine_lua, 2, 1, 0))
+            if(lua_CallAndLog(engine_lua, 2, 1, 0))
             {
                 if(!lua_isnil(engine_lua, -1))
                 {
