@@ -2,6 +2,12 @@
 -- FOR TOMB RAIDER, LEVEL10A
 print("level/tr1/level10a.natla_mines->level_loaded !");
 
+level_PostLoad = function()
+    anim_boat_init(2);
+    anim_rotor_init(12);
+    natla_cabin_init(84);
+end;
+
 level_PreLoad = function()
     --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
@@ -115,10 +121,4 @@ function anim_boat_init(id)      -- Ordinary one way animatings
             setRoomStaticEnability(3, 11, true);
         end;
     end;
-end;
-
-level_PostLoad = function()
-    anim_boat_init(2);
-    anim_rotor_init(12);
-    natla_cabin_init(84);
 end;

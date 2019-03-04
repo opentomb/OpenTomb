@@ -2,12 +2,15 @@
 -- FOR TOMB RAIDER, LEVEL3A (CAVES)
 print("level/tr1/level3a.lost_valley->level_loaded !");
 
+--use it in "postload" when you test hair for TR1 !!
+--addCharacterHair(player, getHairSetup(HAIR_TR1));
+print("test hair not enabled (LEVEL3A.lua)");
+
 level_PostLoad = function()
-	--use it when you test hair for TR1 !!
-    --addCharacterHair(player, getHairSetup(HAIR_TR1));
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

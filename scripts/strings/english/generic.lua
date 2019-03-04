@@ -36,6 +36,7 @@ strings[018] = "INVENTORY";
 strings[019] = "ITEMS";
 strings[020] = "PAUSED";
 strings[021] = "OPTIONS";
+strings[051] = "AMMO";
 strings[022] = "STATISTICS";
 
 -- Dialogs
@@ -81,7 +82,6 @@ strings[048] = "Did you know that at least ten different programmers worked on O
 strings[049] = "Did you know that Core Design never released any Tomb Raider source code?";     -- Whatever... :]
 
 strings[050] = "Press INVENTORY key to skip.";
-strings[051] = "AMMO";
 
 -- String masks
 
