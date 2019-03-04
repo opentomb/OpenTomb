@@ -41,7 +41,7 @@ function tallblock_init(id)    -- Tall moving block (TR1)
         return ENTITY_TRIGGERING_NOT_READY;
     end;
 
-	entity_funcs[id].onDeactivate = function(object_id, activator_id)
+    entity_funcs[id].onDeactivate = function(object_id, activator_id)
         if(getEntityEvent(object_id) ~= 0) then
             setEntityActivity(object_id, true);
             playSound(64, object_id);

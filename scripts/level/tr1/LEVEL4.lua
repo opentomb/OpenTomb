@@ -3,7 +3,6 @@
 print("level/tr1/level4.st_francis_folly->level_loaded !");
 
 level_PostLoad = function()
-
 end;
 
 level_PreLoad = function()

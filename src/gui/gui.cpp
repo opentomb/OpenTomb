@@ -27,6 +27,7 @@
 #include "../controls.h"
 #include "../engine_string.h"
 #include "../world.h"
+#include "../inventory.h"
 #include "gui.h"
 #include "gui_menu.h"
 #include "gui_inventory.h"
@@ -76,16 +77,16 @@ void Gui_InitBars()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetSize(250, 15, 2);
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                    Bar[i].SetColor(BASE_MAIN, 255, 50, 50, 200);
-                    Bar[i].SetColor(BASE_FADE, 100, 255, 50, 200);
-                    Bar[i].SetColor(ALT_MAIN, 255, 180, 0, 255);
-                    Bar[i].SetColor(ALT_FADE, 255, 255, 0, 255);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
-                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
+                    Bar[i].SetColor(BASE_MAIN, 204, 153, 0, 255); // 255, 50, 50, 200
+                    Bar[i].SetColor(BASE_FADE, 204, 153, 0, 255); // ?, ?, ?, 200
+                    //Bar[i].SetColor(ALT_MAIN, 204, 153, 0, 255); // 255, 180, 0
+                    //Bar[i].SetColor(ALT_FADE, 0, 0, 0, 255);
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 255);
+                    Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130); // 60, 60, 60, 130
+                    Bar[i].SetColor(BORDER_MAIN, 255, 255, 255, 50); // 200, 200, 200, 50
+                    Bar[i].SetColor(BORDER_FADE, 0, 0, 0, 100);   // 80, 80, 80, 100
                     Bar[i].SetValues(LARA_PARAM_HEALTH_MAX, LARA_PARAM_HEALTH_MAX / 3);
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
@@ -100,14 +101,14 @@ void Gui_InitBars()
                     Bar[i].Invert =       true;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetSize(250, 15, 2);
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 30);
-                    Bar[i].SetColor(BASE_MAIN, 0, 50, 255, 200);
-                    Bar[i].SetColor(BASE_FADE, 190, 190, 255, 200);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                    Bar[i].SetColor(BASE_MAIN, 102, 204, 255, 255); // 0, 50, 255, 200
+                    Bar[i].SetColor(BASE_FADE, 102, 204, 255, 255); // 190, 190, 255, 200
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 255); // 0, 0, 0, 160
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
+                    Bar[i].SetColor(BORDER_MAIN, 255, 255, 255, 50); // 200, 200, 200
+                    Bar[i].SetColor(BORDER_FADE, 255, 255, 255, 100);   // 80, 80, 80
                     Bar[i].SetValues(LARA_PARAM_AIR_MAX, (LARA_PARAM_AIR_MAX / 3));
                     Bar[i].SetBlink(300);
                     Bar[i].SetExtrude(true, 100);
@@ -122,14 +123,14 @@ void Gui_InitBars()
                     Bar[i].Invert =       false;
                     Bar[i].Vertical =     false;
 
-                    Bar[i].SetSize(250, 15, 3);
+                    Bar[i].SetSize(250, 15, 2);
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_LEFT, 30, GUI_ANCHOR_VERT_TOP, 55);
-                    Bar[i].SetColor(BASE_MAIN, 255, 100, 50, 200);
-                    Bar[i].SetColor(BASE_FADE, 255, 200, 0, 200);
+                    Bar[i].SetColor(BASE_MAIN, 0, 179, 0, 200); // 255, 100, 50
+                    Bar[i].SetColor(BASE_FADE, 0, 179, 0, 200);  // 255, 200, 0
                     Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
-                    Bar[i].SetColor(BORDER_MAIN, 110, 110, 110, 100);
-                    Bar[i].SetColor(BORDER_FADE, 60, 60, 60, 180);
+                    Bar[i].SetColor(BORDER_MAIN, 255, 255, 255, 100); // 110, 110, 110
+                    Bar[i].SetColor(BORDER_FADE, 255, 255, 255, 180);    // 60, 60, 60
                     Bar[i].SetValues(LARA_PARAM_STAMINA_MAX, 0);
                     Bar[i].SetExtrude(true, 100);
                     Bar[i].SetAutoshow(true, 500, true, 300);
@@ -147,7 +148,7 @@ void Gui_InitBars()
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_RIGHT, 30, GUI_ANCHOR_VERT_TOP, 55);
                     Bar[i].SetColor(BASE_MAIN, 255, 0, 255, 255);
                     Bar[i].SetColor(BASE_FADE, 190, 120, 255, 255);
-                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 160);
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 255);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 130);
                     Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 50);
                     Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 100);
@@ -167,12 +168,12 @@ void Gui_InitBars()
 
                     Bar[i].SetSize(800, 25, 3);
                     Bar[i].SetPosition(GUI_ANCHOR_HOR_CENTER, 0, GUI_ANCHOR_VERT_BOTTOM, 40);
-                    Bar[i].SetColor(BASE_MAIN, 255, 225, 127, 230);
-                    Bar[i].SetColor(BASE_FADE, 255, 187, 136, 230);
-                    Bar[i].SetColor(BACK_MAIN, 30, 30, 30, 100);
+                    Bar[i].SetColor(BASE_MAIN, 153, 51, 102, 230);  // 255, 255, 127
+                    Bar[i].SetColor(BASE_FADE, 153, 51, 102, 230);  // 255, 187, 136
+                    Bar[i].SetColor(BACK_MAIN, 0, 0, 0, 100);
                     Bar[i].SetColor(BACK_FADE, 60, 60, 60, 100);
-                    Bar[i].SetColor(BORDER_MAIN, 200, 200, 200, 80);
-                    Bar[i].SetColor(BORDER_FADE, 80, 80, 80, 80);
+                    Bar[i].SetColor(BORDER_MAIN, 255, 255, 255, 80); // 200, 200, 200
+                    Bar[i].SetColor(BORDER_FADE, 255, 255, 255, 80);    // 80, 80, 80
                     Bar[i].SetValues(1000, 0);
                     Bar[i].SetExtrude(true, 70);
                     Bar[i].SetAutoshow(false, 500, false, 300);
@@ -446,11 +447,22 @@ void Gui_DrawCrosshair()
 void Gui_DrawBars()
 {
     entity_p player = World_GetPlayer();
+    int32_t ver = World_GetVersion();
+
     if(player && player->character)
     {
         if(player->character->state.weapon_ready)
         {
             Bar[BAR_HEALTH].Forced = true;
+        }
+
+        if (main_inventory_manager->getItemIdActualView() == ITEM_SMALL_MEDIPACK ||
+            main_inventory_manager->getItemIdActualView() == ITEM_LARGE_MEDIPACK)
+        {
+            if (ver < TR_IV)
+            {
+                Bar[BAR_HEALTH].Forced = true;
+            }
         }
 
         Bar[BAR_AIR].Show    (Character_GetParam(player, PARAM_AIR    ));
@@ -554,7 +566,8 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
         if(strncpy(ext, ".png", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PNG;
-        }else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
+        }
+        else if(strncpy(ext, ".pcx", 5) && Sys_FileFound(image_name_buf, 0))
         {
             image_format = IMAGE_FORMAT_PCX;
         }
@@ -564,6 +577,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     uint32_t img_w = 0;
     uint32_t img_h = 0;
     uint32_t img_bpp = 32;
+
     if(Image_Load(image_name_buf, image_format, &img_pixels, &img_w, &img_h, &img_bpp))
     {
         bool ret = Gui_SetScreenTexture(img_pixels, img_w, img_h, img_bpp);

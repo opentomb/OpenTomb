@@ -2,11 +2,12 @@
 -- FOR TOMB RAIDER, LEVEL2 (CAVES)
 print("level/tr1/level2.city_of_vilcabamba->level_loaded !");
 
+-- overlapped list generates correctly
 level_PostLoad = function()
-    -- overlapped list generates correctly
 end;
 
 level_PreLoad = function()
+    --------------------------------------------------------------------------------
     -- STATIC COLLISION FLAGS ------------------------------------------------------
     --------------------------------------------------------------------------------
     static_tbl[06] = {coll = COLLISION_NONE,                shape = COLLISION_SHAPE_BOX};           -- Hanging plant

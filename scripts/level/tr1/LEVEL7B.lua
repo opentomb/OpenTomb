@@ -3,7 +3,6 @@
 print("level/tr1/level7b.tomb_of_tihocan->level_loaded !");
 
 level_PostLoad = function()
-    -- to do something
 end;
 
 level_PreLoad = function()

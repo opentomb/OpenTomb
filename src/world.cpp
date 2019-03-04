@@ -5,9 +5,9 @@
 #include <SDL2/SDL_rwops.h>
 
 extern "C" {
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+    #include <lua.h>
+    #include <lualib.h>
+    #include <lauxlib.h>
 }
 
 #include "core/avl.h"
@@ -39,7 +39,7 @@ extern "C" {
 #include "resource.h"
 #include "inventory.h"
 #include "trigger.h"
-
+#include "weapons.h"
 
  struct world_s
 {
@@ -263,13 +263,21 @@ void World_Open(const char *path, int trv)
     World_UpdateFlipCollisions();
     Gui_DrawLoadScreen(970);
 
+    // Free atlas textures
     if(global_world.tex_atlas)
     {
         delete global_world.tex_atlas;
         global_world.tex_atlas = NULL;
     }
+    Gui_DrawLoadScreen(980);
+    
+    // Init weapons
+    World_WeaponInit();
+    Gui_DrawLoadScreen(990);
 
+    // Free the level
     delete tr;
+    Gui_DrawLoadScreen(1000);
 }
 
 
@@ -422,6 +430,7 @@ void World_Clear()
         free(global_world.anim_sequences);
         global_world.anim_sequences = NULL;
     }
+
     global_world.version = -1;
 }
 
@@ -708,22 +717,24 @@ int World_DeleteEntity(uint32_t id)
 int World_CreateItem(uint32_t item_id, uint32_t model_id, uint32_t world_model_id, uint16_t type, uint16_t count, const char *name)
 {
     skeletal_model_p model = World_GetModelByID(model_id);
+
     if(model && (!AVL_SearchNode(&global_world.items_tree, item_id)))
     {
         base_item_p item = BaseItem_Create(model, item_id);
         item->world_model_id = world_model_id;
         item->type = type;
         item->count = count;
+
         if(name)
         {
             strncpy(item->name, name, sizeof(item->name));
         }
+
         return (AVL_InsertReplace(&global_world.items_tree, item_id, item)) ? (0x01) : (0x00);
     }
 
     return 0;
 }
-
 
 int World_DeleteItem(uint32_t item_id)
 {

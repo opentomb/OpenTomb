@@ -57,7 +57,7 @@ int StateControl_Bat(struct entity_s *ent, struct ss_animation_s *ss_anim)
     character_state_p state = &ent->character->state;
     uint16_t current_state = Anim_GetCurrentState(ss_anim);
 
-    ent->character->rotate_speed_mult = 1.0f;
+    ent->character->rotate_speed_mult = 3.0f;
     ss_anim->anim_frame_flags = ANIM_NORMAL_CONTROL;
 
     state->sprint = 0x00;
