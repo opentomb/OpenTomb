@@ -27,12 +27,6 @@
 #define TW_FRAME_GRENADEGUN_IS_END 14
 #define TW_FRAME_IS_END 23
 
-///===========///
-///  utility  ///
-///===========///
-#define GET_MODEL(model_id) ss_anim->model->id == model_id
-#define ANIM_REVERSE ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE
-
 /// DEFAULT PISTOLS (ALL TR HAVE PISTOL IN SLOT 1)
 #define TR_MODEL_PISTOL     1
 #define TR_MODEL_SHOTGUN    3        // tr2 to tr5

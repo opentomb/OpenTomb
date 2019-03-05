@@ -384,12 +384,12 @@ bool checkCanShoot(weapons_s item_id)
 {
     entity_s* player = World_GetPlayer();
 
-    if (item_id.current_ammo == AMMO_UNLIMITED)
+    if(item_id.current_ammo == AMMO_UNLIMITED)
     {
         return true;
     }
     // ammo are empty when is 0 or go to negative ?
-    else if (Inventory_GetItemsCount(player->inventory, item_id.current_ammo) > AMMO_EMPTY)
+    else if(Inventory_GetItemsCount(player->inventory, item_id.current_ammo) > AMMO_EMPTY)
     {
         return true;
     }
@@ -402,10 +402,10 @@ bool consumeAmmo(weapons_s weapon)
     entity_p player = World_GetPlayer();
 
     // checking if ammo exists before consume !
-    if (Inventory_GetItemsCount(player->inventory, weapon.current_ammo) > AMMO_EMPTY)
+    if(Inventory_GetItemsCount(player->inventory, weapon.current_ammo) > AMMO_EMPTY)
     {
         // checking if the current ammo is not empty or unlimited !
-        if (weapon.current_ammo != AMMO_EMPTY && weapon.current_ammo != AMMO_UNLIMITED)
+        if(weapon.current_ammo != AMMO_EMPTY && weapon.current_ammo != AMMO_UNLIMITED)
         {
             // consume item
             Inventory_RemoveItem(&player->inventory, weapon.current_ammo, 1);
@@ -420,114 +420,114 @@ bool consumeAmmo(weapons_s weapon)
 int CurrentWeaponModelToItemID(ss_animation_s* ss_anim)
 {
     int32_t ver = World_GetVersion();
-    if(GET_MODEL(TR_MODEL_PISTOL))
+    if(ss_anim->model->id == TR_MODEL_PISTOL)
     {
         return ITEM_PISTOL;
     }
-    else if((ver >= TR_II) && GET_MODEL(TR_MODEL_SHOTGUN))
+    else if((ver >= TR_II) && (ss_anim->model->id == TR_MODEL_SHOTGUN))
     {
         return ITEM_SHOTGUN;
     }
 
     if(IS_TR_I(ver))
     {
-        if (GET_MODEL(TR1_MODEL_SHOTGUN))
+        if(ss_anim->model->id == TR1_MODEL_SHOTGUN)
         {
             return ITEM_SHOTGUN;
         }
-        else if (GET_MODEL(TR1_MODEL_MAGNUM))
+        else if(ss_anim->model->id == TR1_MODEL_MAGNUM)
         {
             return ITEM_MAGNUMS;
         }
-        else if (GET_MODEL(TR1_MODEL_UZI))
+        else if(ss_anim->model->id == TR1_MODEL_UZI)
         {
             return ITEM_UZIS;
         }
     }
     else if(IS_TR_II(ver))
     {
-        if (GET_MODEL(TR2_MODEL_AUTOMAGS))
+        if(ss_anim->model->id == TR2_MODEL_AUTOMAGS)
         {
             return ITEM_AUTOMAGS;
         }
-        else if (GET_MODEL(TR2_MODEL_UZI))
+        else if(ss_anim->model->id == TR2_MODEL_UZI)
         {
             return ITEM_UZIS;
         }
-        else if (GET_MODEL(TR2_MODEL_M16))
+        else if(ss_anim->model->id == TR2_MODEL_M16)
         {
             return ITEM_M16;
         }
-        else if (GET_MODEL(TR2_MODEL_GRENADEGUN))
+        else if(ss_anim->model->id == TR2_MODEL_GRENADEGUN)
         {
             return ITEM_GRENADEGUN;
         }
-        else if (GET_MODEL(TR2_MODEL_HARPOONGUN))
+        else if(ss_anim->model->id == TR2_MODEL_HARPOONGUN)
         {
             return ITEM_HARPOONGUN;
         }
     }
     else if(IS_TR_III(ver))
     {
-        if (GET_MODEL(TR3_MODEL_DESERTEAGLE))
+        if(ss_anim->model->id == TR3_MODEL_DESERTEAGLE)
         {
             return ITEM_DESERTEAGLE;
         }
-        else if (GET_MODEL(TR3_MODEL_UZI))
+        else if(ss_anim->model->id == TR3_MODEL_UZI)
         {
             return ITEM_UZIS;
         }
-        else if (GET_MODEL(TR3_MODEL_MP5))
+        else if(ss_anim->model->id == TR3_MODEL_MP5)
         {
             return ITEM_MP5;
         }
-        else if (GET_MODEL(TR3_MODEL_ROCKETGUN))
+        else if(ss_anim->model->id == TR3_MODEL_ROCKETGUN)
         {
             return ITEM_ROCKETGUN;
         }
-        else if (GET_MODEL(TR3_MODEL_GRENADEGUN))
+        else if(ss_anim->model->id == TR3_MODEL_GRENADEGUN)
         {
             return ITEM_GRENADEGUN;
         }
-        else if (GET_MODEL(TR3_MODEL_HARPOONGUN))
+        else if(ss_anim->model->id == TR3_MODEL_HARPOONGUN)
         {
             return ITEM_HARPOONGUN;
         }
     }
     else if(IS_TR_IV(ver))
     {
-        if (GET_MODEL(TR4C_MODEL_UZI))
+        if(ss_anim->model->id == TR4C_MODEL_UZI)
         {
             return ITEM_UZIS;
         }
-        else if (GET_MODEL(TR4C_MODEL_CROSSBOW))
+        else if(ss_anim->model->id == TR4C_MODEL_CROSSBOW)
         {
             return ITEM_CROSSBOW;
         }
-        else if (GET_MODEL(TR4C_MODEL_GRENADEGUN))
+        else if(ss_anim->model->id == TR4C_MODEL_GRENADEGUN)
         {
             return ITEM_GRENADEGUN;
         }
-        else if (GET_MODEL(TR4C_MODEL_REVOLVER))
+        else if(ss_anim->model->id == TR4C_MODEL_REVOLVER)
         {
             return ITEM_REVOLVER;
         }
     }
     else if(IS_TR_V(ver))
     {
-        if (GET_MODEL(TR4C_MODEL_UZI))
+        if(ss_anim->model->id == TR4C_MODEL_UZI)
         {
             return ITEM_UZIS;
         }
-        else if (GET_MODEL(TR4C_MODEL_CROSSBOW))
+        else if(ss_anim->model->id == TR4C_MODEL_CROSSBOW)
         {
             return ITEM_GRAPPLEGUN;  // it's grappling gun !
         }
-        else if (GET_MODEL(TR4C_MODEL_GRENADEGUN))
+        else if(ss_anim->model->id == TR4C_MODEL_GRENADEGUN)
         {
             return ITEM_MP5;         // it's h&k gun !
         }
-        else if (GET_MODEL(TR4C_MODEL_REVOLVER))
+        else if(ss_anim->model->id == TR4C_MODEL_REVOLVER)
         {
             return ITEM_REVOLVER;
         }
@@ -544,17 +544,17 @@ void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time
     ent->character->state.weapon_ready = 0;
 
     // animation only for one hand !
-    if (ss_anim->model->animation_count == 4)
+    if(ss_anim->model->animation_count == 4)
     {
         Anim_SetAnimation(ss_anim, 2, -1);  // hide and draw
         
         // when animation is finished, change weapon to model_id
-        if (Anim_IncTime(ss_anim, time))
+        if(Anim_IncTime(ss_anim, time))
         {
             Character_ChangeWeapon(ent, model_id);
         }
     }
-    else if (ss_anim->model->animation_count > 4)
+    else if(ss_anim->model->animation_count > 4)
     {
         Anim_SetAnimation(ss_anim, 3, 0);   // hide (back)
     }
@@ -572,14 +572,16 @@ void SetCurrentWeaponAnimation(entity_s* ent, ss_animation_s* ss_anim, float tim
 
         case ANIM_HIDE_TO_IDLE:
             OneHand_HideToIdle(ent, ss_anim, weapon, time);
+            b_tag->is_targeted = 0x00;
             break;
 
         case ANIM_IDLE_AND_HIDE:
             OneHand_HideAndIdle(ent, ss_anim, weapon, time);
+            b_tag->is_targeted = 0x00;
             break;
 
         case ANIM_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 OneHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, targeted_bone_start, targeted_bone_end, ANIM_FIRING, ANIM_IDLE_TO_FIRING);
             }
@@ -605,7 +607,7 @@ void ShotgunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
             break;
 
         case SHOTGUN_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, SHOTGUN_FIRING, SHOTGUN_FIRING_TO_IDLE, SHOTGUN_IDLE_TO_FIRING);
             }
@@ -665,9 +667,9 @@ void GrenadeGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_
                     break;
             }
             
-            if (Anim_IncTime(ss_anim, time))
+            if(Anim_IncTime(ss_anim, time))
             {
-                if (ent->character->cmd.action)
+                if(ent->character->cmd.action)
                 {
                     Anim_SetAnimation(ss_anim, GRENADEGUN_FIRING, 0);
                 }
@@ -679,7 +681,7 @@ void GrenadeGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_
             break;
 
         case GRENADEGUN_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, GRENADEGUN_FIRING_RELOAD, GRENADEGUN_FIRING_TO_IDLE, GRENADEGUN_IDLE_TO_FIRING);
             }
@@ -704,7 +706,7 @@ void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
     switch (ss_anim->current_animation)
     {
         case HARPOON_LAND_IDLE_TO_FIRING:
-            if (ent->move_type == MOVE_UNDERWATER)
+            if(ent->move_type == MOVE_UNDERWATER)
             {
                 Anim_SetAnimation(ss_anim, HARPOON_WATER_IDLE_TO_FIRING, 0);
             }
@@ -716,7 +718,7 @@ void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
             break;
 
         case HARPOON_LAND_HIDE_TO_IDLE:
-            if (ent->move_type == MOVE_UNDERWATER)
+            if(ent->move_type == MOVE_UNDERWATER)
             {
                 TwoHand_HideToIdle(ent, ss_anim, weapon, time, HARPOON_WATER_IDLE_TO_FIRING);
             }
@@ -727,7 +729,7 @@ void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
             break;
 
         case HARPOON_LAND_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, HARPOON_LAND_FIRING, HARPOON_LAND_FIRING_TO_IDLE, HARPOON_LAND_IDLE_TO_FIRING);
             }
@@ -746,9 +748,9 @@ void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
             break;
 
         case HARPOON_RELOAD:
-            if (Anim_IncTime(ss_anim, time))
+            if(Anim_IncTime(ss_anim, time))
             {
-                if (ent->move_type == MOVE_UNDERWATER)
+                if(ent->move_type == MOVE_UNDERWATER)
                 {
                     Anim_SetAnimation(ss_anim, HARPOON_WATER_IDLE_TO_FIRING, 0);
                 }
@@ -769,7 +771,7 @@ void HarpoonAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s w
             break;
 
         case HARPOON_WATER_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, HARPOON_WATER_FIRING, HARPOON_WATER_FIRING_TO_IDLE, HARPOON_WATER_IDLE_TO_FIRING);
             }
@@ -799,7 +801,7 @@ void MP5Anim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapo
             break;
 
         case MP5_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, MP5_FIRING, MP5_FIRING_TO_IDLE, MP5_IDLE_TO_FIRING);
             }
@@ -833,7 +835,7 @@ void M16Anim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s weapo
             break;
 
         case M16_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, M16_FIRING, M16_FIRING_TO_IDLE, M16_IDLE_TO_FIRING);
             }
@@ -867,7 +869,7 @@ void RocketGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s
             break;
 
         case ROCKETGUN_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, ROCKETGUN_FIRING, ROCKETGUN_FIRING_TO_IDLE, ROCKETGUN_IDLE_TO_FIRING);
             }
@@ -901,7 +903,7 @@ void CrossbowAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons_s 
             break;
 
         case CROSSBOW_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, CROSSBOW_FIRING, CROSSBOW_FIRING_TO_IDLE, CROSSBOW_IDLE_TO_FIRING);
             }
@@ -934,7 +936,7 @@ void GrapplinGunAnim(entity_s* ent, ss_animation_s* ss_anim, float time, weapons
             break;
 
         case GRAPPLING_FIRING:
-            if (checkCanShoot(weapon))
+            if(checkCanShoot(weapon))
             {
                 TwoHand_Firing(ent, ss_anim, b_tag, target, target_pos, weapon, time, GRAPPLING_FIRING, GRAPPLING_FIRING_TO_IDLE, GRAPPLING_IDLE_TO_FIRING);
             }
@@ -963,27 +965,30 @@ void OneHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
         ///@FIXME: animation launch one time and do nothing (sound, ammo consume, shoot)
         Anim_SetAnimation(ss_anim, ANIM_FIRING, 0);
     }
-    else if (ent->character->state.weapon_ready && !ent->character->cmd.action && (-time))
+    else if(ent->character->state.weapon_ready && !ent->character->cmd.action && (-time))
     {
-        if (ss_anim->current_frame == 3)
+        if(ss_anim->current_frame == 3)
         {
             Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
 
-            if(IS_TR_II(ver) && GET_MODEL(TR2_MODEL_UZI) && ANIM_REVERSE)
+            if(ss_anim->anim_frame_flags & ANIM_FRAME_REVERSE)
             {
-                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-            }
-            else if(IS_TR_III(ver) && GET_MODEL(TR3_MODEL_UZI) && ANIM_REVERSE)
-            {
-                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
-            }
-            else if((ver >= TR_IV) && GET_MODEL(TR4C_MODEL_UZI) && ANIM_REVERSE)
-            {
-                Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                if(IS_TR_II(ver) && (ss_anim->model->id == TR2_MODEL_UZI))
+                {
+                    Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+                else if(IS_TR_III(ver) && (ss_anim->model->id == TR3_MODEL_UZI))
+                {
+                    Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
+                else if((ver >= TR_IV) && (ss_anim->model->id == TR4C_MODEL_UZI))
+                {
+                    Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
+                }
             }
         }
     }
-    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    else if((inc_state == UNARMED) && !ent->character->state.weapon_ready)
     {
         // fix exit fire loop bug (after pressing 
         Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
@@ -995,11 +1000,11 @@ void TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
 {
     b_tag->is_targeted = (target) ? (0x01) : (0x00);
 
-    if ((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
+    if((inc_state == ARMED) && ent->character->state.weapon_ready && ent->character->cmd.action)
     {
         Anim_SetAnimation(ss_anim, anim_firing, 0);
     }
-    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    else if((inc_state == UNARMED) && !ent->character->state.weapon_ready)
     {
         // fix exit fire loop bug
         Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
@@ -1010,19 +1015,19 @@ void TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
 void TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle_to_firing)
 {
     int32_t ver = World_GetVersion();
-    if (ss_anim->current_frame == 1)
+    if(ss_anim->current_frame == 1)
     {
         Audio_Kill(weapon.shot, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
-    else if (ss_anim->current_frame == 3 && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
+    else if(ss_anim->current_frame == 3 && (ss_anim->anim_frame_flags == ANIM_FRAME_REVERSE))
     {
-        if(IS_TR_II(ver) && GET_MODEL(TR2_MODEL_M16))
+        if(IS_TR_II(ver) && ss_anim->model->id == TR2_MODEL_M16)
         {
             Audio_Send(weapon.echo, TR_AUDIO_EMITTER_ENTITY, ent->id);
         }
     }
     
-    if (Anim_IncTime(ss_anim, time))
+    if(Anim_IncTime(ss_anim, time))
     {
         Anim_SetAnimation(ss_anim, anim_idle_to_firing, 0);
     }
@@ -1030,19 +1035,19 @@ void TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weap
 
 void TwoHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int frame_to_hide)
 {
-    if (Anim_IncTime(ss_anim, time))
+    if(Anim_IncTime(ss_anim, time))
     {
         SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
 
         // fix animation of two hand if weapon have no ammo (AutoSelect not work with Two Hand after Hide)
         // when animation is finished and if weapon not have ammo, change weapon to model_id
-        if (Inventory_GetItemsCount(ent->inventory, weapon.current_ammo) <= 0)
+        if(Inventory_GetItemsCount(ent->inventory, weapon.current_ammo) <= 0)
         {
             Character_ChangeWeapon(ent, TR_MODEL_PISTOL);
         }
     }
 
-    if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == frame_to_hide))
+    if((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == frame_to_hide))
     {
         int32_t ver = World_GetVersion();
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, IS_TR_I(ver) ? TR1_BACK_WEAPON : TR2_BACK_WEAPON);
@@ -1055,7 +1060,7 @@ void OneHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon
 {
     int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
 
-    if ((inc_state == ARMED) && ent->character->state.weapon_ready)
+    if((inc_state == ARMED) && ent->character->state.weapon_ready)
     {
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_LEFT);
@@ -1064,21 +1069,27 @@ void OneHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon
         Anim_SetAnimation(ss_anim, ANIM_IDLE_AND_HIDE, 0);
         Audio_Send(weapon.draw, TR_AUDIO_EMITTER_ENTITY, ent->id);
     }
-    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    else if((inc_state == UNARMED) && !ent->character->state.weapon_ready)
     {
-        SSBoneFrame_DisableOverrideAnim(ent->bf, ss_anim);
         ent->character->state.weapon_ready = 0;
+        for(ss_animation_p anim = ent->bf->animations.next; anim; anim = anim->next)
+        {
+            if((anim->type == ANIM_TYPE_WEAPON_LH) || (anim->type == ANIM_TYPE_WEAPON_RH))
+            {
+                SSBoneFrame_DisableOverrideAnim(ent->bf, anim);
+            }
+        }
     }
 }
 
 void TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle)
 {
-    if (Anim_IncTime(ss_anim, time))
+    if(Anim_IncTime(ss_anim, time))
     {
         Anim_SetAnimation(ss_anim, anim_idle, 0);  // to idle
     }
 
-    if ((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == TW_FRAME))
+    if((ss_anim->frame_changing_state >= 0x01) && (ss_anim->prev_frame == TW_FRAME))
     {
         int32_t ver = World_GetVersion();
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, HAND_RIGHT);
@@ -1097,12 +1108,13 @@ void TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon
 void OneHand_HideAndIdle(entity_s * ent, ss_animation_s * ss_anim, weapons_s weapon, float time)
 {
     int inc_state = Anim_IncTime(ss_anim, (ent->character->state.weapon_ready) ? (time) : (-time));
-
-    if ((inc_state == ARMED) && ent->character->state.weapon_ready)
+    ent->bf->bone_tags[10].is_targeted = 0x00;
+    ent->bf->bone_tags[13].is_targeted = 0x00;
+    if((inc_state == ARMED) && ent->character->state.weapon_ready)
     {
         Anim_SetAnimation(ss_anim, ANIM_IDLE_TO_FIRING, 0);
     }
-    else if ((inc_state == UNARMED) && !ent->character->state.weapon_ready)
+    else if((inc_state == UNARMED) && !ent->character->state.weapon_ready)
     {
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 1);
         StateControl_SetWeaponMeshOn(ent->bf, ss_anim->model, 4);
@@ -1115,9 +1127,9 @@ void OneHand_HideAndIdle(entity_s * ent, ss_animation_s * ss_anim, weapons_s wea
 
 void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle)
 {
-    if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
+    if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
     {
-        if (ent->character->state.weapon_ready && ent->character->cmd.action)
+        if(ent->character->state.weapon_ready && ent->character->cmd.action)
         {
             collision_result_t cs;
             float from[3], to[3], tr[16], dir[3], t;
@@ -1131,7 +1143,7 @@ void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
             Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
             vec3_copy(from, tr + 12);
 
-            if (target && (bt->mod.current_slerp) > 0.99f)
+            if(target && (bt->mod.current_slerp) > 0.99f)
             {
                 vec3_sub(dir, target_pos, from);
                 vec3_norm(dir, t);
@@ -1160,14 +1172,14 @@ void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
                     case 3: vec3_add_mul(to, to, tr + 4, -t); break;
                 }
 
-                if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+                if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
                 {
                     target = (entity_p)cs.obj->object;
                     Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
                 }
             }
         }
-        else if (target)
+        else if(target)
         {
             // if you have a target -> lock the enemie
             Anim_SetAnimation(ss_anim, anim_idle, -1);
@@ -1179,9 +1191,9 @@ void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
         }
     }
 
-    if ((ss_anim->frame_changing_state == 0x01) && (weapon.reload_1))
+    if((ss_anim->frame_changing_state == 0x01) && (weapon.reload_1))
     {
-        if (ss_anim->prev_frame == 2)
+        if(ss_anim->prev_frame == 2)
         {
             Audio_Send(weapon.reload_1, TR_AUDIO_EMITTER_ENTITY, ent->id);
         }
@@ -1190,9 +1202,9 @@ void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
 
 void OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, uint16_t targeted_bone_start, uint16_t targeted_bone_end, int anim_firing, int anim_firing_to_idle)
 {
-    if ((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
+    if((ss_anim->frame_changing_state >= 4) | Anim_IncTime(ss_anim, time * weapon.firerate))
     {
-        if (ent->character->state.weapon_ready && ent->character->cmd.action)
+        if(ent->character->state.weapon_ready && ent->character->cmd.action)
         {
             collision_result_t cs;
             float from[3], to[3], tr[16];
@@ -1206,7 +1218,7 @@ void OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
             Mat4_Mat4_mul(tr, ent->transform.M4x4, bt->current_transform);
             Mat4_vec3_mul(from, ent->transform.M4x4, ent->bf->bone_tags[targeted_bone_end].current_transform + 12);
 
-            if (target && (bt->mod.current_slerp > 0.99))
+            if(target && (bt->mod.current_slerp > 0.99))
             {
                 vec3_copy(to, bt->mod.target_pos);
             }
@@ -1215,7 +1227,7 @@ void OneHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag,
                 vec3_add_mul(to, from, tr + 8, -32768.0f);
             }
 
-            if (Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
+            if(Physics_RayTest(&cs, from, to, ent->self, COLLISION_FILTER_CHARACTER) && cs.obj && (cs.obj->object_type == OBJECT_ENTITY))
             {
                 target = (entity_p)cs.obj->object;
                 Script_ExecEntity(engine_lua, ENTITY_CALLBACK_SHOOT, ent->id, target->id);
