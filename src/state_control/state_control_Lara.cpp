@@ -3234,7 +3234,6 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
         ss_bone_tag_p b_tag = ent->bf->bone_tags + targeted_bone_start;
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
-        int32_t ver = World_GetVersion();
         weapons_s weapon;
 
         if (target)
@@ -3296,7 +3295,7 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
                 break;
         }
 
-        SetCurrentWeaponAnimation(ent, ss_anim, time, weapon, b_tag, target, target_pos, do_aim, targeted_bone_start, targeted_bone_end);
+        SetCurrentWeaponAnimation(ent, ss_anim, time, &weapon, b_tag, target, target_pos, do_aim, targeted_bone_start, targeted_bone_end);
     }
 
     return ss_anim->frame_changing_state;
@@ -3384,28 +3383,28 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         switch (CurrentWeaponModelToItemID(ss_anim))
         {
             case ITEM_SHOTGUN:
-                ShotgunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                ShotgunAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_M16:
-                M16Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                M16Anim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_MP5:
-                MP5Anim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                MP5Anim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_GRENADEGUN:
-                GrenadeGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                GrenadeGunAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_ROCKETGUN:
-                RocketGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                RocketGunAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_HARPOONGUN:
-                HarpoonAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                HarpoonAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_CROSSBOW:
-                CrossbowAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                CrossbowAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
             case ITEM_GRAPPLEGUN:
-                GrapplinGunAnim(ent, ss_anim, time, weapon, b_tag, target, target_pos, inc_state, do_aim);
+                GrapplinGunAnim(ent, ss_anim, time, &weapon, b_tag, target, target_pos, inc_state, do_aim);
                 break;
         }
     }

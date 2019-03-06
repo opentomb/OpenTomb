@@ -3,14 +3,13 @@
 #define WEAPONS_H
 
 #include <stdint.h>
-#include "audio/audio.h"
-#include "skeletal_model.h"
-#include "inventory.h"
-#include "entity.h"
 
 /// "inc_state" state
-#define ARMED 1
-#define UNARMED 2
+#define ARMED (1)
+#define UNARMED (2)
+
+#define AMMO_EMPTY (0)
+#define AMMO_UNLIMITED (-1)
 
 // Mesh for Two Hand and One Hand
 #define HAND_RIGHT 10
@@ -137,85 +136,6 @@
 #define GRAPPLING_IDLE_TO_HIDE 3
 #define GRAPPLING_FIRING_TO_IDLE 4
 
-// all weapon id
-enum weapon_item_e
-{
-    TYPE_NULL = 0,
-    TYPE_PISTOLS = ITEM_PISTOL,
-    TYPE_SHOTGUN = ITEM_SHOTGUN,
-    TYPE_MAGNUMS = ITEM_MAGNUMS,
-    TYPE_UZIS = ITEM_UZIS,
-    TYPE_AUTOMAGS = ITEM_AUTOMAGS,
-    TYPE_DESERTEAGLE = ITEM_DESERTEAGLE,
-    TYPE_REVOLVER = ITEM_REVOLVER,
-    TYPE_M16 = ITEM_M16,
-    TYPE_MP5 = ITEM_MP5,
-    TYPE_GRENADEGUN = ITEM_GRENADEGUN,
-    TYPE_ROCKETGUN = ITEM_ROCKETGUN,
-    TYPE_HARPOONGUN = ITEM_HARPOONGUN,
-    TYPE_CROSSBOWGUN = ITEM_CROSSBOW,
-    TYPE_GRAPPLINGUN = ITEM_GRAPPLEGUN
-};
-
-// all weapon ammo
-enum weapon_ammo_e
-{
-    AMMO_EMPTY = 0,
-    AMMO_UNLIMITED = -1,
-    AMMO_SHOTGUN = ITEM_SHOTGUN_AMMO,                   // TR1 to TR3
-    AMMO_SHOTGUN_NORMAL = ITEM_SHOTGUN_NORMAL_AMMO,     // TR4+
-    AMMO_SHOTGUN_WIDE = ITEM_SHOTGUN_WIDESHOT_AMMO,
-    AMMO_MAGNUM = ITEM_MAGNUM_AMMO,
-    AMMO_DESERTEAGLE = ITEM_DESERTEAGLE_AMMO,
-    AMMO_AUTOMAGS = ITEM_AUTOMAGS_AMMO,
-    AMMO_REVOLVER = ITEM_REVOLVER_AMMO,
-    AMMO_UZI = ITEM_UZI_AMMO,
-    AMMO_M16 = ITEM_M16_AMMO,
-    AMMO_MP5 = ITEM_MP5_AMMO,
-    AMMO_GRENADE = ITEM_GRENADEGUN_AMMO,                 // TR1 to TR3
-    AMMO_GRENADE_NORMAL = ITEM_GRENADEGUN_NORMAL_AMMO,   // TR4+
-    AMMO_GRENADE_SUPER = ITEM_GRENADEGUN_SUPER_AMMO,
-    AMMO_GRENADE_FLASH = ITEM_GRENADEGUN_FLASH_AMMO,
-    AMMO_ROCKETGUN = ITEM_ROCKETGUN_AMMO,
-    AMMO_HARPOON = ITEM_HARPOONGUN_AMMO,
-    AMMO_CROSSBOW_NORMAL = ITEM_CROSSBOW_NORMAL_AMMO,
-    AMMO_CROSSBOW_EXPLOSIVE = ITEM_CROSSBOW_EXPLOSIVE_AMMO,
-    AMMO_CROSSBOW_POISON = ITEM_CROSSBOW_POISON_AMMO,
-    AMMO_GRAPPLIN = ITEM_GRAPPLEGUN_AMMO
-};
-
-// all weapon sound
-enum weapon_sound_e
-{
-    SND_NULL = -1,
-    SND_UNIVERSAL_RELOAD = TR_AUDIO_SOUND_RELOAD,
-    SND_UNIVERSAL_DRAW = TR_AUDIO_SOUND_HOLSTEROUT,
-    SND_UNIVERSAL_HIDE = TR_AUDIO_SOUND_HOLSTERIN,
-    SND_PISTOL = TR_AUDIO_SOUND_SHOTPISTOLS,
-    SND_SHOTGUN = TR_AUDIO_SOUND_SHOTSHOTGUN,
-    SND_UZI = TR_AUDIO_SOUND_SHOTUZI,
-    SND_UZI_STOP = TR_AUDIO_SOUND_SHOTUZI_END,
-    SND_MAGNUM = TR_AUDIO_SOUND_SHOTMAGNUM,
-    SND_AUTOMAGS = TR_AUDIO_SOUND_SHOTAUTOMAGS,
-    SND_DESERTEAGLE = TR_AUDIO_SOUND_SHOTDESERTEAGLE,
-    SND_REVOLVER = TR_AUDIO_SOUND_SHOTREVOLVER,
-    SND_M16 = TR_AUDIO_SOUND_SHOTM16,
-    SND_M16_STOP = TR_AUDIO_SOUND_SHOTM16_END,
-    SND_MP5 = TR_AUDIO_SOUND_SHOTMP5,
-    SND_ROCKETGUN = TR_AUDIO_SOUND_SHOTROCKETGUN,
-    SND_ROCKETGUN_RELOAD = TR_AUDIO_SOUND_RELOADROCKETGUN,
-    SND_HARPOON_LAND = TR_AUDIO_SOUND_SHOTHARPOON_G,
-    SND_HARPOON_WATER = TR_AUDIO_SOUND_SHOTHARPOON_W,
-    SND_HARPOON_RELOAD_LAND = TR_AUDIO_SOUND_RELOADHARPOON_G,
-    SND_HARPOON_RELOAD_WATER = TR_AUDIO_SOUND_RELOADHARPOON_W,
-    SND_GRENADEGUN = TR_AUDIO_SOUND_SHOTGRENADEGUN,
-    SND_TR2_3_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN,
-    SND_TR2_3_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR2_3_RELOADGRENADEGUN_LOCK,
-    SND_TR4_C_GRENADEGUN_RELOAD = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN,
-    SND_TR4_C_GRENADEGUN_LOCK = TR_AUDIO_SOUND_TR4C_RELOADGRENADEGUN_LOCK,
-    SND_CROSSBOWGUN = TR_AUDIO_SOUND_SHOTCROSSBOW
-};
-
 #define RATE_LOWEST 0.1f
 #define RATE_PISTOL 1.0f
 #define RATE_SHOTGUN 1.0f
@@ -283,40 +203,41 @@ struct weapons_s
 // init all weapons
 void World_WeaponInit();
 
-bool checkCanShoot(weapons_s item_id);
+bool checkCanShoot(struct weapons_s *weapon);
 // consume ammo after firing (target or not !)
-bool consumeAmmo(weapons_s weapon);
+bool consumeAmmo(struct weapons_s *weapon);
 
-int CurrentWeaponModelToItemID(ss_animation_s* ss_anim); // this function can be found in state_control_weapons
+int CurrentWeaponModelToItemID(struct ss_animation_s *ss_anim); // this function can be found in state_control_weapons
 // auto change weapon to model_id assigned
-void AutoSelect(int model_id, ss_animation_s *ss_anim, entity_s* ent, float time);
+void AutoSelect(int model_id, struct ss_animation_s *ss_anim, struct entity_s *ent, float time);
 
 // One Hand Weapon Animation Controller
-void SetCurrentWeaponAnimation(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end);
+void SetCurrentWeaponAnimation(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, bool do_aim, uint16_t targeted_bone_start, uint16_t targeted_bone_end);
 
 /// Two Hand Animation Controller
-void ShotgunAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void GrenadeGunAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void HarpoonAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void MP5Anim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void M16Anim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void RocketGunAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void CrossbowAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
-void GrapplinGunAnim(entity_s* ent,  ss_animation_s* ss_anim, float time, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, float* target_pos, int inc_state, bool do_aim);
+// may be add MORE arguments... ;-)
+void ShotgunAnim(struct entity_s *ent,  ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void GrenadeGunAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void HarpoonAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void MP5Anim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void M16Anim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void RocketGunAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void CrossbowAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
+void GrapplinGunAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, float time, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, int inc_state, bool do_aim);
 
 ///===================================///
 ///       Weapon Fast Function        ///
 ///===================================///
-void OneHand_IdleToFiring(entity_s* ent,  ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time);
-void OneHand_HideToIdle(entity_s* ent,  ss_animation_s* ss_anim, weapons_s weapon, float time);
-void OneHand_HideAndIdle(entity_s* ent,  ss_animation_s* ss_anim, weapons_s weapon, float time);
-void OneHand_Firing(entity_s* ent,  ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, uint16_t targeted_bone_start, uint16_t targeted_bone_end, int anim_firing, int anim_firing_to_idle);
+void OneHand_IdleToFiring(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, bool do_aim, float time);
+void OneHand_HideToIdle(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, float time);
+void OneHand_HideAndIdle(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, float time);
+void OneHand_Firing(struct entity_s *ent, struct ss_animation_s *ss_anim, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, struct weapons_s *weapon, float time, uint16_t targeted_bone_start, uint16_t targeted_bone_end, int anim_firing, int anim_firing_to_idle);
 
-void TwoHand_IdleToFiring(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, ss_bone_tag_p b_tag, entity_p target, bool do_aim, float time, int inc_state, int anim_hide, int anim_firing);
-void TwoHand_HideToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle);
-void TwoHand_Firing(entity_s* ent, ss_animation_s* ss_anim, ss_bone_tag_p b_tag, entity_p target, float* target_pos, weapons_s weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle);
-void TwoHand_IdleToHide(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int frame_to_hide);
-void TwoHand_FiringToIdle(entity_s* ent, ss_animation_s* ss_anim, weapons_s weapon, float time, int anim_idle_to_firing);
+void TwoHand_IdleToFiring(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, struct ss_bone_tag_s *b_tag, struct entity_s *target, bool do_aim, float time, int inc_state, int anim_hide, int anim_firing);
+void TwoHand_HideToIdle(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, float time, int anim_idle);
+void TwoHand_Firing(struct entity_s *ent, struct ss_animation_s *ss_anim, struct ss_bone_tag_s *b_tag, struct entity_s *target, float *target_pos, struct weapons_s *weapon, float time, int anim_firing, int anim_firing_to_idle, int anim_idle);
+void TwoHand_IdleToHide(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, float time, int frame_to_hide);
+void TwoHand_FiringToIdle(struct entity_s *ent, struct ss_animation_s *ss_anim, struct weapons_s *weapon, float time, int anim_idle_to_firing);
 
 struct weapons_s getPistol();
 struct weapons_s getShotgun();
