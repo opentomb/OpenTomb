@@ -1382,8 +1382,8 @@ extern "C" int Engine_ExecCmd(char *ch)
             }
             else
             {
-                char buf[1024];
-                snprintf(buf, 1024, "Command \"%s\" not found", token);
+                char buf[1088]; // Give some more room to store the printf() format string plus the token argument (this avoids triggering -Wformat-truncation gcc warning)
+                snprintf(buf, sizeof(buf), "Command \"%s\" not found", token);
                 Con_AddLine(buf, FONTSTYLE_CONSOLE_WARNING);
             }
             return 1;
