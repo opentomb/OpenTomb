@@ -1,48 +1,20 @@
-#include "weapons.h"
 
-#include "core/system.h"
-#include "core/console.h"
-#include "core/vmath.h"
-#include "core/obb.h"
-
-#include "script/script.h"
 #include "audio/audio.h"
 #include "inventory.h"
 #include "entity.h"
-#include "room.h"
+#include "character_controller.h"
 #include "world.h"
 
-#include "character_controller.h"
 #include "state_control/state_control_Lara.h"
+
+#include "weapons.h"
 
 #define SND_NULL (-1)
 
-struct weapons_s pistol;
-struct weapons_s shotgun;
-struct weapons_s uzi;
-struct weapons_s magnum;
-struct weapons_s automags;
-struct weapons_s deserteagle;
-struct weapons_s revolver;
-struct weapons_s m16;
-struct weapons_s mp5;
-struct weapons_s rocket;
-struct weapons_s grenade;
-struct weapons_s harpoon;
-struct weapons_s crossbow;
-struct weapons_s grapplin;
 
-/*=============================================//
-//             WEAPON CLASS INIT               //
-//=============================================*/
-void World_WeaponInit()
+struct weapons_s getPistol()
 {
-    entity_s* player = World_GetPlayer();
-    int32_t ver = World_GetVersion();
-
-    //=============================================//
-    //                PISTOLS GUN                  //
-    //=============================================//
+    static struct weapons_s pistol;
     pistol.item_id = ITEM_PISTOL;
     pistol.shot = TR_AUDIO_SOUND_SHOTPISTOLS;
     pistol.draw = TR_AUDIO_SOUND_HOLSTEROUT;
@@ -62,10 +34,13 @@ void World_WeaponInit()
     pistol.muzzle_orient[0] = 0;
     pistol.muzzle_orient[1] = 0;
     pistol.muzzle_orient[2] = 0;
+    return pistol;
+}
 
-    //=============================================//
-    //                SHOTGUN GUN                  //
-    //=============================================//
+struct weapons_s getShotgun()
+{
+    static struct weapons_s shotgun;
+    int32_t ver = World_GetVersion();
     shotgun.item_id = ITEM_SHOTGUN;
     shotgun.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
     shotgun.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -95,32 +70,12 @@ void World_WeaponInit()
     shotgun.muzzle_orient[0] = 0;
     shotgun.muzzle_orient[1] = 0;
     shotgun.muzzle_orient[2] = 0;
-    
-    //=============================================//
-    //                   UZI GUN                   //
-    //=============================================//
-    uzi.item_id = ITEM_UZIS;
-    uzi.shot = TR_AUDIO_SOUND_SHOTUZI;
-    uzi.draw = TR_AUDIO_SOUND_HOLSTEROUT;
-    uzi.hide = TR_AUDIO_SOUND_HOLSTERIN;
-    uzi.echo = (!IS_TR_I(ver)) ? TR_AUDIO_SOUND_SHOTUZI_END : SND_NULL;
-    uzi.reload_1 = TR_AUDIO_SOUND_RELOAD;
-    uzi.reload_2 = SND_NULL;
-    uzi.damage = 1;
-    uzi.firerate = RATE_UZI;
-    uzi.bullet = 2;
-    uzi.current_ammo = ITEM_UZI_AMMO;
-    uzi.muzzle_duration = 1.0f;
-    uzi.muzzle_pos[0] = 0;
-    uzi.muzzle_pos[1] = 0;
-    uzi.muzzle_pos[2] = 0;
-    uzi.muzzle_orient[0] = 0;
-    uzi.muzzle_orient[1] = 0;
-    uzi.muzzle_orient[2] = 0;
+    return shotgun;
+}
 
-    //=============================================//
-    //                 MAGNUM GUN                  //
-    //=============================================//
+struct weapons_s getMagnum()
+{
+    static struct weapons_s magnum;
     magnum.item_id = ITEM_MAGNUMS;
     magnum.shot = TR_AUDIO_SOUND_SHOTMAGNUM;
     magnum.draw = TR_AUDIO_SOUND_HOLSTEROUT;
@@ -139,32 +94,37 @@ void World_WeaponInit()
     magnum.muzzle_orient[0] = 0;
     magnum.muzzle_orient[1] = 0;
     magnum.muzzle_orient[2] = 0;
+    return magnum;
+}
 
-    //=============================================//
-    //             DESERT EAGLE GUN                //
-    //=============================================//
-    deserteagle.item_id = ITEM_DESERTEAGLE;
-    deserteagle.shot = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
-    deserteagle.draw = TR_AUDIO_SOUND_HOLSTEROUT;
-    deserteagle.hide = TR_AUDIO_SOUND_HOLSTERIN;
-    deserteagle.echo = SND_NULL;
-    deserteagle.reload_1 = TR_AUDIO_SOUND_RELOAD;
-    deserteagle.reload_2 = SND_NULL;
-    deserteagle.damage = 21;
-    deserteagle.firerate = RATE_DESERTEAGLE;
-    deserteagle.bullet = 1;
-    deserteagle.current_ammo = ITEM_DESERTEAGLE_AMMO;
-    deserteagle.muzzle_duration = 3.0f;
-    deserteagle.muzzle_pos[0] = 0;
-    deserteagle.muzzle_pos[1] = 0;
-    deserteagle.muzzle_pos[2] = 0;
-    deserteagle.muzzle_orient[0] = 0;
-    deserteagle.muzzle_orient[1] = 0;
-    deserteagle.muzzle_orient[2] = 0;
+struct weapons_s getUzi()
+{
+    static struct weapons_s uzi;
+    int32_t ver = World_GetVersion();
+    uzi.item_id = ITEM_UZIS;
+    uzi.shot = TR_AUDIO_SOUND_SHOTUZI;
+    uzi.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+    uzi.hide = TR_AUDIO_SOUND_HOLSTERIN;
+    uzi.echo = (!IS_TR_I(ver)) ? TR_AUDIO_SOUND_SHOTUZI_END : SND_NULL;
+    uzi.reload_1 = TR_AUDIO_SOUND_RELOAD;
+    uzi.reload_2 = SND_NULL;
+    uzi.damage = 1;
+    uzi.firerate = RATE_UZI;
+    uzi.bullet = 2;
+    uzi.current_ammo = ITEM_UZI_AMMO;
+    uzi.muzzle_duration = 1.0f;
+    uzi.muzzle_pos[0] = 0;
+    uzi.muzzle_pos[1] = 0;
+    uzi.muzzle_pos[2] = 0;
+    uzi.muzzle_orient[0] = 0;
+    uzi.muzzle_orient[1] = 0;
+    uzi.muzzle_orient[2] = 0;
+    return uzi;
+}
 
-    //=============================================//
-    //                AUTOMAGS GUN                 //
-    //=============================================//
+struct weapons_s getAutomags()
+{
+    static struct weapons_s automags;
     automags.item_id = ITEM_AUTOMAGS;
     automags.shot = TR_AUDIO_SOUND_SHOTAUTOMAGS;
     automags.draw = TR_AUDIO_SOUND_HOLSTEROUT;
@@ -183,10 +143,36 @@ void World_WeaponInit()
     automags.muzzle_orient[0] = 0;
     automags.muzzle_orient[1] = 0;
     automags.muzzle_orient[2] = 0;
+    return automags;
+}
 
-    //=============================================//
-    //                REVOLVER GUN                 //
-    //=============================================//
+struct weapons_s getDesertEagle()
+{
+    static struct weapons_s deserteagle;
+    deserteagle.item_id = ITEM_DESERTEAGLE;
+    deserteagle.shot = TR_AUDIO_SOUND_SHOTDESERTEAGLE;
+    deserteagle.draw = TR_AUDIO_SOUND_HOLSTEROUT;
+    deserteagle.hide = TR_AUDIO_SOUND_HOLSTERIN;
+    deserteagle.echo = SND_NULL;
+    deserteagle.reload_1 = TR_AUDIO_SOUND_RELOAD;
+    deserteagle.reload_2 = SND_NULL;
+    deserteagle.damage = 21;
+    deserteagle.firerate = RATE_DESERTEAGLE;
+    deserteagle.bullet = 1;
+    deserteagle.current_ammo = ITEM_DESERTEAGLE_AMMO;
+    deserteagle.muzzle_duration = 3.0f;
+    deserteagle.muzzle_pos[0] = 0;
+    deserteagle.muzzle_pos[1] = 0;
+    deserteagle.muzzle_pos[2] = 0;
+    deserteagle.muzzle_orient[0] = 0;
+    deserteagle.muzzle_orient[1] = 0;
+    deserteagle.muzzle_orient[2] = 0;
+    return deserteagle;
+}
+
+struct weapons_s getRevolver()
+{
+    static struct weapons_s revolver;
     revolver.item_id = ITEM_REVOLVER;
     revolver.shot = TR_AUDIO_SOUND_SHOTREVOLVER;
     revolver.draw = TR_AUDIO_SOUND_HOLSTEROUT;
@@ -206,10 +192,12 @@ void World_WeaponInit()
     revolver.muzzle_orient[0] = 0;
     revolver.muzzle_orient[1] = 0;
     revolver.muzzle_orient[2] = 0;
+    return revolver;
+}
 
-    //=============================================//
-    //                  M16 GUN                    //
-    //=============================================//
+struct weapons_s getM16()
+{
+    static struct weapons_s m16;
     m16.item_id = ITEM_M16;
     m16.shot = TR_AUDIO_SOUND_SHOTM16;
     m16.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -218,7 +206,7 @@ void World_WeaponInit()
     m16.reload_1 = SND_NULL;
     m16.reload_2 = SND_NULL;
     m16.damage = 12;
-    m16.firerate = (mp5.alternateAim) ? RATE_M16_ALT : RATE_M16;
+    m16.firerate = (m16.alternateAim) ? RATE_M16_ALT : RATE_M16;
     m16.bullet = 1;
     m16.current_ammo = ITEM_M16_AMMO;
     m16.alternateAim = false;           // define it at animation (M16Anim()) ?
@@ -229,10 +217,12 @@ void World_WeaponInit()
     m16.muzzle_orient[0] = 0;
     m16.muzzle_orient[1] = 0;
     m16.muzzle_orient[2] = 0;
+    return m16;
+}
 
-    //=============================================//
-    //                  MP5 GUN                    //
-    //=============================================//
+struct weapons_s getMP5()
+{
+    static struct weapons_s mp5;
     mp5.item_id = ITEM_MP5;
     mp5.shot = TR_AUDIO_SOUND_SHOTMP5;
     mp5.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -252,10 +242,12 @@ void World_WeaponInit()
     mp5.muzzle_orient[0] = 0;
     mp5.muzzle_orient[1] = 0;
     mp5.muzzle_orient[2] = 0;
+    return mp5;
+}
 
-    //=============================================//
-    //                 ROCKET GUN                  //
-    //=============================================//
+struct weapons_s getRocketGun()
+{
+    static struct weapons_s rocket;
     rocket.item_id = ITEM_ROCKETGUN;
     rocket.shot = TR_AUDIO_SOUND_SHOTROCKETGUN;
     rocket.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -278,10 +270,36 @@ void World_WeaponInit()
     rocket.muzzle_orient[0] = 0;
     rocket.muzzle_orient[1] = 0;
     rocket.muzzle_orient[2] = 0;
+    return rocket;
+}
 
-    //=============================================//
-    //                GRENADE GUN                  //
-    //=============================================//
+struct weapons_s getHarpoonGun(bool is_underwater)
+{
+    static struct weapons_s harpoon;
+    harpoon.item_id = ITEM_HARPOONGUN;
+    harpoon.shot = (is_underwater) ? TR_AUDIO_SOUND_SHOTHARPOON_W : TR_AUDIO_SOUND_SHOTHARPOON_G;
+    harpoon.draw = (is_underwater) ? SND_NULL : TR_AUDIO_SOUND_HOLSTERIN;
+    harpoon.hide = (is_underwater) ? SND_NULL : TR_AUDIO_SOUND_HOLSTERIN;
+    harpoon.echo = SND_NULL;
+    harpoon.reload_1 = (is_underwater) ? TR_AUDIO_SOUND_RELOADHARPOON_W : TR_AUDIO_SOUND_RELOADHARPOON_G;
+    harpoon.damage = 10;
+    harpoon.damage_explosion = 0;
+    harpoon.damage_water = 20;
+    harpoon.firerate = RATE_HARPOONGUN;
+    harpoon.bullet = 1;
+    harpoon.ammo_counter = 4;
+    harpoon.current_ammo = ITEM_HARPOONGUN_AMMO;
+    harpoon.onWater = (is_underwater) ? true : false;
+    harpoon.haveGravity = (is_underwater) ? false : true;
+    harpoon.dealDmgAtImpact = false;
+    // harpoon have no muzzleflash or smoke
+    return harpoon;
+}
+
+struct weapons_s getGrenadeGun()
+{
+    static struct weapons_s grenade;
+    int32_t ver = World_GetVersion();
     grenade.item_id = ITEM_GRENADEGUN;
     grenade.shot = TR_AUDIO_SOUND_SHOTGRENADEGUN;
     grenade.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -319,31 +337,12 @@ void World_WeaponInit()
     grenade.muzzle_orient[0] = 0;
     grenade.muzzle_orient[1] = 0;
     grenade.muzzle_orient[2] = 0;
+    return grenade;
+}
 
-    //=============================================//
-    //                HARPOON GUN                  //
-    //=============================================//
-    harpoon.item_id = ITEM_HARPOONGUN;
-    harpoon.shot = (player->move_type == MOVE_UNDERWATER) ? TR_AUDIO_SOUND_SHOTHARPOON_W : TR_AUDIO_SOUND_SHOTHARPOON_G;
-    harpoon.draw = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : TR_AUDIO_SOUND_HOLSTERIN;
-    harpoon.hide = (player->move_type == MOVE_UNDERWATER) ? SND_NULL : TR_AUDIO_SOUND_HOLSTERIN;
-    harpoon.echo = SND_NULL;
-    harpoon.reload_1 = (player->move_type == MOVE_UNDERWATER) ? TR_AUDIO_SOUND_RELOADHARPOON_W : TR_AUDIO_SOUND_RELOADHARPOON_G;
-    harpoon.damage = 10;
-    harpoon.damage_explosion = 0;
-    harpoon.damage_water = 20;
-    harpoon.firerate = RATE_HARPOONGUN;
-    harpoon.bullet = 1;
-    harpoon.ammo_counter = 4;
-    harpoon.current_ammo = ITEM_HARPOONGUN_AMMO;
-    harpoon.onWater = (player->move_type == MOVE_UNDERWATER) ? true : false;
-    harpoon.haveGravity = (player->move_type == MOVE_UNDERWATER) ? false : true;
-    harpoon.dealDmgAtImpact = false;
-    // harpoon have no muzzleflash or smoke
-
-    //=============================================//
-    //                CROSSBOW GUN                 //
-    //=============================================//
+struct weapons_s getCrossbowGun()
+{
+    static struct weapons_s crossbow;
     crossbow.item_id = ITEM_CROSSBOW;
     crossbow.shot = TR_AUDIO_SOUND_SHOTCROSSBOW;
     crossbow.draw = TR_AUDIO_SOUND_HOLSTERIN;
@@ -361,10 +360,12 @@ void World_WeaponInit()
     crossbow.haveGravity = false;
     crossbow.itemIsEquipped = false;             // can be equiped of the lasersight
     // same as harpoon
+    return crossbow;
+}
 
-    //=============================================//
-    //                GRAPPLIN GUN                 //
-    //=============================================//
+struct weapons_s getGrapplinGun()
+{
+    static struct weapons_s grapplin;
     grapplin.item_id = ITEM_GRAPPLEGUN;
     // this "weapon" have sound ?
     grapplin.shot = SND_NULL;
@@ -382,75 +383,5 @@ void World_WeaponInit()
     grapplin.haveGravity = false;
     // no muzzleflash for this ?
     // same as harpoon and crossbow
-}
-
-
-struct weapons_s getPistol()
-{
-    return pistol;
-}
-
-struct weapons_s getShotgun()
-{
-    return shotgun;
-}
-
-struct weapons_s getMagnum()
-{
-    return magnum;
-}
-
-struct weapons_s getUzi()
-{
-    return uzi;
-}
-
-struct weapons_s getAutomags()
-{
-    return automags;
-}
-
-struct weapons_s getDesertEagle()
-{
-    return deserteagle;
-}
-
-struct weapons_s getRevolver()
-{
-    return revolver;
-}
-
-struct weapons_s getM16()
-{
-    return m16;
-}
-
-struct weapons_s getMP5()
-{
-    return mp5;
-}
-
-struct weapons_s getRocketGun()
-{
-    return rocket;
-}
-
-struct weapons_s getHarpoonGun()
-{
-    return harpoon;
-}
-
-struct weapons_s getGrenadeGun()
-{
-    return grenade;
-}
-
-struct weapons_s getCrossbowGun()
-{
-    return crossbow;
-}
-
-struct weapons_s getGrapplinGun()
-{
     return grapplin;
 }

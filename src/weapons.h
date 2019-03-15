@@ -71,9 +71,6 @@ struct weapons_s
     float muzzle_orient[3];             // muzzle_orient([0] = x, [1] = y, [2] = z) (need float ?)
 };
 
-// init all weapons
-void World_WeaponInit();
-
 struct weapons_s getPistol();
 struct weapons_s getShotgun();
 struct weapons_s getMagnum();
@@ -84,7 +81,7 @@ struct weapons_s getRevolver();
 struct weapons_s getM16();
 struct weapons_s getMP5();
 struct weapons_s getRocketGun();
-struct weapons_s getHarpoonGun();
+struct weapons_s getHarpoonGun(bool is_underwater);
 struct weapons_s getGrenadeGun();
 struct weapons_s getCrossbowGun();
 struct weapons_s getGrapplinGun();

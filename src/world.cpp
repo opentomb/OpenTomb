@@ -39,7 +39,6 @@ extern "C" {
 #include "resource.h"
 #include "inventory.h"
 #include "trigger.h"
-#include "weapons.h"
 
  struct world_s
 {
@@ -270,10 +269,6 @@ void World_Open(const char *path, int trv)
         global_world.tex_atlas = NULL;
     }
     Gui_DrawLoadScreen(980);
-    
-    // Init weapons
-    World_WeaponInit();
-    Gui_DrawLoadScreen(990);
 
     // Free the level
     delete tr;

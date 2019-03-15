@@ -3318,7 +3318,6 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         bool do_aim = ent->character->cmd.action;
         float target_pos[3];
         int inc_state = 0;
-        int32_t ver = World_GetVersion();
         // Sound Weapon
         weapons_s weapon;
 
@@ -3341,7 +3340,7 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
                 weapon = getGrenadeGun();
                 break;
             case ITEM_HARPOONGUN:
-                weapon = getHarpoonGun();
+                weapon = getHarpoonGun(ent->move_type == MOVE_UNDERWATER);
                 break;
             case ITEM_ROCKETGUN:
                 weapon = getRocketGun();
