@@ -10,6 +10,7 @@ project(OpenTomb)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
+option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
 
 # Detect system FreeType
 
@@ -27,11 +28,30 @@ endif ()
 
 if (OPENTOMB_INTERNAL_FREETYPE)
     add_subdirectory(extern/freetype2)
-    set(FREETYPE_INCLUDE_DIRS "")
+    set(FREETYPE_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/extern/freetype2")
     set(FREETYPE_LIBRARIES freetype2)
 endif ()
 
-add_subdirectory(extern/bullet)
+# Detect system BULLET
+
+if (FORCE_SYSTEM_BULLET)
+    find_package(Bullet QUIET)
+    if (NOT BULLET_FOUND)
+        message(WARNING "BULLET not found. Enabling internal BULLET support.")
+        set(OPENTOMB_INTERNAL_BULLET ON)
+    else()
+        set(OPENTOMB_INTERNAL_BULLET OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_BULLET ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_BULLET)
+    add_subdirectory(extern/bullet)
+    set(BULLET_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/extern/bullet")
+    set(BULLET_LIBRARIES bullet)
+endif ()
+
 add_subdirectory(extern/lua)
 
 set(OPENTOMB_SRCS
@@ -259,6 +279,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
     ${FREETYPE_INCLUDE_DIRS}
+    ${BULLET_INCLUDE_DIRS}
     ${PNG_INCLUDE_DIRS}
     ${ZLIB_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIR}
@@ -268,8 +289,8 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME}
-    bullet
     ${FREETYPE_LIBRARIES}
+    ${BULLET_LIBRARIES}
     lua5.3
     ${PNG_LIBRARIES}
     ${OPENAL_LIBRARY}
