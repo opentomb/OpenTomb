@@ -315,6 +315,7 @@ void Character_FixByBox(struct entity_s *ent)
 
 void Character_GoByPathToTarget(struct entity_s *ent, struct entity_s *target)
 {
+    ent->character->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT;
     if(ent->self->sector && ent->self->sector->box &&
        ent->character->path_target && (ent->character->path_dist > 0))
     {
@@ -384,6 +385,28 @@ void Character_GoByPathToTarget(struct entity_s *ent, struct entity_s *target)
             ent->character->rotate_speed_mult = delta / (360.0f * engine_frame_time);
         }
 
+        float speed = vec3_abs(ent->speed);
+        if((ent->character->path_dist == 1) && (dir[3] > 16.0) && (cos_a < 0.45f) && (speed != 0.0f))
+        {
+            float ang_speed_run = 180.0f * speed / (dir[3] * M_PI);
+            float ang_speed = ROT_SPEED_LAND * 60.0f * ent->character->rotate_speed_mult;
+            if (2.0f * ang_speed < ang_speed_run)
+            {
+                ent->character->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT * 0.1f;
+                ent->character->rotate_speed_mult = 2.0f;
+            }
+            else if(ang_speed < 2.0f * ang_speed_run)
+            {
+                ent->character->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT * 0.15f;
+                ent->character->rotate_speed_mult = 1.5f;
+            }
+            else
+            {
+                ent->character->linear_speed_mult = DEFAULT_CHARACTER_SPEED_MULT * 0.25f;
+                ent->character->rotate_speed_mult = 1.5f;
+            }
+        }
+        
         if(ent->move_type == MOVE_FLY)
         {
             float target_z = ent->character->path_target->floor + 600.0f;

@@ -206,10 +206,10 @@ struct weapons_s getM16()
     m16.reload_1 = SND_NULL;
     m16.reload_2 = SND_NULL;
     m16.damage = 12;
+    m16.alternateAim = false;           // define it at animation (M16Anim()) ?
     m16.firerate = (m16.alternateAim) ? RATE_M16_ALT : RATE_M16;
     m16.bullet = 1;
     m16.current_ammo = ITEM_M16_AMMO;
-    m16.alternateAim = false;           // define it at animation (M16Anim()) ?
     m16.muzzle_duration = 3.0f;
     m16.muzzle_pos[0] = 0;
     m16.muzzle_pos[1] = 0;
@@ -232,10 +232,10 @@ struct weapons_s getMP5()
     mp5.reload_2 = SND_NULL;
     mp5.damage = 12;
     mp5.damage_explosion = 0;
+    mp5.alternateAim = false;
     mp5.firerate = (mp5.alternateAim) ? RATE_MP5_ALT : RATE_MP5;
     mp5.bullet = 1;
     mp5.current_ammo = ITEM_MP5_AMMO;
-    mp5.alternateAim = false;
     mp5.muzzle_pos[0] = 0;
     mp5.muzzle_pos[1] = 0;
     mp5.muzzle_pos[2] = 0;
