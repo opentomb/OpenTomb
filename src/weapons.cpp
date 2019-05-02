@@ -43,7 +43,7 @@ struct weapons_s getShotgun()
     int32_t ver = World_GetVersion();
     shotgun.item_id = ITEM_SHOTGUN;
     shotgun.shot = TR_AUDIO_SOUND_SHOTSHOTGUN;
-    shotgun.draw = TR_AUDIO_SOUND_HOLSTERIN;
+    shotgun.draw = TR_AUDIO_SOUND_HOLSTEROUT;
     shotgun.hide = TR_AUDIO_SOUND_HOLSTERIN;
     shotgun.echo = SND_NULL;
     shotgun.reload_1 = TR_AUDIO_SOUND_RELOAD;
