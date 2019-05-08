@@ -416,9 +416,19 @@ void Game_ApplyControls(struct entity_s *ent)
     int8_t look_logic[3];
 
     // Keyboard move logic
-    move_logic[0] = act[ACT_UP].state - act[ACT_DOWN].state;
-    move_logic[1] = act[ACT_RIGHT].state - act[ACT_LEFT].state;
-    move_logic[2] = act[ACT_JUMP].state - act[ACT_CROUCH].state;
+    if(act[ACT_STEPLEFT].state || act[ACT_STEPRIGHT].state)
+    {
+        // Force movement on Y axis when step left or step right keys are pressed
+        move_logic[0] = 0;
+        move_logic[1] = act[ACT_STEPRIGHT].state - act[ACT_STEPLEFT].state;
+        move_logic[2] = 0;
+    }
+    else
+    {
+        move_logic[0] = act[ACT_UP].state - act[ACT_DOWN].state;
+        move_logic[1] = act[ACT_RIGHT].state - act[ACT_LEFT].state;
+        move_logic[2] = act[ACT_JUMP].state - act[ACT_CROUCH].state;
+    }
 
     // Keyboard look logic
     look_logic[0] = act[ACT_LOOKLEFT].state - act[ACT_LOOKRIGHT].state;
@@ -517,7 +527,14 @@ void Game_ApplyControls(struct entity_s *ent)
         ent->character->cmd.action = control_states.actions[ACT_ACTION].state;
         ent->character->cmd.ready_weapon = control_states.actions[ACT_DRAWWEAPON].state;
         ent->character->cmd.jump = control_states.actions[ACT_JUMP].state;
-        ent->character->cmd.shift = control_states.actions[ACT_WALK].state;
+        if(act[ACT_STEPLEFT].state || act[ACT_STEPRIGHT].state)
+        {
+            ent->character->cmd.shift = 1; // Force shift press when stepping left or right to simulate the key combination of shift + ACT_LEFT or ACT_RIGHT
+        }
+        else
+        {
+            ent->character->cmd.shift = control_states.actions[ACT_WALK].state;
+        }
 
         ent->character->cmd.roll = ((act[ACT_UP].state && act[ACT_DOWN].state) || act[ACT_ROLL].state);
 

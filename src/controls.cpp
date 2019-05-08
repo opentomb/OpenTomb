@@ -100,7 +100,8 @@ void Controls_Key(int32_t button, int state, int memu_mode)
     }
     if(action < ACTIONS::ACT_LASTINDEX)
     {
-        if(control_states.actions[action].state && state)
+        // Allow key repetition emulation only for movement keys (this is useful when navigating into menus or inventory), but not for other keys (for instance medipack short key would consume medipacks until released)
+        if(control_states.actions[action].state && state && (action >= ACT_UP) && (action <= ACT_RIGHT))
         {
             control_states.actions[action].prev_state = 0x00;
         }
