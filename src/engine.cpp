@@ -155,7 +155,7 @@ void Engine_Start(int argc, char **argv)
     // Primary initialization.
     Engine_Init_Pre();
 
-    Engine_LoadConfig(config_name ? config_name : "config.lua");
+    Engine_LoadConfig(config_name);
 
     // Init generic SDL interfaces.
     Engine_InitSDLSubsystems();
