@@ -15,7 +15,7 @@
 
 static struct
 {
-    uint8_t                     background_color[4];
+    uint8_t                     background_color[4]; // Colors are in RGBA format
     uint16_t                    lines_count;
     uint16_t                    commands_count;
     uint16_t                    lines_buff_size;
@@ -68,10 +68,10 @@ void Con_SetExecFunction(int(*exec_cmd)(char *ch))
 
 void Con_InitGlobals()
 {
-    con_base.background_color[0] = 1.0f;
-    con_base.background_color[1] = 0.9f;
-    con_base.background_color[2] = 0.7f;
-    con_base.background_color[3] = 0.4f;
+    con_base.background_color[0] = 0;
+    con_base.background_color[1] = 0;
+    con_base.background_color[2] = 0;
+    con_base.background_color[3] = 200;
 
     con_base.exec_cmd        = NULL;
     con_base.spacing         = CON_MIN_LINE_INTERVAL;
