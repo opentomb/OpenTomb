@@ -1120,7 +1120,7 @@ void gui_InventoryManager::handlePassport(struct base_item_s *bi, float time)
                 m_current_menu = NULL;
             }
             Anim_IncTime(&bi->bf->animations, time);
-            if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
+            if(bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM)
             {
                 Anim_SetAnimation(&bi->bf->animations, 0, 0);
                 m_command = GUI_COMMAND_NONE;
@@ -1197,7 +1197,7 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             m_current_menu = NULL;
         }
         Anim_IncTime(&bi->bf->animations, time);
-        if((bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM))
+        if(bi->bf->animations.frame_changing_state == SS_CHANGING_END_ANIM)
         {
             Anim_SetAnimation(&bi->bf->animations, 0, 0);
             m_command = GUI_COMMAND_NONE;

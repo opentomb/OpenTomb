@@ -3549,10 +3549,10 @@ void StateControl_LaraSetWeaponModel(struct entity_s *ent, int weapon_model, int
                 else if (anim_th->current_animation == 0)
                 {
                     // check if weapon is not grenadegun to hide the weapon
-                    if (IS_TR_I(ver) && anim_th->model->id == TR1_MODEL_SHOTGUN ||
-                        IS_TR_II(ver) && anim_th->model->id != TR2_MODEL_GRENADEGUN ||
-                        IS_TR_III(ver) && anim_th->model->id != TR3_MODEL_GRENADEGUN ||
-                        (ver >= TR_IV) && anim_th->model->id != TR4C_MODEL_GRENADEGUN
+                    if ((IS_TR_I(ver) && (anim_th->model->id == TR1_MODEL_SHOTGUN)) ||
+                        (IS_TR_II(ver) && (anim_th->model->id != TR2_MODEL_GRENADEGUN)) ||
+                        (IS_TR_III(ver) && (anim_th->model->id != TR3_MODEL_GRENADEGUN)) ||
+                        ((ver >= TR_IV) && (anim_th->model->id != TR4C_MODEL_GRENADEGUN))
                        )
                     {
                         // only for tr (1: shotgun)/2/3/4/5
