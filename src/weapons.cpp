@@ -1,5 +1,6 @@
 
 #include "audio/audio.h"
+#include "controls.h"
 #include "inventory.h"
 #include "entity.h"
 #include "character_controller.h"
@@ -384,4 +385,110 @@ struct weapons_s getGrapplinGun()
     // no muzzleflash for this ?
     // same as harpoon and crossbow
     return grapplin;
+}
+
+bool Weapons_GetIdsFromActionKey(int actionKey, int *pointerModelId, int *pointerInventoryItemId)
+{
+    typedef struct
+    {
+        int modelId;
+        int inventoryItemId;
+    } WeaponIds;
+
+    static WeaponIds tombRaider1WeaponIds[] =
+    {
+        { TR_MODEL_PISTOL, ITEM_PISTOL },
+        { TR1_MODEL_SHOTGUN, ITEM_SHOTGUN },
+        { TR1_MODEL_MAGNUM, ITEM_MAGNUMS },
+        { TR1_MODEL_UZI, ITEM_UZIS },
+        { 0, 0 },
+        { 0, 0 },
+        { 0, 0 },
+        { 0, 0 }
+    };
+    static WeaponIds tombRaider2WeaponIds[] =
+    {
+        { TR_MODEL_PISTOL, ITEM_PISTOL },
+        { TR_MODEL_SHOTGUN, ITEM_SHOTGUN },
+        { TR2_MODEL_AUTOMAGS, ITEM_AUTOMAGS },
+        { TR2_MODEL_UZI, ITEM_UZIS },
+        { TR2_MODEL_HARPOONGUN, ITEM_HARPOONGUN },
+        { TR2_MODEL_M16, ITEM_M16 },
+        { TR2_MODEL_GRENADEGUN, ITEM_GRENADEGUN },
+        { 0, 0 }
+    };
+    static WeaponIds tombRaider3WeaponIds[] =
+    {
+        { TR_MODEL_PISTOL, ITEM_PISTOL },
+        { TR_MODEL_SHOTGUN, ITEM_SHOTGUN },
+        { TR3_MODEL_DESERTEAGLE, ITEM_DESERTEAGLE },
+        { TR3_MODEL_UZI, ITEM_UZIS },
+        { TR3_MODEL_HARPOONGUN, ITEM_HARPOONGUN },
+        { TR3_MODEL_MP5, ITEM_MP5 },
+        { TR3_MODEL_ROCKETGUN, ITEM_ROCKETGUN },
+        { TR3_MODEL_GRENADEGUN, ITEM_GRENADEGUN }
+    };
+    static WeaponIds tombRaider4WeaponIds[] =
+    {
+        { TR_MODEL_PISTOL, ITEM_PISTOL },
+        { TR_MODEL_SHOTGUN, ITEM_SHOTGUN },
+        { TR4C_MODEL_REVOLVER, ITEM_REVOLVER },
+        { TR4C_MODEL_UZI, ITEM_UZIS },
+        { TR4C_MODEL_CROSSBOW, ITEM_CROSSBOW },
+        { TR4C_MODEL_GRENADEGUN, ITEM_GRENADEGUN },
+        { 0, 0 },
+        { 0, 0 }
+    };
+    // TODO several lookup tables according to level sections (Rome, Russia...)
+    static WeaponIds tombRaider5WeaponIds[] =
+    {
+        { TR_MODEL_PISTOL, ITEM_PISTOL },
+        { TR_MODEL_SHOTGUN, ITEM_SHOTGUN },
+        { TR4C_MODEL_REVOLVER, ITEM_REVOLVER },
+        { TR4C_MODEL_UZI, ITEM_UZIS },
+        { TR4C_MODEL_CROSSBOW, ITEM_CROSSBOW },
+        { TR4C_MODEL_GRENADEGUN, ITEM_GRENADEGUN },
+        { 0, 0 },
+        { 0, 0 }
+    };
+
+    // Make sure a valid action key is provided
+    if((actionKey < ACT_WEAPON1) || (actionKey > ACT_WEAPON8))
+    {
+        return false;
+    }
+    actionKey -= ACT_WEAPON1; // Lookup tables are zero-based
+
+    // Select the right lookup table
+    int gameVersion = World_GetVersion();
+    if(gameVersion < TR_II)
+    {
+        *pointerModelId = tombRaider1WeaponIds[actionKey].modelId;
+        *pointerInventoryItemId = tombRaider1WeaponIds[actionKey].inventoryItemId;
+        return true;
+    }
+    else if(gameVersion < TR_III)
+    {
+        *pointerModelId = tombRaider2WeaponIds[actionKey].modelId;
+        *pointerInventoryItemId = tombRaider2WeaponIds[actionKey].inventoryItemId;
+        return true;
+    }
+    else if(gameVersion < TR_IV)
+    {
+        *pointerModelId = tombRaider3WeaponIds[actionKey].modelId;
+        *pointerInventoryItemId = tombRaider3WeaponIds[actionKey].inventoryItemId;
+        return true;
+    }
+    else if(gameVersion < TR_V)
+    {
+        *pointerModelId = tombRaider4WeaponIds[actionKey].modelId;
+        *pointerInventoryItemId = tombRaider4WeaponIds[actionKey].inventoryItemId;
+        return true;
+    }
+    else
+    {
+        *pointerModelId = tombRaider5WeaponIds[actionKey].modelId;
+        *pointerInventoryItemId = tombRaider5WeaponIds[actionKey].inventoryItemId;
+        return true;
+    }
 }
