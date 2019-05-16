@@ -1,6 +1,5 @@
 
 #include "audio/audio.h"
-#include "controls.h"
 #include "inventory.h"
 #include "entity.h"
 #include "character_controller.h"
@@ -387,7 +386,7 @@ struct weapons_s getGrapplinGun()
     return grapplin;
 }
 
-bool Weapons_GetIdsFromActionKey(int actionKey, int *pointerModelId, int *pointerInventoryItemId)
+bool Weapons_GetIdsFromActionKey(int weaponId, int *pointerModelId, int *pointerInventoryItemId)
 {
     typedef struct
     {
@@ -453,42 +452,41 @@ bool Weapons_GetIdsFromActionKey(int actionKey, int *pointerModelId, int *pointe
     };
 
     // Make sure a valid action key is provided
-    if((actionKey < ACT_WEAPON1) || (actionKey > ACT_WEAPON8))
+    if((weaponId < 0) || (weaponId > 7))
     {
         return false;
     }
-    actionKey -= ACT_WEAPON1; // Lookup tables are zero-based
 
     // Select the right lookup table
     int gameVersion = World_GetVersion();
     if(gameVersion < TR_II)
     {
-        *pointerModelId = tombRaider1WeaponIds[actionKey].modelId;
-        *pointerInventoryItemId = tombRaider1WeaponIds[actionKey].inventoryItemId;
+        *pointerModelId = tombRaider1WeaponIds[weaponId].modelId;
+        *pointerInventoryItemId = tombRaider1WeaponIds[weaponId].inventoryItemId;
         return true;
     }
     else if(gameVersion < TR_III)
     {
-        *pointerModelId = tombRaider2WeaponIds[actionKey].modelId;
-        *pointerInventoryItemId = tombRaider2WeaponIds[actionKey].inventoryItemId;
+        *pointerModelId = tombRaider2WeaponIds[weaponId].modelId;
+        *pointerInventoryItemId = tombRaider2WeaponIds[weaponId].inventoryItemId;
         return true;
     }
     else if(gameVersion < TR_IV)
     {
-        *pointerModelId = tombRaider3WeaponIds[actionKey].modelId;
-        *pointerInventoryItemId = tombRaider3WeaponIds[actionKey].inventoryItemId;
+        *pointerModelId = tombRaider3WeaponIds[weaponId].modelId;
+        *pointerInventoryItemId = tombRaider3WeaponIds[weaponId].inventoryItemId;
         return true;
     }
     else if(gameVersion < TR_V)
     {
-        *pointerModelId = tombRaider4WeaponIds[actionKey].modelId;
-        *pointerInventoryItemId = tombRaider4WeaponIds[actionKey].inventoryItemId;
+        *pointerModelId = tombRaider4WeaponIds[weaponId].modelId;
+        *pointerInventoryItemId = tombRaider4WeaponIds[weaponId].inventoryItemId;
         return true;
     }
     else
     {
-        *pointerModelId = tombRaider5WeaponIds[actionKey].modelId;
-        *pointerInventoryItemId = tombRaider5WeaponIds[actionKey].inventoryItemId;
+        *pointerModelId = tombRaider5WeaponIds[weaponId].modelId;
+        *pointerInventoryItemId = tombRaider5WeaponIds[weaponId].inventoryItemId;
         return true;
     }
 }

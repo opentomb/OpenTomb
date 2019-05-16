@@ -2,11 +2,11 @@
 screen =
 {
     x = 67;
-    y = 61;
+    y = 151;
     width = 800;
     height = 600;
     fov = 75.0;
-    debug_view_state = 3;
+    debug_view_state = 0;
     fullscreen = 0;
     crosshair = 0;
 }
@@ -93,6 +93,17 @@ bind(ACT_LOOKLEFT, KEY_LEFT, JOY_POVLEFT);
 bind(ACT_LOOKRIGHT, KEY_RIGHT, JOY_POVRIGHT);
 bind(ACT_BIGMEDI, KEY_0);
 bind(ACT_SMALLMEDI, KEY_9);
+bind(ACT_WEAPON1, KEY_1);
+bind(ACT_WEAPON2, KEY_2);
+bind(ACT_WEAPON3, KEY_3);
+bind(ACT_WEAPON4, KEY_4);
+bind(ACT_WEAPON5, KEY_5);
+bind(ACT_WEAPON6, KEY_6);
+bind(ACT_WEAPON7, KEY_7);
+bind(ACT_WEAPON8, KEY_8);
+bind(ACT_WEAPON9, KEY_9);
+bind(ACT_WEAPON10, KEY_0);
+bind(ACT_BINOCULARS, KEY_MINUS);
 bind(ACT_INVENTORY, KEY_ESCAPE);
 bind(ACT_LOADGAME, KEY_F6);
 bind(ACT_SAVEGAME, KEY_F5);

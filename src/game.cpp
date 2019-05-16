@@ -549,7 +549,7 @@ void Game_ApplyControls(struct entity_s *ent)
             if(control_states.actions[actionKeyId].state && !control_states.actions[actionKeyId].prev_state)
             {
                 // Is a weapon currently bound to this action ?
-                if(!Weapons_GetIdsFromActionKey(actionKeyId, &weaponModelId, &weaponItemId))
+                if(!Weapons_GetIdsFromActionKey(actionKeyId - ACT_WEAPON1, &weaponModelId, &weaponItemId))
                 {
                     break;
                 }
