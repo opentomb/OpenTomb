@@ -33,6 +33,7 @@ extern "C" {
 #include "gameflow.h"
 #include "inventory.h"
 #include "mesh.h"
+#include "weapons.h"
 
 extern lua_State *engine_lua;
 
@@ -414,6 +415,7 @@ void Game_ApplyControls(struct entity_s *ent)
     control_action_p act = control_states.actions;
     int8_t move_logic[3];
     int8_t look_logic[3];
+    int actionKeyId, weaponModelId, weaponItemId;
 
     // Keyboard move logic
     if(act[ACT_STEPLEFT].state || act[ACT_STEPRIGHT].state)
@@ -525,7 +527,6 @@ void Game_ApplyControls(struct entity_s *ent)
     {
         // Apply controls to Lara
         ent->character->cmd.action = control_states.actions[ACT_ACTION].state;
-        ent->character->cmd.ready_weapon = control_states.actions[ACT_DRAWWEAPON].state;
         ent->character->cmd.jump = control_states.actions[ACT_JUMP].state;
         if(act[ACT_STEPLEFT].state || act[ACT_STEPRIGHT].state)
         {
@@ -541,6 +542,41 @@ void Game_ApplyControls(struct entity_s *ent)
         // New commands only for TR3 and above
         ent->character->cmd.sprint = control_states.actions[ACT_SPRINT].state;
         ent->character->cmd.crouch = control_states.actions[ACT_CROUCH].state;
+
+        // Handle weapon short keys
+        for(actionKeyId = ACT_WEAPON1; actionKeyId <= ACT_WEAPON8; actionKeyId++)
+        {
+            if(control_states.actions[actionKeyId].state && !control_states.actions[actionKeyId].prev_state)
+            {
+                // Is a weapon currently bound to this action ?
+                if(!Weapons_GetIdsFromActionKey(actionKeyId, &weaponModelId, &weaponItemId))
+                {
+                    break;
+                }
+
+                // Is the weapon present in the inventory ?
+                if(Inventory_GetItemsCount(ent->inventory, weaponItemId) == 0)
+                {
+                    break;
+                }
+
+                // Do not switch to the weapon if this one is drawn yet (this would make Lara replace the weapon in the holster)
+                if((ent->character->weapon_id == weaponModelId) && (ent->character->state.weapon_ready))
+                {
+                    break;
+                }
+
+                // Switch to the new weapon
+                Character_ChangeWeapon(ent, weaponModelId);
+                ent->character->cmd.ready_weapon = 1;
+                break;
+            }
+        }
+        // No weapon key was pressed
+        if(actionKeyId > ACT_WEAPON8)
+        {
+            ent->character->cmd.ready_weapon = control_states.actions[ACT_DRAWWEAPON].state;
+        }
 
         if(control_states.actions[ACT_SMALLMEDI].state && !control_states.actions[ACT_SMALLMEDI].prev_state)
         {

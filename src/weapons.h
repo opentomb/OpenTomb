@@ -86,4 +86,6 @@ struct weapons_s getGrenadeGun();
 struct weapons_s getCrossbowGun();
 struct weapons_s getGrapplinGun();
 
+bool Weapons_GetIdsFromActionKey(int actionKey, int *pointerModelId, int *pointerInventoryItemId);
+
 #endif
