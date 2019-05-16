@@ -2,7 +2,7 @@
 screen =
 {
     x = 67;
-    y = 151;
+    y = 168;
     width = 800;
     height = 600;
     fov = 75.0;

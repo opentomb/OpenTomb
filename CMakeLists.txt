@@ -122,6 +122,8 @@ set(OPENTOMB_SRCS
     src/render/frustum.h
     src/render/render.cpp
     src/render/render.h
+    src/render/render_debug.cpp
+    src/render/render_debug.h
     src/render/shader_description.cpp
     src/render/shader_description.h
     src/render/shader_manager.cpp
