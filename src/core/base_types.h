@@ -62,7 +62,12 @@ typedef struct engine_container_s
 
 typedef struct engine_transform_s
 {
+#ifdef __GNUC__
     float                        M4x4[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+#else
+    float                        M4x4[16]; // GL transformation matrix
+#endif
+
     float                        scaling[3];         // entity scaling
     float                        angles[3];
 } engine_transform_t, *engine_transform_p;

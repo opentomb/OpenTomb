@@ -5,7 +5,12 @@
 #include <SDL2/SDL_video.h>
 #include <SDL2/SDL_audio.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+#ifdef __GNUC__
+#   include <sys/time.h>
+#else
+#   include "timer.h"
+#endif
+
 #include <time.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -263,7 +268,11 @@ int64_t Sys_MicroSecTime(int64_t sec_offset)
 {
     int64_t ret = 0;
     struct timeval tp;
-    if(0 == gettimeofday(&tp, NULL))
+#ifdef __GNUC__
+    if (0 == gettimeofday(&tp, NULL))
+#else
+    if (0 == _gettimeofday(&tp, NULL))
+#endif
     {
         ret = tp.tv_sec - sec_offset;
         ret *= 1e6;

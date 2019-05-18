@@ -66,9 +66,15 @@ typedef struct camera_state_s
 
 typedef struct camera_s
 {
+#ifdef __GNUC__
     GLfloat                     gl_view_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_proj_mat[16] __attribute__((packed, aligned(16)));
     GLfloat                     gl_view_proj_mat[16] __attribute__((packed, aligned(16)));
+#else
+    GLfloat                     gl_view_mat[16];
+    GLfloat                     gl_proj_mat[16];
+    GLfloat                     gl_view_proj_mat[16];
+#endif
     engine_transform_s          transform;
     
     GLfloat                     clip_planes[16];        // frustum side clip planes

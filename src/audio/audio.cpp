@@ -1,16 +1,28 @@
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_audio.h>
 
 #include <math.h>
 
-#include "../config-opentomb.h"
+#ifdef __GNUC__
+#   include "../config-opentomb.h"
+#else
+// no cmake to convert it.
+#   include "../config-default/config-opentomb.h"
+#endif
 
 extern "C" {
-#include <al.h>
-#include <alc.h>
-#ifdef HAVE_ALEXT_H
-#include <alext.h>
+#ifdef __GNUC__
+#   include <al.h>
+#   include <alc.h>
+#   ifdef HAVE_ALEXT_H
+#       include <alext.h>
+#   endif
+#else
+#   include <AL/al.h>
+#   include <AL/alc.h>
+#   ifdef HAVE_ALEXT_H
+#       include <AL/alext.h>
+#   endif
 #endif
 }
 

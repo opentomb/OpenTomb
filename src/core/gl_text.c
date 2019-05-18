@@ -124,7 +124,7 @@ void GLText_RenderStringLine(gl_text_line_p l)
     if(l->show && (gl_font = GLText_GetFont(l->font_id)) && (style = GLText_GetFontStyle(l->style_id)))
     {
         GLfloat real_x = 0.0f, real_y = 0.0f;
-        int32_t x0, y0, x1, y1;
+        int32_t x0 = 0, y0 = 0, x1, y1;
         GLfloat shadow_color[4];
         int32_t w_pt = (l->line_width * 64.0f + 0.5f);
         GLfloat ascender = glf_get_ascender(gl_font) / 64.0f;

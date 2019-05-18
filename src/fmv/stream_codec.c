@@ -1,14 +1,14 @@
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
 #include <SDL2/SDL.h>
+
 #ifndef _POSIX_SOURCE
 #define __USE_POSIX199309  (1)   // make posix GCC workable
 #define __USE_XOPEN2K
 #endif
+
 #include <pthread.h>
 #ifdef _TIMESPEC_DEFINED         // make MinGW workable
 #include <pthread_time.h>
@@ -16,6 +16,11 @@
 
 #include "tiny_codec.h"
 #include "stream_codec.h"
+
+#ifndef __GNUC__
+#   define CLOCK_REALTIME 0
+#   include "timer.h"
+#endif
 
 void stream_codec_init(stream_codec_p s)
 {
@@ -83,7 +88,11 @@ static void *stream_codec_thread_func(void *data)
         struct timespec vid_time;
         int can_continue = 1;
 
+#ifdef __GNUC__
         clock_gettime(CLOCK_REALTIME, &time_start);
+#else
+        _clock_gettime(CLOCK_REALTIME, &time_start);
+#endif
 
         while(!s->stop && can_continue)
         {

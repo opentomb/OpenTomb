@@ -1,17 +1,35 @@
-
-#include "../config-opentomb.h"
+#ifdef __GNUC__
+#   include "../config-opentomb.h"
+#else
+// no cmake to convert it.
+#   include "../config-default/config-opentomb.h"
+#endif
 
 extern "C" {
-#include <al.h>
-#include <alc.h>
-#ifdef HAVE_ALEXT_H
-#include <alext.h>
-#endif
-#ifdef HAVE_EFX_H
-#include <efx.h>
-#endif
-#ifdef HAVE_EFX_PRESETS_H
-#include <efx-presets.h>
+#ifdef __GNUC__
+#   include <al.h>
+#   include <alc.h>
+#   ifdef HAVE_ALEXT_H
+#       include <alext.h>
+#   endif
+#   ifdef HAVE_EFX_H
+#       include <efx.h>
+#   endif
+#   ifdef HAVE_EFX_PRESETS_H
+#       include <efx-presets.h>
+#   endif
+#else
+#   include <AL/al.h>
+#   include <AL/alc.h>
+#   ifdef HAVE_ALEXT_H
+#       include <AL/alext.h>
+#   endif
+#   ifdef HAVE_EFX_H
+#       include <AL/efx.h>
+#   endif
+#   ifdef HAVE_EFX_PRESETS_H
+#       include <AL/efx-presets.h>
+#   endif
 #endif
 }
 
