@@ -555,7 +555,7 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     size_t pic_len = strlen(pic_name);
     size_t base_len = strlen(Engine_GetBasePath());
     size_t buf_len = pic_len + base_len + 5;
-    char image_name_buf[buf_len];
+    char *image_name_buf = (char*)Sys_GetTempMem(buf_len);;
     int image_format = 0;
 
     strncpy(image_name_buf, Engine_GetBasePath(), buf_len);
@@ -582,9 +582,10 @@ bool Gui_LoadScreenAssignPic(const char* pic_name)
     {
         bool ret = Gui_SetScreenTexture(img_pixels, img_w, img_h, img_bpp);
         free(img_pixels);
+        Sys_ReturnTempMem(buf_len);
         return ret;
     }
-
+    Sys_ReturnTempMem(buf_len);
     return false;
 }
 

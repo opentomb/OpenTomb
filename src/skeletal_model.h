@@ -77,14 +77,8 @@ typedef struct ss_bone_tag_s
     float                   offset[3];                                          // model position offset
 
     float                   qrotate[4];                                         // quaternion rotation
-    
-#ifdef __GNUC__
-    float                   local_transform[16] __attribute__((packed, aligned(16)));       // 4x4 OpenGL matrix for stack usage
-    float                   current_transform[16]  __attribute__((packed, aligned(16)));    // 4x4 OpenGL matrix for global usage
-#else
-    float                   local_transform[16];       // 4x4 OpenGL matrix for stack usage
-    float                   current_transform[16];    // 4x4 OpenGL matrix for global usage
-#endif
+    float                   local_transform[16] OT_ATTRIBUTE_ALIGN(16);         // 4x4 OpenGL matrix for stack usage
+    float                   current_transform[16] OT_ATTRIBUTE_ALIGN(16);       // 4x4 OpenGL matrix for global usage
 }ss_bone_tag_t, *ss_bone_tag_p;
 
 typedef struct bone_tag_s

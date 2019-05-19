@@ -3,6 +3,7 @@
 #define ROOM_H
 
 #include <stdint.h>
+#include "core/base_types.h"
 
 // Here you can specify the way OpenTomb processes room collision -
 // in a classic TR way (floor data collision) or in a modern way
@@ -223,7 +224,7 @@ typedef struct static_mesh_s
     float                       cbb_min[3];                                     // collision bounding box
     float                       cbb_max[3];
 
-    float                       transform[16]   __attribute__((packed, aligned(16)));   // gl transformation matrix
+    float                       transform[16] OT_ATTRIBUTE_ALIGN(16);           // gl transformation matrix
     struct obb_s               *obb;
     struct engine_container_s  *self;
 
@@ -278,7 +279,7 @@ typedef struct room_s
     struct obb_s               *obb;
     float                       bb_min[3];                                      // effective room box, exclude portal sectors zones
     float                       bb_max[3];                                      //
-    float                       transform[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    float                       transform[16] OT_ATTRIBUTE_ALIGN(16);           // GL transformation matrix
     uint32_t                    sectors_count;
     uint16_t                    sectors_x;
     uint16_t                    sectors_y;

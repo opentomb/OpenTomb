@@ -39,10 +39,16 @@
 
 #define COLLISION_FILTER_HEIGHT_TEST            (COLLISION_GROUP_STATIC_ROOM | COLLISION_GROUP_STATIC_OBLECT | COLLISION_GROUP_KINEMATIC | COLLISION_GROUP_VEHICLE)
 
+#ifdef __GNUC__
+#define OT_ATTRIBUTE_ALIGN(x) __attribute__((packed, aligned(x)))
+#else
+#define OT_ATTRIBUTE_ALIGN(x) //_Alignas(x)
+#endif
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
+    
 struct room_s;
 struct room_sector_s;
 
@@ -62,7 +68,7 @@ typedef struct engine_container_s
 
 typedef struct engine_transform_s
 {
-    float                        M4x4[16] __attribute__((packed, aligned(16))); // GL transformation matrix
+    float                        M4x4[16] OT_ATTRIBUTE_ALIGN(16); // GL transformation matrix
     float                        scaling[3];         // entity scaling
     float                        angles[3];
 } engine_transform_t, *engine_transform_p;
