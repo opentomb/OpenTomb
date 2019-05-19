@@ -293,7 +293,7 @@ void ShowDebugInfo()
                     room_sector_p rs = Room_GetSectorRaw(room, ray_test_point);
                     if(rs != NULL)
                     {
-                        renderer.debugDrawer->SetColor(0.0, 1.0, 0.0);
+                        renderer.debugDrawer->SetColor(0, 255, 0, 255);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "cont_room: (id = %d, sx = %d, sy = %d)", room->id, rs->index_x, rs->index_y);
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
@@ -310,7 +310,7 @@ void ShowDebugInfo()
                                 entity_p trig_obj = World_GetEntityByID(cmd->operands);
                                 if(trig_obj)
                                 {
-                                    renderer.debugDrawer->SetColor(0.0, 0.0, 1.0);
+                                    renderer.debugDrawer->SetColor(0, 0, 255, 255);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform.M4x4);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
                                     gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform.M4x4[12 + 0], trig_obj->transform.M4x4[12 + 1], trig_obj->transform.M4x4[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
@@ -368,7 +368,7 @@ void ShowDebugInfo()
                     room_sector_p rs = Room_GetSectorRaw(room, ent->transform.M4x4 + 12);
                     if(rs != NULL)
                     {
-                        renderer.debugDrawer->SetColor(0.0f, 1.0f, 0.0f);
+                        renderer.debugDrawer->SetColor(0, 255, 0, 255);
                         renderer.debugDrawer->DrawSectorDebugLines(rs);
                         GLText_OutTextXY(30.0f, y += dy, "room = (id = %d, sx = %d, sy = %d)", room->id, rs->index_x, rs->index_y);
                         GLText_OutTextXY(30.0f, y += dy, "room_below = %d, room_above = %d", (rs->room_below) ? (rs->room_below->id) : (-1), (rs->room_above) ? (rs->room_above->id) : (-1));
@@ -393,7 +393,7 @@ void ShowDebugInfo()
                                 entity_p trig_obj = World_GetEntityByID(cmd->operands);
                                 if(trig_obj)
                                 {
-                                    renderer.debugDrawer->SetColor(0.0f, 0.0f, 1.0f);
+                                    renderer.debugDrawer->SetColor(0, 0, 255, 255);
                                     renderer.debugDrawer->DrawBBox(trig_obj->bf->bb_min, trig_obj->bf->bb_max, trig_obj->transform.M4x4);
                                     Trigger_TrigMaskToStr(trig_mask, trig_obj->trigger_layout);
                                     gl_text_line_p text = renderer.OutTextXYZ(trig_obj->transform.M4x4[12 + 0], trig_obj->transform.M4x4[12 + 1], trig_obj->transform.M4x4[12 + 2], "(id = 0x%X, layout = 0b%s)", trig_obj->id, trig_mask);
@@ -482,7 +482,7 @@ void ShowDebugInfo()
                             Character_UpdatePath(foe, ent->self->sector);
                             if(foe->character->path_dist > 0)
                             {
-                                renderer.debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
+                                renderer.debugDrawer->SetColor(0, 0, 0, 255);
                                 for(int i = 0; i < foe->character->path_dist; ++i)
                                 {
                                     renderer.debugDrawer->DrawBBox(foe->character->path[i]->bb_min, foe->character->path[i]->bb_max, tr);

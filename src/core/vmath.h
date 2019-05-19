@@ -121,6 +121,8 @@ void vec3_RotateZ(float res[3], float src[3], float ang);
 #define vec4_norm(x) ((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3])
 #define vec4_abs(x) (sqrtf((x)[0]*(x)[0] + (x)[1]*(x)[1] + (x)[2]*(x)[2] + (x)[3]*(x)[3]))
 
+#define vec4_mul_scalar(res, x, t) {(res)[0] = (x)[0]*(t); (res)[1] = (x)[1]*(t); (res)[2] = (x)[2]*(t); (res)[3] = (x)[3]*(t);}
+
 #define vec4_mul(res, x, y) {\
                    (res)[0] = (x)[3]*(y)[0] + (x)[0]*(y)[3] + (x)[1]*(y)[2] - (x)[2]*(y)[1]; \
                    (res)[1] = (x)[3]*(y)[1] + (x)[1]*(y)[3] + (x)[2]*(y)[0] - (x)[0]*(y)[2]; \

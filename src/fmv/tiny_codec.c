@@ -184,10 +184,9 @@ uint32_t codec_resize_audio_buffer(struct tiny_codec_s *s, uint32_t sample_size,
         s->audio.buff_p = (uint8_t**)malloc(s->audio.channels * sizeof(int16_t*));
     }
 
-    s->audio.buff_p[0] = s->audio.buff;
-    for(uint16_t i = 1; i < s->audio.channels; ++i)
+    for(uint16_t i = 0; i < s->audio.channels; ++i)
     {
-        s->audio.buff_p[i] = s->audio.buff_p[i - 1] + bytes_per_channel;
+        s->audio.buff_p[i] = s->audio.buff + bytes_per_channel * i;
     }
 
     return ret;

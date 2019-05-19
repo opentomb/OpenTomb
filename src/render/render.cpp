@@ -512,7 +512,7 @@ void CRender::DrawListDebugLines()
             uint32_t id = 0;
 
             Mat4_E_macro(tr);
-            debugDrawer->SetColor(0.7f, 0.6f, 0.3f);
+            debugDrawer->SetColor(179, 153, 77, 255);
             for(room_box_p rb = World_GetRoomBoxByID(id); rb; rb = World_GetRoomBoxByID(++id))
             {
                 debugDrawer->DrawBBox(rb->bb_min, rb->bb_max, tr);
@@ -949,7 +949,7 @@ void CRender::DrawEntity(struct entity_s *entity, const float modelViewMatrix[16
         GLfloat from[3], to[3];
         vec3_copy(from, entity->self->sector->pos);
         from[2] = entity->transform.M4x4[12 + 2] + TR_METERING_STEP;
-        this->debugDrawer->SetColor(0.0f, 0.0f, 0.0f);
+        this->debugDrawer->SetColor(0, 0, 0, 255);
         for(int i = 1; i < entity->character->path_dist; ++i)
         {
             Room_GetOverlapCenter(entity->character->path[i], entity->character->path[i - 1], to);

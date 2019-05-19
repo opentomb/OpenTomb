@@ -41,6 +41,12 @@ struct obb_s;
 
 class CRenderDebugDrawer
 {
+    struct vertex_s
+    {
+        GLfloat     pos[3];
+        uint8_t     rgba[4];
+    };
+    
     public:
         // engine debug function
         CRenderDebugDrawer();
@@ -51,11 +57,12 @@ class CRenderDebugDrawer
         }
         void Reset();
         void Render();
-        void SetColor(GLfloat r, GLfloat g, GLfloat b)
+        void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a/* = 255*/)
         {
-            m_color[0] = r;
-            m_color[1] = g;
-            m_color[2] = b;
+            m_rgba[0] = r;
+            m_rgba[1] = g;
+            m_rgba[2] = b;
+            m_rgba[3] = a;
         }
         void DrawAxis(float r, float transform[16]);
         void DrawPortal(struct portal_s *p);
@@ -75,14 +82,14 @@ class CRenderDebugDrawer
         uint32_t GetDrawFlags() const {return m_drawFlags;}
 
     private:
-        uint32_t m_drawFlags;
-        uint32_t m_max_lines;
-        uint32_t m_lines;
-        bool     m_need_realloc;
+        uint32_t            m_drawFlags;
+        uint32_t            m_max_lines;
+        uint32_t            m_lines;
+        bool                m_need_realloc;
 
-        GLuint   m_gl_vbo;
-        GLfloat  m_color[3];
-        GLfloat *m_buffer;
+        GLuint              m_gl_vbo;
+        uint8_t             m_rgba[4];
+        struct vertex_s    *m_buffer;
 };
 
 #endif
