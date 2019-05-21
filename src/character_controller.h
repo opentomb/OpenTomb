@@ -285,6 +285,7 @@ typedef struct character_s
     uint16_t                    bone_r_hand_end;
     int16_t                     weapon_id;
     int16_t                     weapon_id_req;
+    int                         currentAmmunitionInventoryItemId;
 
     int                        (*state_func)(struct entity_s *ent, struct ss_animation_s *ss_anim);
     void                       (*set_key_anim_func)(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
