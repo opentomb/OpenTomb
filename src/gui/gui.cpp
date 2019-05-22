@@ -54,12 +54,12 @@ static void Gui_DrawAmmunitionCount()
 
     // Retrieve currently used ammunition
     entity_p player = World_GetPlayer();
-    ammunitionInventoryItemId = player->character->currentAmmunitionInventoryItemId;
+    ammunitionInventoryItemId = player->character->current_ammunition_inventory_item_id;
     if((ammunitionInventoryItemId == ITEM_PISTOL_AMMO) || (ammunitionInventoryItemId == ITEM_GRAPPLEGUN_AMMO)) return; // Do not display ammunition amount for unlimited ammunition weapons
 
     // Display ammunition count to top right screen corner
     ammunitionCount = Inventory_GetItemsCount(player->inventory, ammunitionInventoryItemId);
-    sprintf(ammunitionsCountString, "%d", ammunitionCount);
+    snprintf(ammunitionsCountString, sizeof(ammunitionsCountString), "%d", ammunitionCount);
     GLText_OutTextXY(screen_info.w - 80.0f, screen_info.h - 40.0f, ammunitionsCountString);
 }
 

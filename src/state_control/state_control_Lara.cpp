@@ -3277,27 +3277,27 @@ int StateControl_LaraDoOneHandWeaponFrame(struct entity_s *ent, struct ss_animat
         {
             case ITEM_PISTOL:
                 weapon = getPistol();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_PISTOL_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_PISTOL_AMMO;
                 break;
             case ITEM_AUTOMAGS:
                 weapon = getAutomags();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_AUTOMAGS_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_AUTOMAGS_AMMO;
                 break;
             case ITEM_DESERTEAGLE:
                 weapon = getDesertEagle();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_DESERTEAGLE_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_DESERTEAGLE_AMMO;
                 break;
             case ITEM_MAGNUMS:
                 weapon = getMagnum();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_MAGNUM_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_MAGNUM_AMMO;
                 break;
             case ITEM_REVOLVER:
                 weapon = getRevolver();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_REVOLVER_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_REVOLVER_AMMO;
                 break;
             case ITEM_UZIS:
                 weapon = getUzi();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_UZI_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_UZI_AMMO;
                 break;
         }
 
@@ -3332,35 +3332,35 @@ int StateControl_LaraDoTwoHandWeaponFrame(struct entity_s *ent, struct ss_animat
         {
             case ITEM_SHOTGUN:
                 weapon = getShotgun();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_SHOTGUN_AMMO; // TODO multiple ammo in TR4
+                ent->character->current_ammunition_inventory_item_id = ITEM_SHOTGUN_AMMO; // TODO multiple ammo in TR4
                 break;
             case ITEM_MP5:
                 weapon = getMP5();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_MP5_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_MP5_AMMO;
                 break;
             case ITEM_M16:
                 weapon = getM16();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_M16_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_M16_AMMO;
                 break;
             case ITEM_CROSSBOW:
                 weapon = getCrossbowGun();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_CROSSBOW_NORMAL_AMMO; // TODO multiple ammo in TR4
+                ent->character->current_ammunition_inventory_item_id = ITEM_CROSSBOW_NORMAL_AMMO; // TODO multiple ammo in TR4
                 break;
             case ITEM_GRENADEGUN:
                 weapon = getGrenadeGun();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_GRENADEGUN_AMMO; // TODO multiple ammo in TR4
+                ent->character->current_ammunition_inventory_item_id = ITEM_GRENADEGUN_AMMO; // TODO multiple ammo in TR4
                 break;
             case ITEM_HARPOONGUN:
                 weapon = getHarpoonGun(ent->move_type == MOVE_UNDERWATER);
-                ent->character->currentAmmunitionInventoryItemId = ITEM_HARPOONGUN_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_HARPOONGUN_AMMO;
                 break;
             case ITEM_ROCKETGUN:
                 weapon = getRocketGun();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_ROCKETGUN_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_ROCKETGUN_AMMO;
                 break;
             case ITEM_GRAPPLEGUN:
                 weapon = getGrapplinGun();
-                ent->character->currentAmmunitionInventoryItemId = ITEM_GRAPPLEGUN_AMMO;
+                ent->character->current_ammunition_inventory_item_id = ITEM_GRAPPLEGUN_AMMO;
                 break;
         }
 
