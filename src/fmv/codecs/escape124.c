@@ -145,7 +145,7 @@ static MacroBlock decode_macroblock(struct tiny_codec_s *avctx, GetBitContext *g
         value = get_bits1(gb);
         *codebook_index = transitions[*codebook_index][value];
     }
-    Escape124Context *s = (Escape124Context*)avctx->video.priv_data;
+    Escape124Context *s = (Escape124Context*)avctx->video.private_data;
     depth = s->codebooks[*codebook_index].depth;
 
     // depth = 0 means that this shouldn't read any bits;
@@ -196,7 +196,7 @@ static const uint16_t mask_matrix[] = {0x1,   0x2,   0x10,   0x20,
 
 static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
 {
-    Escape124Context *s = (Escape124Context*)avctx->video.priv_data;
+    Escape124Context *s = (Escape124Context*)avctx->video.private_data;
 
     GetBitContext gb;
     unsigned frame_flags, frame_size;
@@ -394,10 +394,10 @@ static int escape124_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *a
 void escape124_decode_init(struct tiny_codec_s *avctx)
 {
     avctx->video.decode = escape124_decode_frame;
-    if(!avctx->video.priv_data)
+    if(!avctx->video.private_data)
     {
         Escape124Context *s = (Escape124Context*)malloc(sizeof(Escape124Context));
-        avctx->video.priv_data = s;
+        avctx->video.private_data = s;
         avctx->video.free_data = escape124_free_data;
         s->num_superblocks = ((unsigned)avctx->video.width / 8) *
                              ((unsigned)avctx->video.height / 8);

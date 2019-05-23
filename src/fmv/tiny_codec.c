@@ -59,7 +59,9 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->free_context = NULL;
     s->fps_num = 24;
     s->fps_denum = 1;
-
+    s->time_ns = 0;
+    s->frame = 0;
+    
     av_init_packet(&s->audio.pkt);
     s->audio.pkt.is_video = 0;
     s->audio.buff_allocated_size = 0;
@@ -84,7 +86,7 @@ void codec_init(struct tiny_codec_s *s, SDL_RWops *rw)
     s->video.entry = NULL;
     s->video.entry_size = 0;
     s->video.entry_current = 0;
-    s->video.priv_data = NULL;
+    s->video.private_data = NULL;
     s->video.free_data = NULL;
     s->video.decode = NULL;
     s->video.codec_tag = 0;
@@ -118,8 +120,8 @@ void codec_clear(struct tiny_codec_s *s)
     }
     if(s->video.free_data)
     {
-        s->video.free_data(s->video.priv_data);
-        s->video.priv_data = NULL;
+        s->video.free_data(s->video.private_data);
+        s->video.private_data = NULL;
         s->video.free_data = NULL;
     }
     if(s->video.rgba)
@@ -151,6 +153,11 @@ void codec_clear(struct tiny_codec_s *s)
         s->audio.priv_data = NULL;
         s->audio.free_data = NULL;
     }
+    if(s->input)
+    {
+        SDL_RWclose(s->input);
+        s->input = NULL;
+    }
 }
 
 void codec_simplify_fps(struct tiny_codec_s *s)
@@ -163,6 +170,13 @@ void codec_simplify_fps(struct tiny_codec_s *s)
             s->fps_num /= 10;
         }
     }
+}
+
+uint64_t codec_inc_time(struct tiny_codec_s *s, uint64_t time_ns)
+{
+    s->time_ns += time_ns;
+    s->frame = (s->time_ns * s->fps_num) / (s->fps_denum * 1e9);
+    return s->frame;
 }
 
 uint32_t codec_resize_audio_buffer(struct tiny_codec_s *s, uint32_t sample_size, uint32_t samples)

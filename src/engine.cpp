@@ -27,7 +27,6 @@ extern "C" {
 #include "script/script.h"
 #include "physics/physics.h"
 #include "fmv/tiny_codec.h"
-#include "fmv/stream_codec.h"
 #include "gui/gui.h"
 #include "gui/gui_inventory.h"
 #include "vt/vt_level.h"
@@ -55,7 +54,8 @@ static SDL_GameController      *sdl_controller = NULL;
 static SDL_Haptic              *sdl_haptic     = NULL;
 static SDL_GLContext            sdl_gl_context = 0;
 
-static stream_codec_t           engine_video;
+static tiny_codec_t             engine_video;
+int                             video_state;
 
 static char                     base_path[1024] = {0};
 static char                     config_name[1024] = "config.lua";
@@ -196,14 +196,14 @@ void Engine_Shutdown(int val)
     strncat(path, config_name, path_base_len - strlen(path));
     Script_ExportConfig(path);
 
-    stream_codec_stop(&engine_video, 0);
     StreamTrack_Stop(Audio_GetStreamExternal());
 
     renderer.ResetWorld(NULL, 0, NULL, 0);
     ClearTestModel();
     World_Clear();
 
-    stream_codec_clear(&engine_video);
+    codec_clear(&engine_video);
+    video_state = 0;
 
     if(engine_lua)
     {
@@ -276,7 +276,8 @@ void Engine_InitDefaultGlobals()
 // First stage of initialization.
 void Engine_Init_Pre()
 {
-    stream_codec_init(&engine_video);
+    codec_init(&engine_video, NULL);
+    video_state = 0;
 
     Sys_Init();
     glf_init();
@@ -797,9 +798,9 @@ void Engine_JoyRumble(float power, int time)
 
 void Engine_MainLoop()
 {
-    int64_t newtime = 0;
-    int64_t sec_base_offset = Sys_MicroSecTime(0) / 1E6;
-    int64_t oldtime = Sys_MicroSecTime(sec_base_offset);
+    uint64_t frequency = SDL_GetPerformanceFrequency();
+    uint64_t oldtime = SDL_GetPerformanceCounter();
+    uint64_t time_ns = 0;
     float time = 0.0f;
     float time_cycl = 0.0f;
 
@@ -809,8 +810,11 @@ void Engine_MainLoop()
 
     while(!engine_done)
     {
-        newtime = Sys_MicroSecTime(sec_base_offset);
-        time = (newtime - oldtime) / 1E6;
+        uint64_t newtime = SDL_GetPerformanceCounter();
+        time_ns = newtime - oldtime;
+        time_ns *= 1e9;
+        time_ns /= frequency;
+        time = time_ns / 1E9;
         oldtime = newtime;
         time *= time_scale;
 
@@ -854,13 +858,12 @@ void Engine_MainLoop()
             }
         }
 
-        int codec_end_state = stream_codec_check_end(&engine_video);
-        if(codec_end_state == 1)
+        if(!engine_video.input)
         {
             StreamTrack_Stop(Audio_GetStreamExternal());
         }
-
-        if(codec_end_state >= 0)
+        
+        if(!engine_video.input)
         {
             if(!g_menu_mode && (screen_info.debug_view_state != debug_view_state_e::model_view))
             {
@@ -873,32 +876,41 @@ void Engine_MainLoop()
         else
         {
             stream_track_p s = Audio_GetStreamExternal();
-            stream_codec_audio_lock(&engine_video);
-            if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= s->buffer_offset))
-            {
-                s->current_volume = audio_settings.sound_volume;
-                StreamTrack_UpdateBuffer(s, engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
-                    engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
-            }
             if(StreamTrack_IsNeedUpdateBuffer(s))
             {
-                engine_video.update_audio = 1;
+                codec_decode_audio(&engine_video);
             }
-            stream_codec_audio_unlock(&engine_video);
+            if(engine_video.audio.buff && (engine_video.audio.buff_offset >= s->buffer_offset))
+            {
+                s->current_volume = audio_settings.sound_volume;
+                StreamTrack_UpdateBuffer(s, engine_video.audio.buff, engine_video.audio.buff_size,
+                    engine_video.audio.bits_per_sample, engine_video.audio.channels, engine_video.audio.sample_rate);
+            }
             StreamTrack_Play(s);
 
-            stream_codec_video_lock(&engine_video);
-            if(engine_video.codec.video.rgba)
+            uint64_t frame = engine_video.frame;
+            codec_inc_time(&engine_video, time_ns);
+            while (frame < engine_video.frame)
             {
-                Gui_SetScreenTexture(engine_video.codec.video.rgba, engine_video.codec.video.width, engine_video.codec.video.height, 32);
+                frame++;
+                video_state = (codec_decode_video(&engine_video)) ? (1) : (0);
             }
-            stream_codec_video_unlock(&engine_video);
+            
+            if(engine_video.video.rgba)
+            {
+                Gui_SetScreenTexture(engine_video.video.rgba, engine_video.video.width, engine_video.video.height, 32);
+            }
             Gui_DrawLoadScreen(-1);
 
             if(control_states.actions[ACT_INVENTORY].state &&
               !control_states.actions[ACT_INVENTORY].prev_state)
             {
-                stream_codec_stop(&engine_video, 0);
+                video_state = 0;
+            }
+            
+            if (video_state == 0)
+            {
+                codec_clear(&engine_video);
             }
         }
     }
@@ -1115,12 +1127,12 @@ int Engine_LoadMap(const char *name)
 
 int  Engine_PlayVideo(const char *name)
 {
-    if(engine_video.state == VIDEO_STATE_STOPPED)
+    if(video_state == 0)
     {
-        codec_init(&engine_video.codec, SDL_RWFromFile(name, "rb"));
-        if(engine_video.codec.input)
+        codec_init(&engine_video, SDL_RWFromFile(name, "rb"));
+        if(engine_video.input)
         {
-            if(0 == codec_open_rpl(&engine_video.codec))
+            if(0 == codec_open_rpl(&engine_video))
             {
                 stream_track_p s = Audio_GetStreamExternal();
                 StreamTrack_Stop(s);
@@ -1130,17 +1142,17 @@ int  Engine_PlayVideo(const char *name)
                 s->current_volume = audio_settings.sound_volume;
                 while(StreamTrack_IsNeedUpdateBuffer(s))
                 {
-                    codec_decode_audio(&engine_video.codec);
-                    if(engine_video.codec.audio.buff && (engine_video.codec.audio.buff_offset >= s->buffer_offset))
+                    codec_decode_audio(&engine_video);
+                    if(engine_video.audio.buff && (engine_video.audio.buff_offset >= s->buffer_offset))
                     {
-                        StreamTrack_UpdateBuffer(s, engine_video.codec.audio.buff, engine_video.codec.audio.buff_size,
-                            engine_video.codec.audio.bits_per_sample, engine_video.codec.audio.channels, engine_video.codec.audio.sample_rate);
+                        StreamTrack_UpdateBuffer(s, engine_video.audio.buff, engine_video.audio.buff_size,
+                            engine_video.audio.bits_per_sample, engine_video.audio.channels, engine_video.audio.sample_rate);
                     }
                 }
-
-                return stream_codec_play(&engine_video);
+                codec_decode_video(&engine_video);
+                return (video_state = 1);
             }
-            codec_clear(&engine_video.codec);
+            codec_clear(&engine_video);
         }
     }
     return 0;
@@ -1149,7 +1161,7 @@ int  Engine_PlayVideo(const char *name)
 
 int  Engine_IsVideoPlayed()
 {
-    return (engine_video.state != VIDEO_STATE_STOPPED);
+    return video_state;
 }
 
 

@@ -89,8 +89,6 @@ set(OPENTOMB_SRCS
     src/gui/gui_inventory.h
     src/fmv/tiny_codec.h
     src/fmv/tiny_codec.c
-    src/fmv/stream_codec.h
-    src/fmv/stream_codec.c
     src/fmv/internal/avcodec.h
     src/fmv/internal/common.h
     src/fmv/internal/bytestream.h

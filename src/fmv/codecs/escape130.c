@@ -143,7 +143,7 @@ static int decode_skip_count(GetBitContext* gb)
 static int escape130_decode_frame(struct tiny_codec_s *avctx, struct AVPacket *avpkt)
 {
     int buf_size        = avpkt->size;
-    Escape130Context *s = (Escape130Context*)avctx->video.priv_data;
+    Escape130Context *s = (Escape130Context*)avctx->video.private_data;
     GetBitContext gb;
     int ret;
 
@@ -337,11 +337,11 @@ static void escape130_free_data(void *data)
 
 void escape130_decode_init(struct tiny_codec_s *avctx)
 {
-    if(!avctx->video.priv_data && !((avctx->video.width & 1) || (avctx->video.height & 1)))
+    if(!avctx->video.private_data && !((avctx->video.width & 1) || (avctx->video.height & 1)))
     {
         Escape130Context *s = (Escape130Context*)malloc(sizeof(Escape130Context));
         avctx->video.decode = escape130_decode_frame;
-        avctx->video.priv_data = s;
+        avctx->video.private_data = s;
         avctx->video.free_data = escape130_free_data;
 
         //avctx->pix_fmt = AV_PIX_FMT_YUV420P;

@@ -65,6 +65,8 @@ typedef struct tiny_codec_s
     int               (*packet)(struct tiny_codec_s *s, struct AVPacket *pkt);
     uint64_t            fps_num;
     uint64_t            fps_denum;
+    uint64_t            time_ns;
+    uint64_t            frame;
 
     struct
     {
@@ -73,7 +75,7 @@ typedef struct tiny_codec_s
         uint16_t        width;
         uint16_t        height;
         uint8_t        *rgba;
-        void           *priv_data;
+        void           *private_data;
         void          (*free_data)(void *data);
         int32_t       (*decode)(struct tiny_codec_s *s, struct AVPacket *pkt);
 
@@ -86,7 +88,7 @@ typedef struct tiny_codec_s
     {
         AVPacket        pkt;
         uint32_t        codec_tag;
-        uint16_t        frquency;
+        uint16_t        frequency;
         uint16_t        format;
         uint16_t        bit_rate;
         uint16_t        sample_rate;
@@ -120,12 +122,13 @@ void av_packet_unref(AVPacket *pkt);
 void codec_init(struct tiny_codec_s *s, SDL_RWops *rw);
 void codec_clear(struct tiny_codec_s *s);
 void codec_simplify_fps(struct tiny_codec_s *s);
+uint64_t codec_inc_time(struct tiny_codec_s *s, uint64_t time_ns); // return current frame
 uint32_t codec_resize_audio_buffer(struct tiny_codec_s *s, uint32_t sample_size, uint32_t samples);
 
 int codec_open_rpl(struct tiny_codec_s *s);
                     
-#define codec_decode_audio(s) do{ if((s)->packet((s), &(s)->audio.pkt) >= 0) (s)->audio.decode((s), &(s)->audio.pkt); }while(0)
-#define codec_decode_video(s) do{ if((s)->packet((s), &(s)->video.pkt) >= 0) (s)->video.decode((s), &(s)->video.pkt); }while(0)
+#define codec_decode_audio(s) (((s)->packet((s), &(s)->audio.pkt) >= 0) && (s)->audio.decode((s), &(s)->audio.pkt))
+#define codec_decode_video(s) (((s)->packet((s), &(s)->video.pkt) >= 0) && (s)->video.decode((s), &(s)->video.pkt))
 
 #ifdef __cplusplus
 }

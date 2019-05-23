@@ -259,20 +259,6 @@ SYS TIME
 ===============================================================================
 */
 
-int64_t Sys_MicroSecTime(int64_t sec_offset)
-{
-    int64_t ret = 0;
-    struct timeval tp;
-    if(0 == gettimeofday(&tp, NULL))
-    {
-        ret = tp.tv_sec - sec_offset;
-        ret *= 1e6;
-        ret += tp.tv_usec;
-    }
-    return ret;
-}
-
-
 void Sys_Strtime(char *buf, size_t buf_size)
 {
     struct tm *tm_;
