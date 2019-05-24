@@ -850,6 +850,15 @@ void Game_Prepare()
         engine_camera.transform.M4x4[12 + 2] += player->character->height;
         engine_camera.transform.angles[0] = player->transform.angles[0] + 180.0f;
         engine_camera.current_room = player->self->room;
+
+        // Equip pistols if they are available in inventory
+        if(Inventory_GetItemsCount(player->inventory, ITEM_PISTOL) > 0)
+        {
+            player->character->set_weapon_model_func(player, TR_MODEL_PISTOL, 0); // Do not draw pistols
+            player->character->weapon_id = TR_MODEL_PISTOL;
+        }
+        // Always set pistol ammunition to prevent ammunition count from being displayed on screen (this is useful in levels where Lara starts with no weapon)
+        player->character->current_ammunition_inventory_item_id = ITEM_PISTOL_AMMO;
     }
     else
     {

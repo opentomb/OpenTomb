@@ -463,30 +463,29 @@ bool Weapons_GetIdsFromActionKey(int weaponId, int *pointerModelId, int *pointer
     {
         *pointerModelId = tombRaider1WeaponIds[weaponId].modelId;
         *pointerInventoryItemId = tombRaider1WeaponIds[weaponId].inventoryItemId;
-        return true;
     }
     else if(gameVersion < TR_III)
     {
         *pointerModelId = tombRaider2WeaponIds[weaponId].modelId;
         *pointerInventoryItemId = tombRaider2WeaponIds[weaponId].inventoryItemId;
-        return true;
     }
     else if(gameVersion < TR_IV)
     {
         *pointerModelId = tombRaider3WeaponIds[weaponId].modelId;
         *pointerInventoryItemId = tombRaider3WeaponIds[weaponId].inventoryItemId;
-        return true;
     }
     else if(gameVersion < TR_V)
     {
         *pointerModelId = tombRaider4WeaponIds[weaponId].modelId;
         *pointerInventoryItemId = tombRaider4WeaponIds[weaponId].inventoryItemId;
-        return true;
     }
     else
     {
         *pointerModelId = tombRaider5WeaponIds[weaponId].modelId;
         *pointerInventoryItemId = tombRaider5WeaponIds[weaponId].inventoryItemId;
-        return true;
     }
+
+    // Is a weapon bound to this key ?
+    if (*pointerModelId == 0) return false;
+    return true;
 }
