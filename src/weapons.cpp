@@ -486,6 +486,5 @@ bool Weapons_GetIdsFromActionKey(int weaponId, int *pointerModelId, int *pointer
     }
 
     // Is a weapon bound to this key ?
-    if (*pointerModelId == 0) return false;
-    return true;
+    return (*pointerModelId != 0);
 }
