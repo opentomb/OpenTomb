@@ -88,6 +88,7 @@ void CRenderDebugDrawer::Render()
     {       
         uint32_t linesStart = 0;
         bool done = false;
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_gl_vbo);
         while (!done)
         {
             uint32_t linesToDrow = m_lines - linesStart;
@@ -99,15 +100,13 @@ void CRenderDebugDrawer::Render()
             {
                 done = true;
             }
-
-            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, m_gl_vbo);
             qglBufferDataARB(GL_ARRAY_BUFFER_ARB, linesToDrow * 2 * sizeof(struct vertex_s), m_buffer + 2 * linesStart, GL_STREAM_DRAW);
             qglVertexPointer(3, GL_FLOAT, sizeof(struct vertex_s), (GLvoid*)offsetof(struct vertex_s, pos));
             qglColorPointer(4, GL_UNSIGNED_BYTE, sizeof(struct vertex_s), (GLvoid*)offsetof(struct vertex_s, rgba));
             qglDrawArrays(GL_LINES, 0, 2 * linesToDrow);
-            qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
             linesStart += step;
         }
+        qglBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
     }
 
     vec4_set_zero(m_rgba);
@@ -270,6 +269,7 @@ void CRenderDebugDrawer::DrawBBox(float bb_min[3], float bb_max[3], float *trans
         }
         
         struct vertex_s *v = m_buffer + 2 * m_lines;
+        m_lines += 12;
         put_line(v0, v1, v);
         put_line(v1, v2, v);
         put_line(v2, v3, v);
