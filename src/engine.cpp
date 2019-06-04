@@ -906,6 +906,9 @@ void Engine_MainLoop()
               !control_states.actions[ACT_INVENTORY].prev_state)
             {
                 video_state = 0;
+
+                // Reset inventory key state to avoid opening the inventory when skipping a video
+                control_states.actions[ACT_INVENTORY].state = 0;
             }
             
             if (video_state == 0)
