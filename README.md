@@ -59,7 +59,7 @@ original engine.
 Bullet Physics.
 * OpenTomb implements a Lua scripting engine to define all entity functionality.
  This means that, again, unlike the original, much less is hardcoded into the
- engine itself, so functionality can be extended or modified without havng to
+ engine itself, so functionality can be extended or modified without having to
  modify and recompile the engine itself.
 * Many abandoned and unused features from the original engine have been enabled
 in OpenTomb. New animation, unused items, hidden PSX-specific structures inside
@@ -81,7 +81,8 @@ Here is the list of all needed assets and where to get them:
  * Data folders from each game. Get them from your retail game CDs or Steam/GOG
  bundles. Just take data folder from each game's folder, and put it into
  corresponding `/data/tr*/` folder. For instance, for TR3, the path would be
- `OpenTomb/data/tr3/data/`
+ `OpenTomb/data/tr3/data/`. Tomb Raider "Gold" versions go to `data/tr*_gold/`
+ directories.
 
  * CD audio tracks. OpenTomb only supports OGG audiotracks for a moment, so you
  should convert original soundtracks by yourself, or just download whole TR1-5
