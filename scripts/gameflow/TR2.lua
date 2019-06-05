@@ -47,12 +47,12 @@ gameflow_params[GAME_2].fmv = {};
 -----------------------------------------------------------------------------------------------------------------------------------------------
 gameflow_params[GAME_2].fmv[0] =  { name = "Logo",                              filepath = "data/tr2/fmv/LOGO.RPL" };
 gameflow_params[GAME_2].fmv[1] =  { name = "Ancient War",                       filepath = "data/tr2/fmv/ANCIENT.RPL" };
-gameflow_params[GAME_2].fmv[2] =  { name = "Helicopter Lara",                   filepath = "data/tr2/FMV/MODERN.RPL" };
-gameflow_params[GAME_2].fmv[3] =  { name = "Getting to Offshore Rig",           filepath = "data/tr2/FMV/LANDING.RPL" };
-gameflow_params[GAME_2].fmv[4] =  { name = "Diving",                            filepath = "data/tr2/FMV/MS.RPL" };
-gameflow_params[GAME_2].fmv[5] =  { name = "Arriving at Tibet",                 filepath = "data/tr2/FMV/CRASH.RPL" };
-gameflow_params[GAME_2].fmv[6] =  { name = "Chinese chase",                     filepath = "data/tr2/FMV/JEEP.RPL" };
-gameflow_params[GAME_2].fmv[7] =  { name = "End game",                          filepath = "data/tr2/FMV/END.RPL" };
+gameflow_params[GAME_2].fmv[2] =  { name = "Helicopter Lara",                   filepath = "data/tr2/fmv/MODERN.RPL" };
+gameflow_params[GAME_2].fmv[3] =  { name = "Getting to Offshore Rig",           filepath = "data/tr2/fmv/LANDING.RPL" };
+gameflow_params[GAME_2].fmv[4] =  { name = "Diving",                            filepath = "data/tr2/fmv/MS.RPL" };
+gameflow_params[GAME_2].fmv[5] =  { name = "Arriving at Tibet",                 filepath = "data/tr2/fmv/CRASH.RPL" };
+gameflow_params[GAME_2].fmv[6] =  { name = "Chinese chase",                     filepath = "data/tr2/fmv/JEEP.RPL" };
+gameflow_params[GAME_2].fmv[7] =  { name = "End game",                          filepath = "data/tr2/fmv/END.RPL" };
 -----------------------------------------------------------------------------------------------------------------------------------------------
 
 
