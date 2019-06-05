@@ -684,7 +684,7 @@ void Game_Frame(float time)
 {
     entity_p player = World_GetPlayer();
 
-    if(Game_ProcessMenu(player))
+    if(Game_ProcessMenu(player) || Engine_IsVideoPlayed())
     {
         return;
     }

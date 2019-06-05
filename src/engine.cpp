@@ -512,7 +512,7 @@ void Engine_LoadConfig(const char *filename)
 
 void Engine_Display(float time)
 {
-    if(!engine_done)
+    if(!engine_done && !Engine_IsVideoPlayed())
     {
         qglClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);//| GL_ACCUM_BUFFER_BIT);
 
@@ -867,8 +867,8 @@ void Engine_MainLoop()
         {
             if(!g_menu_mode && (screen_info.debug_view_state != debug_view_state_e::model_view))
             {
-                Game_Frame(time);
                 Gameflow_ProcessCommands();
+                Game_Frame(time);
             }
             Audio_Update(time);
             Engine_Display(time);
