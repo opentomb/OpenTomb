@@ -924,11 +924,9 @@ void Engine_MainLoop()
             if (video_state == 0)
             {
                 // Stop video sounds
-                StreamTrack_Stop(Audio_GetStreamExternal());
+                StreamTrack_Stop(Audio_GetStreamExternal()); // This is legacy code, is it really needed ?
+                StreamTrack_Stop(s);
                 Audio_StopStreams(-1);
-                // FIXME : this hack allows to play several videos in row but StreamTrack_Stop() should be enough, audio refactoring needed
-                StreamTrack_Clear(s);
-                StreamTrack_Init(s);
 
                 codec_clear(&engine_video);
             }
