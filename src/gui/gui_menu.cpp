@@ -315,33 +315,15 @@ static gui_object_p Gui_AddHomeContainer(gui_object_p root)
 
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
-    Gui_SetObjectLabel(obj, "Tomb Raider I UB", 2, 2);
-    obj->flags.draw_label = 0x01;
-    obj->data = (void*)GAME_1_5;
-
-    obj = Gui_AddListItem(cont);
-    obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider II", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_2;
 
     obj = Gui_AddListItem(cont);
     obj->flags.draw_border = 0x00;
-    Gui_SetObjectLabel(obj, "Tomb Raider II Gold", 2, 2);
-    obj->flags.draw_label = 0x01;
-    obj->data = (void*)GAME_2_5;
-
-    obj = Gui_AddListItem(cont);
-    obj->flags.draw_border = 0x00;
     Gui_SetObjectLabel(obj, "Tomb Raider III", 2, 2);
     obj->flags.draw_label = 0x01;
     obj->data = (void*)GAME_3;
-
-    obj = Gui_AddListItem(cont);
-    obj->flags.draw_border = 0x00;
-    Gui_SetObjectLabel(obj, "Tomb Raider III Gold", 2, 2);
-    obj->flags.draw_label = 0x01;
-    obj->data = (void*)GAME_3_5;
 
     return cont;
 }
@@ -953,13 +935,14 @@ extern "C" int handle_new_game_cont(struct gui_object_s *obj, int cmd)
                 case GAME_2_1:
                 case GAME_2_5:
                     Gameflow_Send(GF_OP_STARTFMV, 0);
+                    Gameflow_Send(GF_OP_STARTFMV, 1);
                     Gameflow_Send(GF_OP_STARTFMV, 2);
                     break;
 
                 case GAME_3:
                 case GAME_3_5:
                     Gameflow_Send(GF_OP_STARTFMV, 0);
-                    Gameflow_Send(GF_OP_STARTFMV, 2);
+                    Gameflow_Send(GF_OP_STARTFMV, 1);
                     break;
             }
             ret = 1;
@@ -987,24 +970,11 @@ extern "C" int handle_home_cont(struct gui_object_s *obj, int cmd)
             int game_id = 0x7FFF & (uint64_t)item->data;
             Gameflow_SetGame(game_id, 0);
             Gui_SetCurrentMenu(NULL);
-            switch(game_id)
+            
+            // Only Tomb Raider 1 has a Lara's Home introduction video
+            if(game_id < GAME_2)
             {
-                case GAME_1:
-                case GAME_1_1:
-                case GAME_1_5:
-                    Gameflow_Send(GF_OP_STARTFMV, 1);
-                    break;
-
-                case GAME_2:
-                case GAME_2_1:
-                case GAME_2_5:
-                    Gameflow_Send(GF_OP_STARTFMV, 1);
-                    break;
-
-                case GAME_3:
-                case GAME_3_5:
-                    Gameflow_Send(GF_OP_STARTFMV, 1);
-                    break;
+                Gameflow_Send(GF_OP_STARTFMV, 1);
             }
             ret = 1;
         }
