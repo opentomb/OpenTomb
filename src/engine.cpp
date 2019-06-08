@@ -808,9 +808,17 @@ void Engine_MainLoop()
     int cycles = 0;
     char fps_str[32] = "0.0";
 
+    bool isTimeResetNeeded = false;
+
     while(!engine_done)
     {
         uint64_t newtime = SDL_GetPerformanceCounter();
+        // Reset loop timing if a game flow command took too much time to execute and would shift timing-sensitive rendering
+        if(isTimeResetNeeded)
+        {
+            oldtime = newtime;
+            isTimeResetNeeded = false;
+        }
         time_ns = newtime - oldtime;
         time_ns *= 1e9;
         time_ns /= frequency;
@@ -872,6 +880,13 @@ void Engine_MainLoop()
             }
             Audio_Update(time);
             Engine_Display(time);
+            
+            // Loading a video takes much more time than a frame when a new game is started.
+            // As the elapsed time is taken into account when requesting the next video frame to display,
+            // this shifts the video playing from several seconds, resulting in no displaying the video beginning.
+            // See codec_inc_time(&engine_video, time_ns); instruction below for better understanding.
+            // By resetting the loop timing the video is displayed from the beginning.
+            if (Engine_IsVideoPlayed()) isTimeResetNeeded = true;
         }
         else
         {
