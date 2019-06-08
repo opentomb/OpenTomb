@@ -865,11 +865,6 @@ void Engine_MainLoop()
                 fps->style_id = FONTSTYLE_MENU_TITLE;
             }
         }
-
-        if(!engine_video.input)
-        {
-            StreamTrack_Stop(Audio_GetStreamExternal());
-        }
         
         if(!engine_video.input)
         {
@@ -928,6 +923,13 @@ void Engine_MainLoop()
             
             if (video_state == 0)
             {
+                // Stop video sounds
+                StreamTrack_Stop(Audio_GetStreamExternal());
+                Audio_StopStreams(-1);
+                // FIXME : this hack allows to play several videos in row but StreamTrack_Stop() should be enough, audio refactoring needed
+                StreamTrack_Clear(s);
+                StreamTrack_Init(s);
+
                 codec_clear(&engine_video);
             }
         }
@@ -1153,13 +1155,7 @@ int  Engine_PlayVideo(const char *name)
             if(0 == codec_open_rpl(&engine_video))
             {
                 stream_track_p s = Audio_GetStreamExternal();
-                StreamTrack_Stop(s);
-                Audio_StopStreams(-1);
                 Gui_ConShow(0);
-
-                // FIXME : this hack allows to play several videos in row but StreamTrack_Stop() should be enough, audio refactoring needed
-                StreamTrack_Clear(s);
-                StreamTrack_Init(s);
 
                 s->current_volume = audio_settings.sound_volume;
                 while(StreamTrack_IsNeedUpdateBuffer(s))
