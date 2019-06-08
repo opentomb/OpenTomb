@@ -1157,6 +1157,10 @@ int  Engine_PlayVideo(const char *name)
                 Audio_StopStreams(-1);
                 Gui_ConShow(0);
 
+                // FIXME : this hack allows to play several videos in row but StreamTrack_Stop() should be enough, audio refactoring needed
+                StreamTrack_Clear(s);
+                StreamTrack_Init(s);
+
                 s->current_volume = audio_settings.sound_volume;
                 while(StreamTrack_IsNeedUpdateBuffer(s))
                 {
