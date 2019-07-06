@@ -718,12 +718,15 @@ int lua_SetGame(lua_State *lua)
     int top = lua_gettop(lua);
     if(top >= 1)
     {
-        Gameflow_SetGame(lua_tointeger(lua, 1), (top >= 2) ? (lua_tointeger(lua, 2)) : (0));
-        Con_Notify("level was changed to %d", Gameflow_GetCurrentGameID());
+        int gameId = lua_tointeger(lua, 1);
+        int levelId = top >= 2 ? lua_tointeger(lua, 2) : 0;
+
+        Gameflow_SetGame(gameId, levelId);
+        Con_Notify("changed to game ID %d, level %d", gameId, levelId);
     }
     else
     {
-        Con_Warning("setGame: expecting arguments (gameversion, (level_id))");
+        Con_Warning("setGame: expecting arguments (game_id, (level_id))");
     }
 
     return 0;
