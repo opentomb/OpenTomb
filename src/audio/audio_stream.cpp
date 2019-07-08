@@ -49,7 +49,6 @@ void StreamTrack_Init(stream_track_p s)
 
 void StreamTrack_Clear(stream_track_p s)
 {
-    StreamTrack_Stop(s);
     s->buffer_offset = 0;
     s->linked_buffers = 0;
     if(alIsSource(s->internal->source))
@@ -173,6 +172,10 @@ int StreamTrack_Stop(stream_track_p s)
         s->linked_buffers = 0;
         s->buffer_offset = 0;
         s->state = TR_AUDIO_STREAM_STOPPED;
+        
+        // FIXME : this hack allows to play several videos in row and Lara Home's chat, but above code should be enough : audio refactoring needed
+        StreamTrack_Clear(s);
+        StreamTrack_Init(s);
         return 1;
     }
     return -1;

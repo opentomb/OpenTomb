@@ -308,7 +308,12 @@ int codec_open_rpl(struct tiny_codec_s *s)
         switch (audio_format)
         {
             case 1:
-                if(s->audio.bits_per_coded_sample == 16)
+                if(s->audio.bits_per_coded_sample == 8)
+                {
+                    s->audio.codec_tag = AV_CODEC_ID_PCM_U8;
+                    pcm_decode_init(s);
+                }
+                else if(s->audio.bits_per_coded_sample == 16)
                 {
                     // 16-bit audio is always signed
                     s->audio.codec_tag = AV_CODEC_ID_PCM_S16LE;
