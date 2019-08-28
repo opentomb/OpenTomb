@@ -790,6 +790,11 @@ void gui_InventoryManager::frameItems(float time)
                                                 m_current_state = INVENTORY_DEACTIVATING;
                                             }
                                             break;
+
+                                        case ITEM_COMPASS:
+                                            m_current_state = INVENTORY_ACTIVATED;
+                                            break;
+
                                         default:
                                             if(ver > TR_III)
                                             {
@@ -1158,21 +1163,13 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
             Gui_DeleteObjects(m_current_menu);
             m_current_menu = NULL;
         }
-        if(m_command == GUI_COMMAND_CLOSE)
-        {
-            m_command = GUI_COMMAND_NONE;
-            m_current_state = INVENTORY_DEACTIVATING;
-            m_menu_mode = 0;
-        }
-        else if(m_command == GUI_COMMAND_ACTIVATE)
-        {
-            m_command = GUI_COMMAND_NONE;
-            m_menu_mode = 1;
-        }
+        
+        m_command = GUI_COMMAND_NONE;
+        m_menu_mode = 1;
         break;
 
-    case 1:  // load game
-        if(bi->bf->animations.current_frame < 10)
+    case 1:  // Create statistics menu and display it
+        if(bi->bf->animations.current_frame < 7) // Tomb Raider 1 compass animation opens then closes the compass. By limiting to 7 frames the compass is only opened
         {
             Anim_IncTime(&bi->bf->animations, time);
             if((bi->bf->animations.frame_changing_state != SS_CHANGING_END_ANIM))
@@ -1181,10 +1178,18 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
                 break;
             }
         }
+        
+        // Allow to quit the statistics menu by also pressing "activate" key, like in classic Tomb Raider
+        if(m_command == GUI_COMMAND_ACTIVATE)
+        {
+            m_command = GUI_COMMAND_CLOSE;
+        }
 
+        // Create the menu
         if(!m_current_menu)
         {
             m_current_menu = Gui_BuildStatisticsMenu();
+            Gui_SetCurrentMenu(m_current_menu);
         }
         break;
 
