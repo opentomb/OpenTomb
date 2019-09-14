@@ -720,6 +720,8 @@ void Script_LoadConstants(lua_State *lua)
         LUA_EXPOSE(lua, STATE_FUNCTIONS_TORSO_BOSS);
         LUA_EXPOSE(lua, STATE_FUNCTIONS_NATLA);
 
+        LUA_EXPOSE(lua, STATE_FUNCTIONS_TIGER);
+
         LUA_EXPOSE(lua, ANIM_NORMAL_CONTROL);
         LUA_EXPOSE(lua, ANIM_LOOP_LAST_FRAME);
         LUA_EXPOSE(lua, ANIM_FRAME_LOCK);

@@ -25,6 +25,8 @@ struct entity_s;
 #define STATE_FUNCTIONS_TORSO_BOSS          (0x13)
 #define STATE_FUNCTIONS_NATLA               (0x14)
 
+#define STATE_FUNCTIONS_TIGER               (0x15)
+
 #define TR_STATE_CURRENT (-1)
 
 #define ANIMATION_KEY_INIT          (0)

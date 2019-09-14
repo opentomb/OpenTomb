@@ -65,6 +65,8 @@ void StateControl_TorsoBossSetKeyAnim(struct entity_s *ent, struct ss_animation_
 int StateControl_Natla(struct entity_s *ent, struct ss_animation_s *ss_anim);
 void StateControl_NatlaSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
 
+int StateControl_Tiger(struct entity_s *ent, struct ss_animation_s *ss_anim);
+void StateControl_TigerSetKeyAnim(struct entity_s *ent, struct ss_animation_s *ss_anim, int key_anim);
 
 void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
 {
@@ -171,6 +173,11 @@ void StateControl_SetStateFunctions(struct entity_s *ent, int functions_id)
             case STATE_FUNCTIONS_NATLA:
                 ent->character->state_func = StateControl_Natla;
                 ent->character->set_key_anim_func = StateControl_NatlaSetKeyAnim;
+                break;
+
+            case STATE_FUNCTIONS_TIGER:
+                ent->character->state_func = StateControl_Tiger;
+                ent->character->set_key_anim_func = StateControl_TigerSetKeyAnim;
                 break;
         }
     }

@@ -251,7 +251,7 @@ tr2_entity_tbl[34] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_S
 tr2_entity_tbl[36] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Spider
 tr2_entity_tbl[37] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Giant spider
 tr2_entity_tbl[38] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Crow
-tr2_entity_tbl[39] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Tiger / Leopard
+tr2_entity_tbl[39] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "tr2_tiger"};            -- Tiger / Leopard
 tr2_entity_tbl[40] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Marco Bartoli
 tr2_entity_tbl[41] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX, func = "basic"};                -- Spear-wielding Xian Guard
 tr2_entity_tbl[42] = {coll = COLLISION_GROUP_CHARACTERS,     shape = COLLISION_SHAPE_TRIMESH_CONVEX};                -- Spear-wielding Xian Guard statue

@@ -57,7 +57,14 @@ dofile(base_path .. "scripts/entity/entities/tr1/characters/tr1_mrt.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/characters/tr1_skateboardist.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/characters/tr1_natla.lua");
 dofile(base_path .. "scripts/entity/entities/tr1/characters/tr1_torsoboss.lua");
+
 -- other
 dofile(base_path .. "scripts/entity/entities/tr1/tr1_spawner.lua");
+
+--------------------------------------
+--      Tomb Raider 2 Entities      --
+--------------------------------------
+-- animals & monster
+dofile(base_path .. "scripts/entity/entities/tr2/tr2_tiger.lua");
 
 print("entity_functions_enemies->loaded success !");

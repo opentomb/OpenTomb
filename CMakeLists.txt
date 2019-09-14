@@ -192,6 +192,8 @@ set(OPENTOMB_SRCS
     src/state_control/state_control_torso_boss.cpp
     src/state_control/state_control_Natla.h
     src/state_control/state_control_Natla.cpp
+    src/state_control/state_control_tiger.h
+    src/state_control/state_control_tiger.cpp
     src/audio/audio.cpp
     src/audio/audio.h
     src/audio/audio_fx.cpp
