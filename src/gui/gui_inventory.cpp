@@ -1217,7 +1217,6 @@ void gui_InventoryManager::handleCompass(struct base_item_s *bi, float time)
     {
         SSBoneFrame_Update(bi->bf, 0);
     }
-    Gui_SetCurrentMenu(m_current_menu);
 
     if(m_current_menu && m_current_menu->handlers.do_command
       && m_current_menu->handlers.do_command(m_current_menu, m_command))
