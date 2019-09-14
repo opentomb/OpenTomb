@@ -94,12 +94,13 @@ extern "C" {
 } global_world;
 
 
-// private load level functions prototipes:
+// private load level functions prototypes:
 void World_SetEntityModelProperties(struct entity_s *ent);
 void World_SetStaticMeshProperties(struct static_mesh_s *r_static);
 void World_SetEntityFunction(struct entity_s *ent);
 void World_ScriptsOpen(const char *path);
 void World_AutoexecOpen();
+float World_GetAnimatedTexturesFrameRate(class VT_Level *tr);
 // Create entity function from script, if exists.
 bool Res_CreateEntityFunc(lua_State *lua, const char* func_name, int entity_id);
 
@@ -1187,13 +1188,44 @@ void World_ScriptsOpen(const char *path)
 void World_AutoexecOpen()
 {
     int top = lua_gettop(engine_lua);
-    Script_DoLuaFile(engine_lua, "scripts/autoexec.lua");    // do standart autoexec
+    Script_DoLuaFile(engine_lua, "scripts/autoexec.lua");    // do standard autoexec
     lua_getglobal(engine_lua, "level_PostLoad");
     if(lua_isfunction(engine_lua, -1))
     {
         lua_CallAndLog(engine_lua, 0, 0, 0);
     }
     lua_settop(engine_lua, top);
+}
+
+
+float World_GetAnimatedTexturesFrameRate(class VT_Level *tr)
+{
+    switch(tr->game_version)
+    {
+        // Tomb Raider 1, Tomb Raider 1 demo and Tomb Raider Unfinished Business
+        case TR_I:
+        case TR_I_DEMO:
+        case TR_I_UB:
+            return 0.15f;
+
+        // Tomb Raider 2 and Tomb Raider 2 demo (Tomb Raider Golden Mask is identified as TR_II)
+        case TR_II:
+        case TR_II_DEMO:
+            return 0.17f;
+
+        // Tomb Raider 3 (Tomb Raider The Lost Artifact is identified as TR_III)
+        case TR_III:
+            return 0.08f;
+
+        // Tomb Raider 4 and Tomb Raider 4 demo
+        case TR_IV:
+        case TR_IV_DEMO:
+            return 0.12f;
+
+        // TODO other TR
+        default:
+            return 0.05f;
+    }
 }
 
 
@@ -1368,6 +1400,7 @@ void World_GenAnimTextures(class VT_Level *tr)
     uint16_t *pointer;
     uint16_t  num_sequences, num_uvrotates;
     polygon_t p0, p;
+    float frameRate;
 
     p0.vertex_count = 0;
     p0.vertices = NULL;
@@ -1379,6 +1412,8 @@ void World_GenAnimTextures(class VT_Level *tr)
     pointer       = tr->animated_textures;
     num_uvrotates = tr->animated_textures_uv_count;
     num_sequences = *(pointer++);   // First word in a stream is sequence count.
+
+    frameRate = World_GetAnimatedTexturesFrameRate(tr);
 
     if(num_sequences)
     {
@@ -1396,7 +1431,7 @@ void World_GenAnimTextures(class VT_Level *tr)
             seq->frame_lock        = false; // by default anim is playing
             seq->uvrotate          = false; // by default uvrotate
             seq->reverse_direction = false; // Needed for proper reverse-type start-up.
-            seq->frame_rate        = 0.05f; // Should be passed as 1 / FPS.
+            seq->frame_rate        = frameRate; // Should be passed as 1 / FPS.
             seq->frame_time        = 0.0f;  // Reset frame time to initial state.
             seq->current_frame     = 0;     // Reset current frame to zero.
 
@@ -1418,7 +1453,7 @@ void World_GenAnimTextures(class VT_Level *tr)
             if((i < num_uvrotates) && (seq->frames_count <= 2))
             {
                 seq->uvrotate   = true;
-                seq->frame_rate = 0.05f * 16;
+                seq->frame_rate = frameRate * 16;
             }
             seq->frames = (tex_frame_p)calloc(seq->frames_count, sizeof(tex_frame_t));
             global_world.tex_atlas->getCoordinates(&p0, seq->frame_list[0], false);
