@@ -1200,7 +1200,8 @@ extern "C" int Engine_ExecCmd(char *ch)
             Con_AddLine("cls - clean console\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("show_fps - switch show fps flag\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cvars - lua's table of cvar's, to see them type: show_table(cvars)\0", FONTSTYLE_CONSOLE_NOTIFY);
-            Con_AddLine("free_look - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("freelook(is_enabled) - switch camera mode\0", FONTSTYLE_CONSOLE_NOTIFY);
+            Con_AddLine("mlook(is_enabled) - control camera with mouse\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("r_crosshair - switch crosshair visibility\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("cam_distance - camera distance to actor\0", FONTSTYLE_CONSOLE_NOTIFY);
             Con_AddLine("r_wireframe, r_portals, r_frustums, r_room_boxes, r_boxes, r_normals, r_skip_room, r_flyby, r_cinematics, r_triggers, r_ai_boxes, r_cameras - render modes, r_path - show character path\0", FONTSTYLE_CONSOLE_NOTIFY);
