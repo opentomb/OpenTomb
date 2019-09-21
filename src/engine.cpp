@@ -585,7 +585,7 @@ void Engine_Resize(int nominalW, int nominalH, int pixelsW, int pixelsH)
 
 void Engine_PollSDLEvents()
 {
-    SDL_Event event;
+    static SDL_Event event;
     static int mouse_setup = 0;
     const float color[3] = {1.0f, 0.0f, 0.0f};
     static float from[3], to[3];
@@ -796,29 +796,102 @@ void Engine_JoyRumble(float power, int time)
 }
 
 
+static int Engine_HandleVideo(uint64_t time_ns)
+{
+    stream_track_p s = Audio_GetStreamExternal();
+    if(StreamTrack_IsNeedUpdateBuffer(s))
+    {
+        codec_decode_audio(&engine_video);
+    }
+    if(engine_video.audio.buff && (engine_video.audio.buff_offset >= s->buffer_offset))
+    {
+        s->current_volume = audio_settings.sound_volume;
+        StreamTrack_UpdateBuffer(s, engine_video.audio.buff, engine_video.audio.buff_size,
+            engine_video.audio.bits_per_sample, engine_video.audio.channels, engine_video.audio.sample_rate);
+    }
+    StreamTrack_Play(s);
+
+    uint64_t frame = engine_video.frame;
+    codec_inc_time(&engine_video, time_ns);
+    while (frame < engine_video.frame)
+    {
+        frame++;
+        video_state = (codec_decode_video(&engine_video)) ? (1) : (0);
+    }
+
+    if(engine_video.video.rgba)
+    {
+        Gui_SetScreenTexture(engine_video.video.rgba, engine_video.video.width, engine_video.video.height, 32);
+    }
+    Gui_DrawLoadScreen(-1);
+
+    if(control_states.actions[ACT_INVENTORY].state &&
+      !control_states.actions[ACT_INVENTORY].prev_state)
+    {
+        video_state = 0;
+
+        // Reset inventory key state to avoid opening the inventory when skipping a video
+        control_states.actions[ACT_INVENTORY].state = 0;
+    }
+
+    if (video_state == 0)
+    {
+        // Stop video sounds
+        StreamTrack_Stop(Audio_GetStreamExternal()); // This is legacy code, is it really needed ?
+        StreamTrack_Stop(s);
+        Audio_StopStreams(-1);
+
+        codec_clear(&engine_video);
+    }
+    
+    return video_state;
+}
+
+
+static void Engine_HandleFPS(float time)
+{
+    const int max_cycles = 64;
+    static float time_cycl = 0.0f;
+    static int cycles = 0;
+    static char fps_str[32] = "0.0";
+    
+    if(cycles < max_cycles)
+    {
+        cycles++;
+        time_cycl += time;
+    }
+    else
+    {
+        screen_info.fps = ((float)max_cycles / time_cycl);
+        snprintf(fps_str, sizeof(fps_str), "%.1f", screen_info.fps);
+        cycles = 0;
+        time_cycl = 0.0f;
+    }
+    
+    if (renderer.settings.show_fps)
+    {
+        gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
+        if (fps)
+        {
+            fps->x_align = GLTEXT_ALIGN_RIGHT;
+            fps->y_align = GLTEXT_ALIGN_BOTTOM;
+            fps->font_id = FONT_PRIMARY;
+            fps->style_id = FONTSTYLE_MENU_TITLE;
+        }
+    }
+}
+
+
 void Engine_MainLoop()
 {
     uint64_t frequency = SDL_GetPerformanceFrequency();
     uint64_t oldtime = SDL_GetPerformanceCounter();
     uint64_t time_ns = 0;
     float time = 0.0f;
-    float time_cycl = 0.0f;
-
-    const int max_cycles = 64;
-    int cycles = 0;
-    char fps_str[32] = "0.0";
-
-    bool isTimeResetNeeded = false;
-
+    
     while(!engine_done)
     {
         uint64_t newtime = SDL_GetPerformanceCounter();
-        // Reset loop timing if a game flow command took too much time to execute and would shift timing-sensitive rendering
-        if(isTimeResetNeeded)
-        {
-            oldtime = newtime;
-            isTimeResetNeeded = false;
-        }
         time_ns = newtime - oldtime;
         time_ns *= 1e9;
         time_ns /= frequency;
@@ -828,6 +901,7 @@ void Engine_MainLoop()
 
         if(engine_set_zero_time)
         {
+            oldtime = newtime;
             engine_set_zero_time = 0;
             time = 0.0f;
         }
@@ -838,33 +912,10 @@ void Engine_MainLoop()
 
         engine_frame_time = time;
 
-        if(cycles < max_cycles)
-        {
-            cycles++;
-            time_cycl += time;
-        }
-        else
-        {
-            screen_info.fps = ((float)max_cycles / time_cycl);
-            snprintf(fps_str, sizeof(fps_str), "%.1f", screen_info.fps);
-            cycles = 0;
-            time_cycl = 0.0f;
-        }
+        Engine_HandleFPS(time);
 
         Sys_ResetTempMem();
         Engine_PollSDLEvents();
-
-        if (renderer.settings.show_fps)
-        {
-            gl_text_line_p fps = GLText_OutTextXY(screen_info.w - 10.0f, 10.0f, fps_str);
-            if (fps)
-            {
-                fps->x_align = GLTEXT_ALIGN_RIGHT;
-                fps->y_align = GLTEXT_ALIGN_BOTTOM;
-                fps->font_id = FONT_PRIMARY;
-                fps->style_id = FONTSTYLE_MENU_TITLE;
-            }
-        }
         
         if(!engine_video.input)
         {
@@ -881,55 +932,11 @@ void Engine_MainLoop()
             // this shifts the video playing from several seconds, resulting in no displaying the video beginning.
             // See codec_inc_time(&engine_video, time_ns); instruction below for better understanding.
             // By resetting the loop timing the video is displayed from the beginning.
-            if (Engine_IsVideoPlayed()) isTimeResetNeeded = true;
+            engine_set_zero_time = video_state;
         }
         else
         {
-            stream_track_p s = Audio_GetStreamExternal();
-            if(StreamTrack_IsNeedUpdateBuffer(s))
-            {
-                codec_decode_audio(&engine_video);
-            }
-            if(engine_video.audio.buff && (engine_video.audio.buff_offset >= s->buffer_offset))
-            {
-                s->current_volume = audio_settings.sound_volume;
-                StreamTrack_UpdateBuffer(s, engine_video.audio.buff, engine_video.audio.buff_size,
-                    engine_video.audio.bits_per_sample, engine_video.audio.channels, engine_video.audio.sample_rate);
-            }
-            StreamTrack_Play(s);
-
-            uint64_t frame = engine_video.frame;
-            codec_inc_time(&engine_video, time_ns);
-            while (frame < engine_video.frame)
-            {
-                frame++;
-                video_state = (codec_decode_video(&engine_video)) ? (1) : (0);
-            }
-            
-            if(engine_video.video.rgba)
-            {
-                Gui_SetScreenTexture(engine_video.video.rgba, engine_video.video.width, engine_video.video.height, 32);
-            }
-            Gui_DrawLoadScreen(-1);
-
-            if(control_states.actions[ACT_INVENTORY].state &&
-              !control_states.actions[ACT_INVENTORY].prev_state)
-            {
-                video_state = 0;
-
-                // Reset inventory key state to avoid opening the inventory when skipping a video
-                control_states.actions[ACT_INVENTORY].state = 0;
-            }
-            
-            if (video_state == 0)
-            {
-                // Stop video sounds
-                StreamTrack_Stop(Audio_GetStreamExternal()); // This is legacy code, is it really needed ?
-                StreamTrack_Stop(s);
-                Audio_StopStreams(-1);
-
-                codec_clear(&engine_video);
-            }
+            Engine_HandleVideo(time_ns);
         }
     }
 }
