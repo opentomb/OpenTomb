@@ -54,3 +54,7 @@ TR1_WINGED_MUTANT_DMG_PROJ = 100;
 
 TR1_CENTAUR                 = 125;
 TR1_CENTAUR_MUTANT_DMG_PROJ = 100;
+
+-- TR2 constants
+TR2_TIGER_HEALTH = 30 -- Need 2 shotgun shots to die
+TR2_TIGER_DAMAGES = 50

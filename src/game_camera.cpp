@@ -62,28 +62,6 @@ void Cam_FollowEntity(struct camera_s *cam, struct camera_state_s *cam_state, st
                 cameraTo[0] = cameraFrom[0] + sinf((ent_ang[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                 cameraTo[1] = cameraFrom[1] - cosf((ent_ang[0] - 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
                 cameraTo[2] = cameraFrom[2];
-
-                //If collided we want to go right otherwise stay left
-                if(Physics_SphereTest(NULL, cameraFrom, cameraTo, test_r, ent->self, filter))
-                {
-                    cameraTo[0] = cameraFrom[0] + sinf((ent_ang[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
-                    cameraTo[1] = cameraFrom[1] - cosf((ent_ang[0] + 90.0f) * (M_PI / 180.0f)) * control_states.cam_distance;
-                    cameraTo[2] = cameraFrom[2];
-
-                    //If collided we want to go to back else right
-                    if(Physics_SphereTest(NULL, cameraFrom, cameraTo, test_r, ent->self, filter))
-                    {
-                        cam_state->target_dir = TR_CAM_TARG_BACK;
-                    }
-                    else
-                    {
-                        cam_state->target_dir = TR_CAM_TARG_RIGHT;
-                    }
-                }
-                else
-                {
-                    cam_state->target_dir = TR_CAM_TARG_LEFT;
-                }
             }
         }
         else if((ent->move_type == MOVE_FREE_FALLING) && (ent->dir_flag == ENT_MOVE_BACKWARD))
