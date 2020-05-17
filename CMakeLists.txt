@@ -9,8 +9,29 @@ project(OpenTomb)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+option(FORCE_SYSTEM_ZLIB     "Use system-provided Zlib instead of internal library."     ON)
 option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
 option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
+
+# Detect system Zlib (must be done before FreeType because FreeType needs Zlib)
+
+if (FORCE_SYSTEM_ZLIB)
+    find_package(ZLIB QUIET)
+    if (NOT ZLIB_FOUND)
+        message("System-provided Zlib not found. Enabling internal Zlib support.")
+        set(OPENTOMB_INTERNAL_ZLIB ON)
+    else()
+        set(OPENTOMB_INTERNAL_ZLIB OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_ZLIB ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_ZLIB)
+    add_subdirectory(extern/zlib)
+    set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/zlib")
+    set(ZLIB_LIBRARY zlib)
+endif ()
 
 # Detect system FreeType
 
@@ -265,7 +286,6 @@ endif()
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 find_package(PNG REQUIRED)
-find_package(ZLIB REQUIRED)
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
 include(CheckIncludeFiles)
