@@ -31,7 +31,7 @@ endif ()
 
 if (OPENTOMB_INTERNAL_ZLIB)
     add_subdirectory(extern/zlib)
-    set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/zlib")
+    set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/zlib" "${CMAKE_BINARY_DIR}/extern/zlib")
     set(ZLIB_LIBRARY zlib)
 endif ()
 find_package(ZLIB REQUIRED)
