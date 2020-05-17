@@ -13,6 +13,7 @@ option(FORCE_SYSTEM_ZLIB     "Use system-provided Zlib instead of internal libra
 option(FORCE_SYSTEM_LIBPNG   "Use system-provided LibPNG instead of internal library."   ON)
 option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
 option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
+option(FORCE_SYSTEM_OPENAL   "Use system-provided OpenAL instead of internal library."   ON)
 
 # Detect system Zlib (must be done before FreeType because FreeType needs Zlib)
 
@@ -290,15 +291,12 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
 
-    set(OPENAL_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/AL")
-    set(OPENAL_LIBRARY OpenAL32)
-
     set(SDL2_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/SDL2")
     set(SDL2_LIBRARY
-        /usr/${COMPILER_PREFIX}/lib/libmingw32.a
-        /usr/${COMPILER_PREFIX}/lib/libSDL2main.a
-        /usr/${COMPILER_PREFIX}/lib/libSDL2.dll.a
-        /usr/${COMPILER_PREFIX}/lib/libwinpthread.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libmingw32.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2main.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a
+        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libwinpthread.a
     )
 
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
@@ -306,6 +304,27 @@ else()
     find_package(OpenAL REQUIRED)
     find_package(SDL2 REQUIRED)
 endif()
+
+# Detect system OpenAL (SDL2 must be already defined)
+
+if (FORCE_SYSTEM_OPENAL)
+    find_package(OpenAL QUIET)
+    if (NOT OPENAL_FOUND)
+        message("System-provided OpenAL not found. Enabling internal OpenAL support.")
+        set(OPENTOMB_INTERNAL_OPENAL ON)
+    else()
+        set(OPENTOMB_INTERNAL_OPENAL OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_OPENAL ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_OPENAL)
+    add_subdirectory(extern/openal)
+    set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
+    set(OPENAL_LIBRARY OpenAL32)
+endif ()
+find_package(OpenAL REQUIRED)
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 
