@@ -303,7 +303,7 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
     set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
     set(OPENAL_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/libs/Win32/OpenAL32.lib)
 
-    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lmingw32")
 else()
     find_package(OpenAL REQUIRED)
     find_package(SDL2 REQUIRED)
