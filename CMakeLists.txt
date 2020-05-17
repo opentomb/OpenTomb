@@ -291,7 +291,7 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
 
-    set(SDL2_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/SDL2")
+    set(SDL2_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/include")
     set(SDL2_LIBRARY
         ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libmingw32.a
         ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2main.a
