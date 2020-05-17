@@ -15,7 +15,7 @@ jobs:
       - name: Linux dependencies installation
         run: |
           sudo apt update
-          sudo apt install libegl1-mesa-dev libgles2-mesa-dev cmake libopenal-dev libsdl2-dev libpng12-dev zlib1g-dev
+          sudo apt install libegl1-mesa-dev libgles2-mesa-dev cmake libopenal-dev libsdl2-dev libpng-dev zlib1g-dev
       - name: Linux build
         run: |
           mkdir build
