@@ -1,0 +1,24 @@
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  linux_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Linux dependencies installation
+        run: |
+          sudo apt update
+          sudo apt install libegl1-mesa-dev libgles2-mesa-dev cmake libopenal-dev libsdl2-dev libpng12-dev zlib1g-dev
+      - name: Linux build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
