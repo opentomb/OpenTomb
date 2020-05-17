@@ -15,7 +15,7 @@ option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal l
 option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
 option(FORCE_SYSTEM_OPENAL   "Use system-provided OpenAL instead of internal library."   ON)
 
-# Detect system Zlib (must be done before FreeType because FreeType needs Zlib)
+# Detect system Zlib (must be done before FreeType and LibPNG because they both need Zlib)
 
 if (FORCE_SYSTEM_ZLIB)
     find_package(ZLIB QUIET)
@@ -36,7 +36,7 @@ if (OPENTOMB_INTERNAL_ZLIB)
 endif ()
 find_package(ZLIB REQUIRED)
 
-# Detect system LibPNG (must be done before FreeType because FreeType needs this library)
+# Detect system LibPNG
 
 if (FORCE_SYSTEM_LIBPNG)
     find_package(PNG QUIET)
@@ -51,9 +51,12 @@ else ()
 endif ()
 
 if (OPENTOMB_INTERNAL_LIBPNG)
+    # Do not install LibPNG, because this would require to install Zlib
+    set(SKIP_INSTALL_EXPORT ON)
     add_subdirectory(extern/libpng)
-    set(PNG_PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/libpng")
-    set(PNG_LIBRARY libpng)
+    set(SKIP_INSTALL_EXPORT OFF)
+    set(PNG_PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/libpng" "${CMAKE_BINARY_DIR}/extern/libpng")
+    set(PNG_LIBRARY png)
 endif ()
 find_package(PNG REQUIRED)
 
@@ -293,10 +296,8 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
 
     set(SDL2_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/include")
     set(SDL2_LIBRARY
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libmingw32.a
         ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2main.a
         ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libwinpthread.a
     )
 
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
@@ -338,6 +339,12 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h.in ${CMAKE_CURR
 
 add_executable(${PROJECT_NAME} ${OPENTOMB_SRCS} ${OPENTOMB_ICON})
 set_target_properties(${PROJECT_NAME} PROPERTIES C_STANDARD 99 CXX_STANDARD 11)
+
+# Force LibPNG to be built before OpenTomb
+# TODO why are other dependencies working but this one is not ?
+if (OPENTOMB_INTERNAL_LIBPNG)
+    add_dependencies(${PROJECT_NAME} png)
+endif ()
 
 target_include_directories(
     ${PROJECT_NAME} PRIVATE
