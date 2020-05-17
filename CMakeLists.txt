@@ -300,32 +300,14 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
         ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a
     )
 
+    set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
+    set(OPENAL_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/libs/Win32/OpenAL32.lib)
+
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++")
 else()
     find_package(OpenAL REQUIRED)
     find_package(SDL2 REQUIRED)
 endif()
-
-# Detect system OpenAL (SDL2 must be already defined)
-
-if (FORCE_SYSTEM_OPENAL)
-    find_package(OpenAL QUIET)
-    if (NOT OPENAL_FOUND)
-        message("System-provided OpenAL not found. Enabling internal OpenAL support.")
-        set(OPENTOMB_INTERNAL_OPENAL ON)
-    else()
-        set(OPENTOMB_INTERNAL_OPENAL OFF)
-    endif ()
-else ()
-    set(OPENTOMB_INTERNAL_OPENAL ON)
-endif ()
-
-if (OPENTOMB_INTERNAL_OPENAL)
-    add_subdirectory(extern/openal)
-    set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
-    set(OPENAL_LIBRARY OpenAL32)
-endif ()
-find_package(OpenAL REQUIRED)
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 
