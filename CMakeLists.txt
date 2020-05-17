@@ -10,6 +10,7 @@ project(OpenTomb)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 option(FORCE_SYSTEM_ZLIB     "Use system-provided Zlib instead of internal library."     ON)
+option(FORCE_SYSTEM_LIBPNG   "Use system-provided LibPNG instead of internal library."   ON)
 option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal library." OFF)
 option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
 
@@ -32,6 +33,28 @@ if (OPENTOMB_INTERNAL_ZLIB)
     set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/zlib")
     set(ZLIB_LIBRARY zlib)
 endif ()
+find_package(ZLIB REQUIRED)
+
+# Detect system LibPNG (must be done before FreeType because FreeType needs this library)
+
+if (FORCE_SYSTEM_LIBPNG)
+    find_package(PNG QUIET)
+    if (NOT PNG_FOUND)
+        message("System-provided LibPNG not found. Enabling internal LibPNG support.")
+        set(OPENTOMB_INTERNAL_LIBPNG ON)
+    else()
+        set(OPENTOMB_INTERNAL_LIBPNG OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_LIBPNG ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_LIBPNG)
+    add_subdirectory(extern/libpng)
+    set(PNG_PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/libpng")
+    set(PNG_LIBRARY libpng)
+endif ()
+find_package(PNG REQUIRED)
 
 # Detect system FreeType
 
@@ -285,7 +308,6 @@ else()
 endif()
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
-find_package(PNG REQUIRED)
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
 include(CheckIncludeFiles)
