@@ -22,3 +22,19 @@ jobs:
           cd build
           cmake ..
           make
+
+  windows_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Windows dependencies installation
+        run: |
+          sudo apt update
+          sudo apt install mingw-w64
+      - name: Windows build
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_TOOLCHAIN_FILE=../cmake/Toolchain-cross-mingw32-linux.cmake ..
+          make
+          make install
