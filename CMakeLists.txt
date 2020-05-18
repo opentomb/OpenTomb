@@ -312,11 +312,11 @@ endif()
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 
 # Check for optional OpenAL include files that are not present in all implementations of the library
-include(CheckIncludeFiles)
+include(CheckIncludeFile)
 set(CMAKE_REQUIRED_INCLUDES ${OPENAL_INCLUDE_DIR})
-CHECK_INCLUDE_FILES(alext.h HAVE_ALC_H)
-CHECK_INCLUDE_FILES(efx.h HAVE_EFX_H)
-CHECK_INCLUDE_FILES("efx-presets.h" HAVE_EFX_PRESETS_H)
+CHECK_INCLUDE_FILE("alext.h" HAVE_ALC_H)
+CHECK_INCLUDE_FILE("efx.h" HAVE_EFX_H)
+CHECK_INCLUDE_FILE("efx-presets.h" HAVE_EFX_PRESETS_H)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h.in ${CMAKE_CURRENT_SOURCE_DIR}/src/config-opentomb.h)
 
 add_executable(${PROJECT_NAME} ${OPENTOMB_SRCS} ${OPENTOMB_ICON})
