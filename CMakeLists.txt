@@ -30,7 +30,10 @@ else ()
 endif ()
 
 if (OPENTOMB_INTERNAL_ZLIB)
+    # Do not install library files
+    set(SKIP_INSTALL_ALL ON)
     add_subdirectory(extern/zlib)
+    set(SKIP_INSTALL_ALL OFF)
     set(ZLIB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/zlib" "${CMAKE_BINARY_DIR}/extern/zlib")
     set(ZLIB_LIBRARY zlib)
 endif ()
@@ -51,10 +54,10 @@ else ()
 endif ()
 
 if (OPENTOMB_INTERNAL_LIBPNG)
-    # Do not install LibPNG, because this would require to install Zlib
-    set(SKIP_INSTALL_EXPORT ON)
+    # Do not install library files
+    set(SKIP_INSTALL_ALL ON)
     add_subdirectory(extern/libpng)
-    set(SKIP_INSTALL_EXPORT OFF)
+    set(SKIP_INSTALL_ALL OFF)
     set(PNG_PNG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/libpng" "${CMAKE_BINARY_DIR}/extern/libpng")
     set(PNG_LIBRARY png)
 endif ()
@@ -296,18 +299,23 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
 
     set(SDL2_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/include")
     set(SDL2_LIBRARY
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2main.a
-        ${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a
+        "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2main.a"
+        "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a"
     )
 
     set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
-    set(OPENAL_LIBRARY ${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/libs/Win32/OpenAL32.lib)
+    set(OPENAL_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/libs/Win32/OpenAL32.lib")
 
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lmingw32")
-else()
-    find_package(OpenAL REQUIRED)
-    find_package(SDL2 REQUIRED)
+
+    # Automatically install needed DLLs close to executable
+    install(FILES "${CMAKE_BINARY_DIR}/extern/zlib/libzlib.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+    install(FILES "${CMAKE_BINARY_DIR}/extern/libpng/libpng16.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/bin/SDL2.dll" DESTINATION "${CMAKE_BINARY_DIR}")
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/bin/Win32/soft_oal.dll" DESTINATION "${CMAKE_BINARY_DIR}" RENAME "OpenAL32.dll")
 endif()
+find_package(OpenAL REQUIRED)
+find_package(SDL2 REQUIRED)
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 
