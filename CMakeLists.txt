@@ -15,6 +15,11 @@ option(FORCE_SYSTEM_FREETYPE "Use system-provided FreeType instead of internal l
 option(FORCE_SYSTEM_BULLET   "Use system-provided BULLET instead of internal library."   OFF)
 option(FORCE_SYSTEM_OPENAL   "Use system-provided OpenAL instead of internal library."   ON)
 
+# Make sure needed GCC libraries are statically built in all DLLs (this avoids deploying GCC libraries)
+if (MINGW AND CMAKE_CROSSCOMPILING)
+    set(CMAKE_SHARED_LINKER_FLAGS "-static-libgcc -static-libstdc++")
+endif ()
+
 # Detect system Zlib (must be done before FreeType and LibPNG because they both need Zlib)
 
 if (FORCE_SYSTEM_ZLIB)
