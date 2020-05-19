@@ -308,19 +308,37 @@ if(MINGW AND CMAKE_CROSSCOMPILING)
         "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/lib/libSDL2.dll.a"
     )
 
-    set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/include/AL")
-    set(OPENAL_LIBRARY "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/libs/Win32/OpenAL32.lib")
-
     set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lmingw32 -mwindows")
 
     # Automatically install needed DLLs close to executable
     install(FILES "${CMAKE_BINARY_DIR}/extern/zlib/libzlib.dll" DESTINATION "${CMAKE_BINARY_DIR}")
     install(FILES "${CMAKE_BINARY_DIR}/extern/libpng/libpng16.dll" DESTINATION "${CMAKE_BINARY_DIR}")
     install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdl2/i686-w64-mingw32/bin/SDL2.dll" DESTINATION "${CMAKE_BINARY_DIR}")
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/bin/Win32/soft_oal.dll" DESTINATION "${CMAKE_BINARY_DIR}" RENAME "OpenAL32.dll")
+    install(FILES "/usr/${COMPILER_PREFIX}/lib/libwinpthread-1.dll" DESTINATION "${CMAKE_BINARY_DIR}")
 endif()
-find_package(OpenAL REQUIRED)
 find_package(SDL2 REQUIRED)
+
+# Detect system OpenAL (depends on SDL2)
+
+if (FORCE_SYSTEM_OPENAL)
+    find_package(OpenAL QUIET)
+    if (NOT OPENAL_FOUND)
+        message("System-provided OpenAL not found. Enabling internal OpenAL support.")
+        set(OPENTOMB_INTERNAL_OPENAL ON)
+    else()
+        set(OPENTOMB_INTERNAL_OPENAL OFF)
+    endif ()
+else ()
+    set(OPENTOMB_INTERNAL_OPENAL ON)
+endif ()
+
+if (OPENTOMB_INTERNAL_OPENAL)
+    add_subdirectory(extern/openal)
+    set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/openal/AL")
+    set(OPENAL_LIBRARY OpenAL)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -pthread -lpthread")
+endif ()
+find_package(OpenAL REQUIRED)
 
 set(OPENTOMB_ICON "resource/icon/opentomb.rc")
 
