@@ -245,7 +245,7 @@ endif()
 if(MINGW AND CMAKE_CROSSCOMPILING)
     # Cross compiling on Linux with the MinGW toolchain.
     message(STATUS "MinGW Cross-Compilation")
-
+# ${OPENAL_LIBRARY} shoud be replaced to internal
     set(OPENAL_INCLUDE_DIR "/usr/${COMPILER_PREFIX}/include/AL")
     set(OPENAL_LIBRARY OpenAL32)
 
@@ -295,6 +295,7 @@ target_link_libraries(
     ${BULLET_LIBRARIES}
     lua5.3
     ${PNG_LIBRARIES}
+# ${OPENAL_LIBRARY} shoud be replaced to internal
     ${OPENAL_LIBRARY}
     ${SDL2_LIBRARY}
     ${ZLIB_LIBRARIES}
