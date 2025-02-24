@@ -1,5 +1,13 @@
 [![Build Status](https://travis-ci.org/opentomb/OpenTomb.svg?branch=master)](https://travis-ci.org/opentomb/OpenTomb)
 
+## Disclaimer
+
+This project is **inactive** and is no longer maintained.  
+
+For an actively developed and community-driven classic engine for creating maps, we recommend checking out **TombEngine** at [tombengine.com](https://tombengine.com).  
+
+TombEngine is built with modern techniques while preserving the legacy of classic level creation.
+
 OpenTomb — an open-source Tomb Raider 1-5 engine remake
 -------------------------------------------------------
 
